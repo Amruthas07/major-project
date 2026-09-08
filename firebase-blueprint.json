@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Clinical profile and location metadata of the pregnant mother",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "weeksPregnant": { "type": "number" },
+        "diet": { "type": "string", "enum": ["Vegetarian", "Non-Vegetarian"] },
+        "deficiencies": { "type": "array" },
+        "prePregnancyWeight": { "type": "number" },
+        "heightCm": { "type": "number" },
+        "currentWeight": { "type": "number" },
+        "lmpDate": { "type": "string" },
+        "allergies": { "type": "array" },
+        "state": { "type": "string" },
+        "district": { "type": "string" },
+        "city": { "type": "string" },
+        "pincode": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" }
+      },
+      "required": ["state", "district", "city", "pincode"]
+    },
+    "GovernmentSchemeList": {
+      "title": "Government Scheme List",
+      "description": "List of maternal welfare schemes available in a specific state",
+      "type": "object",
+      "properties": {
+        "state": { "type": "string" },
+        "schemes": { "type": "array" }
+      },
+      "required": ["state", "schemes"]
+    },
+    "HealthCenterList": {
+      "title": "Health Center List",
+      "description": "List of health facilities and centers available in a specific state and district",
+      "type": "object",
+      "properties": {
+        "state": { "type": "string" },
+        "district": { "type": "string" },
+        "hospitals": { "type": "array" }
+      },
+      "required": ["state", "district", "hospitals"]
+    },
+    "ClinicalReport": {
+      "title": "Clinical Report",
+      "description": "Uploaded clinical and medical reports of the pregnant mother",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "userId": { "type": "string" },
+        "reportName": { "type": "string" },
+        "hospitalName": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "reportDate": { "type": "string" },
+        "reportType": { "type": "string" },
+        "notes": { "type": "string" },
+        "fileUrl": { "type": "string" },
+        "fileName": { "type": "string" },
+        "fileType": { "type": "string" },
+        "uploadTime": { "type": "string" },
+        "aiSummary": { "type": "object" }
+      },
+      "required": ["userId", "reportName", "hospitalName", "reportDate", "reportType"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "User",
+      "description": "The user's maternal profile and location details"
+    },
+    "/appointments_data/{uid}": {
+      "schema": "object",
+      "description": "User's scheduled appointments data"
+    },
+    "/medicines_data/{uid}": {
+      "schema": "object",
+      "description": "User's prescribed medicines data"
+    },
+    "/daily_reminders_data/{uid}": {
+      "schema": "object",
+      "description": "User's daily reminders data"
+    },
+    "/medical_reports_data/{uid}": {
+      "schema": "object",
+      "description": "User's medical reports data"
+    },
+    "/governmentSchemes/{state}": {
+      "schema": "GovernmentSchemeList",
+      "description": "Maternal schemes available for the selected state"
+    },
+    "/healthCenters/{state_district}": {
+      "schema": "HealthCenterList",
+      "description": "Health centers and hospitals grouped by state and district"
+    },
+    "/users/{uid}/clinicalReports/{reportId}": {
+      "schema": "ClinicalReport",
+      "description": "User's uploaded medical and clinical reports"
+    }
+  }
+}

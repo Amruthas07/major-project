@@ -1,0 +1,6 @@
+{
+  "name": "PregNutri AI",
+  "description": "Clinical Maternal Nutrition & Smart Logs Companion - comprehensive pregnancy nutrition, meal planning, clinical records, government schemes, and healthcare companion.",
+  "requestFramePermissions": ["camera", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

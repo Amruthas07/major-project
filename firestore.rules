@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    match /appointments_data/{userId} {
+      allow read, write: if true;
+    }
+
+    match /medicines_data/{userId} {
+      allow read, write: if true;
+    }
+
+    match /daily_reminders_data/{userId} {
+      allow read, write: if true;
+    }
+
+    match /medical_reports_data/{userId} {
+      allow read, write: if true;
+    }
+
+    match /governmentSchemes/{state} {
+      allow read, write: if true;
+    }
+
+    match /healthCenters/{id} {
+      allow read, write: if true;
+    }
+
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
+
+
