@@ -104,29 +104,71 @@ app.post('/api/chat', async (req, res) => {
 
     const currentLang = language || 'en';
     const weeks = profile?.weeksPregnant || 24;
+    const month = profile?.pregnancyMonth || Math.min(9, Math.max(1, Math.floor((weeks - 1) / 4) + 1));
     const trimester = weeks <= 12 ? '1st Trimester' : weeks <= 28 ? '2nd Trimester' : '3rd Trimester';
-    const diet = profile?.diet || 'Vegetarian';
-    const deficiencies = profile?.deficiencies?.join(', ') || 'None';
-    const allergies = profile?.allergies?.join(', ') || 'None';
+    const diet = profile?.dietPreference || profile?.diet || 'Vegetarian';
+    const heightCm = profile?.heightCm || 162;
+    const currentWeightKg = profile?.currentWeightKg || 60;
+    const prePregnancyWeightKg = profile?.prePregnancyWeightKg || 54;
+    const bmi = (currentWeightKg / Math.pow(heightCm / 100, 2)).toFixed(1);
+    const deficiencies = profile?.deficiencies?.join(', ') || profile?.medicalConditions?.join(', ') || 'None reported';
+    const allergies = profile?.allergies?.join(', ') || 'None reported';
     const state = profile?.state || 'Karnataka';
+    const district = profile?.district || profile?.city || '';
+    const taluk = profile?.taluk || '';
+    const village = profile?.village || '';
+
+    const langNameMap: Record<string, string> = {
+      hi: 'Hindi (हिंदी)',
+      kn: 'Kannada (ಕನ್ನಡ)',
+      ta: 'Tamil (தமிழ்)',
+      te: 'Telugu (తెలుగు)',
+      ml: 'Malayalam (മലയാളം)',
+      mr: 'Marathi (मराठी)',
+      bn: 'Bengali (বাংলা)',
+      gu: 'Gujarati (ગુજરાતી)',
+      pa: 'Punjabi (ਪੰਜਾਬੀ)',
+      or: 'Odia (ଓଡ଼ିଆ)',
+      ur: 'Urdu (اردو)',
+      as: 'Assamese (অসমীয়া)',
+      en: 'English'
+    };
+
+    const targetLanguageName = langNameMap[currentLang] || 'English';
 
     const systemInstruction = `
-You are a highly qualified Clinical Pregnancy Nutritionist, OB-GYN Diet Consultant, and maternal health specialist named PregNutri AI.
-Your sole focus is providing medically accurate, culturally sensitive, and scientifically backed maternal nutrition advice for Indian pregnant women.
+You are PregNutri AI, a certified Clinical Maternal Nutritionist and Obstetric Health Companion specialized in Indian maternal health and nutrition.
+Your goal is to provide culturally attuned, empathetic, and medically grounded nutritional advice to the pregnant mother based on ICMR-NIN 2020 Maternal Guidelines.
 
-Guidelines:
-1. Under no circumstances should you answer non-pregnancy, non-maternity, or non-nutrition queries. Gently and politely decline any unrelated prompts.
-2. Maintain clinical precision, warmth, and absolute safety. If something is potentially dangerous during pregnancy (like raw papaya, unpasteurized milk, or excess mercury fish), warn about it clearly.
-3. You must write your response in the language requested. Support English, Kannada, Tamil, Telugu, and Malayalam.
-4. Customize your recommendations based on the user's clinical profile:
-   - Weeks Pregnant: ${weeks} (${trimester})
-   - Diet preference: ${diet}
-   - Nutrient Deficiencies: ${deficiencies}
-   - Food Allergies: ${allergies}
-   - Region/State: ${state} (always emphasize traditional foods and local grains from this state when appropriate)
-5. NEVER hallucinate medical facts, traditional home remedies, or nutritional specifications.
-6. If the mother asks about critical red-flag symptoms (severe bleeding, extreme swelling, blurred vision, sudden pain, or lack of fetal movement), IMMEDIATELY provide a highlighted alert to seek emergency obstetric care or activate the Emergency SOS button, in addition to any nutritional guidance.
-    `;
+MOTHER'S CLINICAL PROFILE:
+- Gestation: ${weeks} Weeks Pregnant (${trimester}, Month ${month} of 9)
+- Physical Vitals: Height: ${heightCm} cm, Current Weight: ${currentWeightKg} kg, Pre-Pregnancy Weight: ${prePregnancyWeightKg} kg, Current BMI: ${bmi}
+- Dietary Preference: ${diet}
+- Location: ${village ? `${village} Village, ` : ''}${taluk ? `${taluk} Taluk, ` : ''}${district ? `${district}, ` : ''}${state}, India
+- Known Allergies: ${allergies}
+- Medical Conditions / Deficiencies: ${deficiencies}
+
+MANDATORY LANGUAGE RULE:
+You MUST write your entire answer in ${targetLanguageName}.
+- If Hindi is requested, write entirely in Hindi (Devanagari script).
+- If Kannada is requested, write entirely in Kannada (ಕನ್ನಡ ಲಿಪಿ).
+- If Tamil is requested, write entirely in Tamil (தமிழ் எழுத்து).
+- If Telugu is requested, write entirely in Telugu (తెలుగు లిపి).
+- If Malayalam is requested, write entirely in Malayalam (മലയാള ലിപി).
+- If English is requested, write in English.
+Do NOT mix unrequested scripts.
+
+CLINICAL & NUTRITIONAL GUIDELINES:
+1. Ground your recommendations in the mother's current trimester (${trimester}):
+   - 1st Trimester: Folic acid, Vitamin B6, hydration, combating nausea, light easily digestible foods.
+   - 2nd Trimester: Rapid fetal skeletal & blood volume expansion. High Iron (spinach, beetroot, lentils, dates), Calcium (ragi/finger millet, curd, paneer), protein, Vitamin C for iron absorption.
+   - 3rd Trimester: Brain & lung development, DHA, Omega-3, fiber to prevent constipation, sustained energy, adequate fluid intake (2.5-3L).
+2. Recommend local and traditional foods from ${state} (e.g. millets like Ragi, Jowar, Bajra, indigenous greens, pulses, seasonal fruits).
+3. Respect her diet preference (${diet}). Never suggest non-veg if Vegetarian.
+4. Food Safety: Clearly warn against unsafe foods (unripe/semi-ripe papaya, excess pineapple in T1, unpasteurized milk, undercooked eggs/meat, high-mercury fish, excess caffeine).
+5. Government Schemes: If asked, explain welfare programs in ${state} (Pradhan Mantri Matru Vandana Yojana - PMMVY, Janani Suraksha Yojana - JSY, Poshan Abhiyaan, and state schemes like Mathru Poorna / Muthulakshmi Reddy).
+6. Medical Safety Disclaimer: Remind the mother gently that this is nutritional guidance, not an emergency medical diagnosis. For severe symptoms (vaginal bleeding, severe abdominal cramps, blurred vision, sudden swelling, or reduced fetal movement), advise immediate hospital care or using the app's Emergency SOS.
+`;
 
     // Convert chat history format if provided
     const chatHistory = history ? history.map((msg: any) => ({
@@ -149,10 +191,20 @@ Guidelines:
 
   } catch (error: any) {
     console.error('Gemini Chat API Error:', error);
-    // Graceful maternal advice fallback during high traffic
-    res.json({
-      text: "According to ICMR-NIN maternal nutrition guidelines, prioritizing balanced traditional meals with sufficient iron (spinach, legumes, dates), calcium (ragi, curd, milk), protein (dal, paneer, sprouts), and drinking 2.5–3 liters of clean water daily is essential for your baby's optimal development. (Note: AI service is experiencing high traffic; please consult your healthcare provider for specific clinical questions.)"
-    });
+    const { language } = req.body || {};
+    
+    // Multilingual graceful maternal advice fallback
+    const fallbacks: Record<string, string> = {
+      hi: "आईसीएमआर-एनआईएन (ICMR-NIN) मातृत्व पोषण दिशानिर्देशों के अनुसार, संतुलित पारंपरिक आहार लेना अत्यंत महत्वपूर्ण है। इसमें पर्याप्त आयरन (पालक, दालें, खजूर), कैल्शियम (रागी, दही, दूध), प्रोटीन (दालें, पनीर, स्प्राउट्स) और रोजाना 2.5–3 लीटर स्वच्छ पानी पीना आपके शिशु के स्वस्थ विकास के लिए आवश्यक है। किसी भी व्यक्तिगत चिकित्सीय प्रश्न के लिए अपने डॉक्टर से संपर्क करें।",
+      kn: "ಐಸಿಎಂಆರ್-ಎನ್‌ಐಎನ್ (ICMR-NIN) ತಾಯಂದಿರ ಪೌಷ್ಟಿಕಾಂಶ ಮಾರ್ಗಸೂಚಿಗಳ ಪ್ರಕಾರ, ಸಮತೋಲಿತ ಸಾಂಪ್ರದಾಯಿಕ ಆಹಾರ ಸೇವನೆ ಅತ್ಯಗತ್ಯ. ಸಾಕಷ್ಟು ಕಬ್ಬಿಣಾಂಶ (ಪಾಲಕ್, ಕಾಳುಗಳು, ಖರ್ಜೂರ), ಕ್ಯಾಲ್ಸಿಯಂ (ರಾಗಿ, ಮೊಸರು, ಹಾಲು), ಪ್ರೋಟೀನ್ (ಬೇಳೆ, ಪನೀರ್) ಮತ್ತು ದಿನಕ್ಕೆ 2.5–3 ಲೀಟರ್ ನೀರು ಕುಡಿಯುವುದು ನಿಮ್ಮ ಮತ್ತು ಮಗುವಿನ ಆರೋಗ್ಯಕ್ಕೆ ಉತ್ತಮ. ವೈದ್ಯಕೀಯ ತುರ್ತು ಸಂದರ್ಭದಲ್ಲಿ ವೈದ್ಯರನ್ನು ಸಂಪರ್ಕಿಸಿ.",
+      ta: "ICMR-NIN தாய்மை ஊட்டச்சத்து வழிகாட்டுதல்களின்படி, சமச்சீரான பாரம்பரிய உணவை உட்கொள்வது அவசியம். போதிய இரும்புச்சத்து (கீரை, பருப்பு வகைகள், பேரீச்சம்பழம்), கால்சியம் (ராகி, தயிர், பால்), புரதம் மற்றும் தினமும் 2.5–3 லிட்டர் தண்ணீர் குடிப்பது குழந்தையின் ஆரோக்கியமான வளர்ச்சிக்கு உதவும்.",
+      te: "ICMR-NIN ప్రసూతి పోషకాహార మార్గదర్శకాల ప్రకారం, సమతుల్య సాంప్రదాయ ఆహారం తీసుకోవడం చాలా ముఖ్యం. తగినంత ఐరన్ (పాలకూర, పప్పులు, ఖర్జూరం), కాల్షియం (రాగులు, పెరుగు, పాలు), ప్రోటీన్ మరియు రోజుకు 2.5–3 లీటర్ల నీరు త్రాగడం మీ బిడ్డ ఆరోగ్యకరమైన పెరుగుదలకు ఎంతో అవసరం.",
+      ml: "ICMR-NIN മാതൃ പോഷകാഹാര മാർഗ്ഗനിർദ്ദേശങ്ങൾ അനുസരിച്ച്, സന്തുലിതമായ പരമ്പരാഗത ഭക്ഷണം കഴിക്കുന്നത് അത്യന്താപേക്ഷിതമാണ്. ആവശ്യത്തിന് ഇരുമ്പ് (ചീര, പയറുവർഗ്ഗങ്ങൾ, ഈന്തപ്പഴം), കാൽസ്യം (റാഗി, തൈര്, പാൽ), പ്രോട്ടീൻ എന്നിവയും ദിവസവും 2.5–3 ലിറ്റർ ശുദ്ധജലവും കുടിക്കുന്നത് കുഞ്ഞിന്റെ ആരോഗ്യകരമായ വളർച്ചയ്ക്ക് ആവശ്യമാണ്.",
+      en: "According to ICMR-NIN maternal nutrition guidelines, prioritizing balanced traditional meals with sufficient iron (spinach, lentils, dates), calcium (ragi/finger millet, curd, milk), protein (dal, paneer, sprouts), and drinking 2.5–3 liters of clean water daily is essential for your baby's optimal development. Please consult your obstetrician for clinical diagnosis."
+    };
+
+    const fallbackText = fallbacks[language] || fallbacks.en;
+    res.json({ text: fallbackText });
   }
 });
 

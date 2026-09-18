@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
 import { MainNavigation, NavTabId } from './components/MainNavigation';
 import { DashboardView } from './components/DashboardView';
@@ -11,13 +11,18 @@ import { HealthFacilitiesView } from './components/HealthFacilitiesView';
 import { AskAiView } from './components/AskAiView';
 import { OrderDeliveryView } from './components/OrderDeliveryView';
 import { ClinicalReportView } from './components/ClinicalReportView';
+import { UserReportsView } from './components/UserReportsView';
+import { ResearchPaperView } from './components/ResearchPaperView';
 import { UserProfileModal } from './components/UserProfileModal';
 import { AddToPlanModal } from './components/AddToPlanModal';
 import { AuthModal } from './components/AuthModal';
 import { PregnancyProfileSetupModal } from './components/PregnancyProfileSetupModal';
 import { SmartReminderModal } from './components/SmartReminderModal';
 import { EmergencySosModal } from './components/EmergencySosModal';
+import { WaterReminderAlertNotification } from './components/WaterReminderAlertNotification';
+import { AiAssistantChatbot } from './components/AiAssistantChatbot';
 import { useAppContext } from './context/AppContext';
+import { voiceService } from './services/voice_service';
 
 import {
   INITIAL_WELFARE_SCHEMES,
@@ -60,6 +65,11 @@ export default function App() {
 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
+  // Automatically cancel all active voice speech whenever user switches navigation tabs or closes dialogs
+  useEffect(() => {
+    voiceService.stopSpeaking();
+  }, [activeTab, isProfileModalOpen, isAuthModalOpen, isProfileSetupModalOpen, isSmartReminderModalOpen, isSosModalOpen]);
+
   return (
     <div className="min-h-screen flex flex-col bg-[#EFEFE9] text-[#223030] antialiased font-sans">
       {/* 1. Dark Earthy Clinical Header with Location Selector, Language Selector & Week Status */}
@@ -98,12 +108,8 @@ export default function App() {
           />
         )}
 
-        {activeTab === 'food-database' && (
+        {(activeTab === 'food-database' || activeTab === 'recipes') && (
           <FoodDatabaseView />
-        )}
-
-        {activeTab === 'recipes' && (
-          <RecipesView />
         )}
 
         {activeTab === 'meal-planner' && (
@@ -139,6 +145,12 @@ export default function App() {
           />
         )}
 
+        {activeTab === 'reports' && (
+          <UserReportsView
+            onNavigateTab={(tab) => setActiveTab(tab)}
+          />
+        )}
+
         {activeTab === 'clinical-report' && (
           <ClinicalReportView
             profile={userProfile}
@@ -150,6 +162,10 @@ export default function App() {
             onToggleMedicationTaken={toggleMedicationTaken}
             onAddMedication={addMedication}
           />
+        )}
+
+        {activeTab === 'research-paper' && (
+          <ResearchPaperView />
         )}
       </main>
 
@@ -208,6 +224,12 @@ export default function App() {
         onOpenProfile={() => setIsProfileModalOpen(true)}
         onNavigateFacilities={() => setActiveTab('health-facilities')}
       />
+
+      {/* 11. Scheduled Water Intake Alert Notification Banner */}
+      <WaterReminderAlertNotification />
+
+      {/* 12. Floating AI Assistant Chatbot Panel & Persistent Launcher */}
+      <AiAssistantChatbot />
     </div>
   );
 }

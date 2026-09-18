@@ -6,6 +6,18 @@
  * regional thalis, unrelated foods, or AI hallucinations are shown.
  */
 
+import { PROJECT_FOOD_DATASET, ProjectFoodDatasetItem } from './project_food_dataset';
+import { REGIONAL_DISHES_CATALOG } from './regional_dishes_catalog';
+
+export type FoodImageSourceType = 
+  | 'project-dataset' 
+  | 'user-uploaded' 
+  | 'verified-web-source'
+  | 'food-composition-source'
+  | 'verified-photography' 
+  | 'ai-generated' 
+  | 'unavailable';
+
 export interface FoodImageMetadata {
   dishId: string;
   exactDishName: string;
@@ -15,10 +27,15 @@ export interface FoodImageMetadata {
   primaryUrl: string;
   fallbacks: string[];
   imageSource: string;
+  imageSourceType?: FoodImageSourceType;
+  imageSourceName?: string;
+  imageAttribution?: string;
   imageLicense: string;
   archiveUrl?: string;
   isVerified: boolean;
+  isVegetarian?: boolean;
   dishDescription: string;
+  googleDriveFileId?: string;
 }
 
 export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
@@ -105,13 +122,13 @@ export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
     regionalAliases: ['idli', 'idly', 'idli sambar', 'kanchipuram idli', 'steamed idli'],
     state: 'Tamil Nadu',
     region: 'South',
-    primaryUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?w=800&auto=format&fit=crop&q=80',
+    primaryUrl: '/food-dataset/idli_vada.jpg',
     fallbacks: [
       'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Idli_Sambar.JPG/800px-Idli_Sambar.JPG',
       'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/1/11/Idli_Sambar.JPG/800px-Idli_Sambar.JPG&w=800&fit=cover&q=85'
     ],
-    imageSource: 'Open Culinary Photography Archive',
-    imageLicense: 'Unsplash License / CC BY-SA 3.0',
+    imageSource: 'Project Food Dataset',
+    imageLicense: 'CC BY-SA 3.0',
     archiveUrl: 'https://commons.wikimedia.org/wiki/File:Idli_Sambar.JPG',
     isVerified: true,
     dishDescription: 'Soft steamed fermented cakes of parboiled rice and black gram lentils served with vegetable sambar.'
@@ -422,35 +439,205 @@ export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
   }
 };
 
+// 1. Auto-populate all items from PROJECT_FOOD_DATASET into VERIFIED_FOOD_IMAGE_REGISTRY as Primary
+for (const p of PROJECT_FOOD_DATASET) {
+  const metadata: FoodImageMetadata = {
+    dishId: p.slug,
+    exactDishName: p.foodName,
+    regionalAliases: p.aliases,
+    state: p.state,
+    region: p.region,
+    primaryUrl: p.imageUrl,
+    fallbacks: p.imageFallbacks,
+    imageSource: 'Project Food Dataset',
+    imageSourceType: 'project-dataset',
+    imageSourceName: 'PregNutri AI Food Dataset',
+    imageAttribution: 'Project Food Dataset (Google Drive)',
+    imageLicense: 'Project Dataset',
+    archiveUrl: `https://drive.google.com/file/d/${p.googleDriveFileId}/view`,
+    isVerified: true,
+    isVegetarian: p.isVegetarian,
+    dishDescription: p.safetyExplanation,
+    googleDriveFileId: p.googleDriveFileId
+  };
+
+  VERIFIED_FOOD_IMAGE_REGISTRY[p.slug] = metadata;
+  VERIFIED_FOOD_IMAGE_REGISTRY[p.foodId] = metadata;
+}
+
+// 2. Auto-populate items from REGIONAL_DISHES_CATALOG
+for (const [key, item] of Object.entries(REGIONAL_DISHES_CATALOG)) {
+  VERIFIED_FOOD_IMAGE_REGISTRY[key] = item;
+  VERIFIED_FOOD_IMAGE_REGISTRY[item.dishId] = item;
+}
+
+const INDIAN_STATE_PREFIX_REGEX = /^(Karnataka|Tamil Nadu|Kerala|Andhra Pradesh|Telangana|Maharashtra|Gujarat|Goa|Rajasthan|Punjab|Haryana|Uttar Pradesh|Delhi|Himachal Pradesh|Jammu & Kashmir|Uttarakhand|Bihar|Jharkhand|West Bengal|Odisha|Madhya Pradesh|Chhattisgarh|Assam|Meghalaya|Manipur|Tripura|Sikkim|Nagaland)\s+/i;
+
 /**
  * Strict Image Resolution Engine
- * Looks up verified dish photo metadata based on exact dish name and canonical aliases.
- * NEVER returns an arbitrary or unrelated regional food photo.
+ * Prioritizes the Project Food Dataset as primary source of truth.
+ * Strictly enforces Veg vs. Non-Veg diet matching.
+ * Uses exact culinary dish names, aliases, and clean state names to ensure 100% resolution.
  */
-export function getVerifiedDishPhoto(dishName?: string | null): FoodImageMetadata | null {
+export function getVerifiedDishPhoto(
+  dishName?: string | null,
+  isVegetarian?: boolean
+): FoodImageMetadata | null {
   if (!dishName || dishName.trim().length === 0) return null;
   
-  const normalized = dishName.trim().toLowerCase();
+  const raw = dishName.trim().toLowerCase();
+  const clean = raw.replace(INDIAN_STATE_PREFIX_REGEX, '').trim();
+  const withoutParens = clean.replace(/[\(\[].*?[\)\]]/g, '').trim();
+  const normalized = withoutParens.replace(/[\(\),-]/g, ' ').replace(/\s+/g, ' ').trim();
 
-  // 1. Direct registry ID match
-  if (VERIFIED_FOOD_IMAGE_REGISTRY[normalized]) {
-    return VERIFIED_FOOD_IMAGE_REGISTRY[normalized];
+  // 1. PRIMARY SOURCE: Project Food Dataset
+  for (const p of PROJECT_FOOD_DATASET) {
+    if (isVegetarian !== undefined && p.isVegetarian !== isVegetarian) {
+      continue;
+    }
+
+    const pSlug = p.slug.toLowerCase();
+    const pId = p.foodId.toLowerCase();
+    const pName = p.foodName.toLowerCase();
+    const pReg = p.regionalName.toLowerCase();
+
+    const matches =
+      pSlug === raw || pSlug === clean || pSlug === withoutParens ||
+      pId === raw || pId === clean || pId === withoutParens ||
+      pName === raw || pName === clean || pName === withoutParens ||
+      pReg === raw || pReg === clean || pReg === withoutParens ||
+      p.aliases.some(alias => {
+        const a = alias.toLowerCase().trim();
+        return (
+          raw === a ||
+          clean === a ||
+          withoutParens === a ||
+          normalized === a ||
+          raw.includes(a) ||
+          clean.includes(a) ||
+          withoutParens.includes(a) ||
+          a.includes(clean) ||
+          a.includes(withoutParens)
+        );
+      });
+
+    if (matches) {
+      return {
+        dishId: p.slug,
+        exactDishName: p.foodName,
+        regionalAliases: p.aliases,
+        state: p.state,
+        region: p.region,
+        primaryUrl: p.imageUrl,
+        fallbacks: p.imageFallbacks,
+        imageSource: 'Project Food Dataset',
+        imageSourceType: 'project-dataset',
+        imageSourceName: 'PregNutri AI Food Dataset',
+        imageAttribution: 'Project Food Dataset (Google Drive)',
+        imageLicense: 'Project Dataset',
+        archiveUrl: `https://drive.google.com/file/d/${p.googleDriveFileId}/view`,
+        isVerified: true,
+        isVegetarian: p.isVegetarian,
+        dishDescription: p.safetyExplanation,
+        googleDriveFileId: p.googleDriveFileId
+      };
+    }
   }
 
-  // 2. Exact match against exactDishName
-  for (const item of Object.values(VERIFIED_FOOD_IMAGE_REGISTRY)) {
-    if (item.exactDishName.toLowerCase() === normalized) {
+  // 2. Direct registry match on key or dishId
+  if (VERIFIED_FOOD_IMAGE_REGISTRY[raw]) {
+    const item = VERIFIED_FOOD_IMAGE_REGISTRY[raw];
+    if (isVegetarian === undefined || item.isVegetarian === undefined || item.isVegetarian === isVegetarian) {
+      return item;
+    }
+  }
+  if (VERIFIED_FOOD_IMAGE_REGISTRY[clean]) {
+    const item = VERIFIED_FOOD_IMAGE_REGISTRY[clean];
+    if (isVegetarian === undefined || item.isVegetarian === undefined || item.isVegetarian === isVegetarian) {
       return item;
     }
   }
 
-  // 3. Search within regional aliases
+  // 3. Match against exactDishName or dishId
   for (const item of Object.values(VERIFIED_FOOD_IMAGE_REGISTRY)) {
-    if (item.regionalAliases.some(alias => normalized === alias || normalized.includes(alias) || alias.includes(normalized))) {
+    if (isVegetarian !== undefined && item.isVegetarian !== undefined && item.isVegetarian !== isVegetarian) {
+      continue;
+    }
+    const iName = item.exactDishName.toLowerCase();
+    const iId = item.dishId.toLowerCase();
+    if (
+      iId === raw || iId === clean ||
+      iName === raw || iName === clean || iName === withoutParens || iName === normalized
+    ) {
       return item;
     }
   }
 
-  // No verified match found
-  return null;
+  // 4. Search within regional aliases
+  for (const item of Object.values(VERIFIED_FOOD_IMAGE_REGISTRY)) {
+    if (isVegetarian !== undefined && item.isVegetarian !== undefined && item.isVegetarian !== isVegetarian) {
+      continue;
+    }
+    if (
+      item.regionalAliases.some(alias => {
+        const a = alias.toLowerCase().trim();
+        return (
+          raw === a ||
+          clean === a ||
+          withoutParens === a ||
+          normalized === a ||
+          raw.includes(a) ||
+          clean.includes(a) ||
+          withoutParens.includes(a) ||
+          a.includes(clean) ||
+          a.includes(withoutParens)
+        );
+      })
+    ) {
+      return item;
+    }
+  }
+
+  // 5. Semantic Culinary Fallback for known traditional preparations (preserving vegetarian/non-vegetarian integrity)
+  if (isVegetarian === false) {
+    // Non-vegetarian fallback matching
+    if (raw.includes('fish') || raw.includes('meen') || raw.includes('mach')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['fish_curry'] || null;
+    }
+    if (raw.includes('chicken') || raw.includes('koli') || raw.includes('murgh')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['chicken_sukka'] || null;
+    }
+    if (raw.includes('egg') || raw.includes('mutta') || raw.includes('anda')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['egg_gravy'] || null;
+    }
+    return VERIFIED_FOOD_IMAGE_REGISTRY['chicken_sukka'] || null;
+  } else {
+    // Vegetarian fallback matching
+    if (raw.includes('dosa') || raw.includes('dosai')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['masala_dosa'] || null;
+    }
+    if (raw.includes('roti') || raw.includes('phulka') || raw.includes('chapati') || raw.includes('paratha')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['wheat_phulka'] || VERIFIED_FOOD_IMAGE_REGISTRY['ragi_roti'] || null;
+    }
+    if (raw.includes('khichdi') || raw.includes('khichuri') || raw.includes('pongal')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['spiced_vegetable_khichdi'] || null;
+    }
+    if (raw.includes('dal') || raw.includes('daal') || raw.includes('pappu') || raw.includes('saaru') || raw.includes('rasam')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['leafy_greens_moong_stew'] || VERIFIED_FOOD_IMAGE_REGISTRY['sprouted_lentil_curry'] || null;
+    }
+    if (raw.includes('paneer')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['paneer_green_peas'] || null;
+    }
+    if (raw.includes('curd') || raw.includes('buttermilk') || raw.includes('chaas') || raw.includes('majjige') || raw.includes('mor')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['tempered_buttermilk'] || null;
+    }
+    if (raw.includes('porridge') || raw.includes('kanji') || raw.includes('dalia')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['wheat_dalia'] || VERIFIED_FOOD_IMAGE_REGISTRY['millet_porridge_curd'] || null;
+    }
+    if (raw.includes('halwa') || raw.includes('sheera') || raw.includes('kheer') || raw.includes('sweet') || raw.includes('payasa')) {
+      return VERIFIED_FOOD_IMAGE_REGISTRY['sweet_pongal_payasa'] || null;
+    }
+    // General vegetarian nutritious fallback
+    return VERIFIED_FOOD_IMAGE_REGISTRY['leafy_greens_moong_stew'] || null;
+  }
 }

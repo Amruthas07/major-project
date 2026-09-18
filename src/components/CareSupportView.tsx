@@ -33,13 +33,13 @@ interface CareSupportViewProps {
 export const CareSupportView: React.FC<CareSupportViewProps> = ({ userProfile }) => {
   const [activeSubTab, setActiveSubTab] = useState<'schemes' | 'sos' | 'hospitals' | 'chatbot'>('schemes');
   const [schemeLevelFilter, setSchemeLevelFilter] = useState<'All' | 'Central' | 'State'>('All');
-  const [selectedSchemeState, setSelectedSchemeState] = useState<string>(userProfile?.state || 'All');
+  const selectedSchemeState = userProfile?.state || 'Karnataka';
   const [schemeSearch, setSchemeSearch] = useState<string>('');
   const [selectedScheme, setSelectedScheme] = useState<GovernmentScheme | null>(null);
 
-  // Hospital locator filters
-  const [selectedState, setSelectedState] = useState<string>(userProfile?.state || 'Karnataka');
-  const [selectedDistrict, setSelectedDistrict] = useState<string>(userProfile?.district || 'Bengaluru Urban');
+  // Hospital locator mapped directly to single source of truth profile location
+  const userState = userProfile?.state || 'Karnataka';
+  const userDistrict = userProfile?.district || userProfile?.city || 'Mysuru';
   const [facilityTypeFilter, setFacilityTypeFilter] = useState<string>('All');
 
   // AI Chatbot State
@@ -61,9 +61,6 @@ export const CareSupportView: React.FC<CareSupportViewProps> = ({ userProfile })
     'How much water should I drink daily during pregnancy?'
   ];
 
-  // Available districts for the selected state
-  const availableDistricts = STATE_DISTRICTS[selectedState] || ['Central District', 'North District', 'South District'];
-
   // Filtered schemes
   const filteredSchemes = useMemo(() => {
     return CENTRALIZED_GOVERNMENT_SCHEMES.filter(s => {
@@ -82,12 +79,12 @@ export const CareSupportView: React.FC<CareSupportViewProps> = ({ userProfile })
     });
   }, [schemeLevelFilter, selectedSchemeState, schemeSearch]);
 
-  // Health facilities
+  // Health facilities mapped to single source of truth profile location
   const facilities: HealthFacility[] = useMemo(() => {
-    const list = getHealthFacilities(selectedState, selectedDistrict, userProfile?.city || 'Local', userProfile?.pincode || '560001');
+    const list = getHealthFacilities(userState, userDistrict, userProfile?.village || userProfile?.city || 'Local', userProfile?.pincode || '560001');
     if (facilityTypeFilter === 'All') return list;
     return list.filter(f => f.type.toLowerCase().includes(facilityTypeFilter.toLowerCase()));
-  }, [selectedState, selectedDistrict, facilityTypeFilter, userProfile]);
+  }, [userState, userDistrict, facilityTypeFilter, userProfile]);
 
   const handleSendChat = (questionText?: string) => {
     const textToSend = questionText || inputMessage;
@@ -490,39 +487,20 @@ export const CareSupportView: React.FC<CareSupportViewProps> = ({ userProfile })
       {activeSubTab === 'hospitals' && (
         <div className="space-y-6">
           
-          {/* Location Selector Bar */}
+          {/* Profile Location Indicator Bar */}
           <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-xs flex flex-wrap gap-4 items-center justify-between">
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-2">
-                <MapPin className="w-4 h-4 text-pink-600" />
-                <span className="text-xs font-bold text-slate-700">Select Region:</span>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-pink-50 flex items-center justify-center text-pink-600">
+                <MapPin className="w-4 h-4" />
               </div>
-
-              {/* State */}
-              <select
-                value={selectedState}
-                onChange={(e) => {
-                  setSelectedState(e.target.value);
-                  const dists = STATE_DISTRICTS[e.target.value] || [];
-                  setSelectedDistrict(dists[0] || 'Central District');
-                }}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-hidden"
-              >
-                {Object.keys(STATE_DISTRICTS).map(st => (
-                  <option key={st} value={st}>{st}</option>
-                ))}
-              </select>
-
-              {/* District */}
-              <select
-                value={selectedDistrict}
-                onChange={(e) => setSelectedDistrict(e.target.value)}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-hidden"
-              >
-                {availableDistricts.map(dst => (
-                  <option key={dst} value={dst}>{dst}</option>
-                ))}
-              </select>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Care Facilities For Your Area</span>
+                <span className="text-xs font-bold text-slate-800">
+                  {userProfile?.village ? `${userProfile.village}, ` : ''}
+                  {userProfile?.taluk ? `${userProfile.taluk}, ` : ''}
+                  {userDistrict}, {userState}
+                </span>
+              </div>
             </div>
 
             {/* Type filter */}

@@ -13,8 +13,10 @@ import {
 } from '../types';
 import { LoggedMealRecord } from '../nutrition_engine';
 import { GlobalLocationService } from '../services/global_location_service';
+import { AdministrativeLocationService } from '../services/administrative_location_service';
 import { LocationNutritionEngine } from '../services/location_nutrition_engine';
 import { authService } from '../services/auth_service';
+import { waterSoundService } from '../services/water_sound_service';
 import {
   INITIAL_USER_PROFILE,
   INITIAL_MEAL_PLAN,
@@ -154,9 +156,26 @@ interface AppContextType {
 
   // Water Tracker
   waterIntakeMl: number;
+  dailyWaterLogs: Record<string, number>;
   updateWaterIntake: (amountMl: number) => void;
-  waterReminderSettings: { enabled: boolean; intervalMinutes: number };
-  updateWaterReminder: (settings: { enabled?: boolean; intervalMinutes?: number }) => void;
+  logWaterForDate: (dateStr: string, amountMl: number) => void;
+  waterReminderSettings: {
+    enabled: boolean;
+    intervalMinutes: number;
+    scheduleType?: '1hour' | '2hours' | '3hours' | 'custom';
+    customMinutes?: number;
+    soundEnabled: boolean;
+  };
+  updateWaterReminder: (settings: {
+    enabled?: boolean;
+    intervalMinutes?: number;
+    scheduleType?: '1hour' | '2hours' | '3hours' | 'custom';
+    customMinutes?: number;
+    soundEnabled?: boolean;
+  }) => void;
+  activeWaterAlert: { visible: boolean; timestamp: number } | null;
+  dismissWaterAlert: () => void;
+  triggerTestWaterReminder: (overrideSound?: boolean) => Promise<boolean>;
 
   // Scanned Food Logs
   loggedMeals: LoggedMealRecord[];
@@ -214,7 +233,9 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 const STORAGE_KEY_PROFILE = 'pregnutri_user_profile_v3';
 const STORAGE_KEY_MEALS = 'pregnutri_central_meals_v3';
 const STORAGE_KEY_WATER = 'pregnutri_water_intake_v3';
+const STORAGE_KEY_DAILY_WATER_LOGS = 'pregnutri_daily_water_logs_v1';
 const STORAGE_KEY_WATER_SETTINGS = 'pregnutri_water_settings_v3';
+const STORAGE_KEY_WATER_REMINDER_TIME = 'pregnutri_last_water_reminder_ts_v1';
 const STORAGE_KEY_LOGGED_MEALS = 'pregnutri_logged_meals_v3';
 const STORAGE_KEY_WEIGHT = 'pregnutri_weight_records_v3';
 const STORAGE_KEY_REPORTS = 'pregnutri_reports_v3';
@@ -336,6 +357,41 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return updated;
     });
   };
+
+  // Synchronize globalLocation whenever userProfile location changes (Single Source of Truth)
+  useEffect(() => {
+    if (userProfile.state || userProfile.district || userProfile.village || userProfile.taluk) {
+      const hierarchy = AdministrativeLocationService.resolveHierarchy({
+        village: userProfile.village,
+        taluk: userProfile.taluk,
+        district: userProfile.district || userProfile.city,
+        state: userProfile.state
+      });
+
+      const updatedLoc: GlobalLocationState = {
+        state: hierarchy.state || userProfile.state || 'Karnataka',
+        district: hierarchy.district || userProfile.district || 'Mysuru',
+        city: hierarchy.district || userProfile.city || userProfile.district || 'Mysuru',
+        taluk: hierarchy.taluk || userProfile.taluk,
+        village: hierarchy.village || userProfile.village,
+        townOrVillage: hierarchy.village || userProfile.village,
+        region: hierarchy.region || 'South India',
+        country: 'India',
+        latitude: hierarchy.latitude || 12.0621,
+        longitude: hierarchy.longitude || 76.5412,
+        pincode: userProfile.pincode || hierarchy.pincode,
+        formattedAddress: [
+          hierarchy.village || userProfile.village,
+          hierarchy.taluk || userProfile.taluk,
+          hierarchy.district || userProfile.district,
+          hierarchy.state || userProfile.state
+        ].filter(Boolean).join(', ')
+      };
+
+      GlobalLocationService.setLocation(updatedLoc);
+      setGlobalLocation(updatedLoc);
+    }
+  }, [userProfile.village, userProfile.taluk, userProfile.district, userProfile.state, userProfile.city, userProfile.pincode]);
 
   // 4. Selected Trimester (synchronized with profile weeks pregnant by default)
   const defaultTrimester = useMemo<PregnancyTrimester>(() => {
@@ -611,8 +667,27 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return 1750;
   });
 
+  const [dailyWaterLogs, setDailyWaterLogs] = useState<Record<string, number>>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY_DAILY_WATER_LOGS);
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    const todayKey = new Date().toISOString().split('T')[0];
+    const initialSaved = localStorage.getItem(STORAGE_KEY_WATER);
+    const initialAmount = initialSaved !== null ? Number(initialSaved) : 1750;
+    return { [todayKey]: initialAmount };
+  });
+
   const updateWaterIntake = (amountMl: number) => {
     setWaterIntakeMl(amountMl);
+    const todayKey = new Date().toISOString().split('T')[0];
+    setDailyWaterLogs((prev) => {
+      const updated = { ...prev, [todayKey]: amountMl };
+      try {
+        localStorage.setItem(STORAGE_KEY_DAILY_WATER_LOGS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
     try {
       localStorage.setItem(STORAGE_KEY_WATER, String(amountMl));
     } catch (e) {}
@@ -621,22 +696,101 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   };
 
+  const logWaterForDate = (dateStr: string, amountMl: number) => {
+    setDailyWaterLogs((prev) => {
+      const updated = { ...prev, [dateStr]: amountMl };
+      try {
+        localStorage.setItem(STORAGE_KEY_DAILY_WATER_LOGS, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+    const todayKey = new Date().toISOString().split('T')[0];
+    if (dateStr === todayKey) {
+      setWaterIntakeMl(amountMl);
+      try {
+        localStorage.setItem(STORAGE_KEY_WATER, String(amountMl));
+      } catch (e) {}
+    }
+  };
+
   const [waterReminderSettings, setWaterReminderSettings] = useState<{
     enabled: boolean;
     intervalMinutes: number;
+    scheduleType?: '1hour' | '2hours' | '3hours' | 'custom';
+    customMinutes?: number;
+    soundEnabled: boolean;
   }>(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_WATER_SETTINGS);
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        return {
+          enabled: parsed.enabled ?? true,
+          intervalMinutes: parsed.intervalMinutes ?? 60,
+          scheduleType:
+            parsed.scheduleType ??
+            (parsed.intervalMinutes === 180
+              ? '3hours'
+              : parsed.intervalMinutes === 120
+              ? '2hours'
+              : parsed.intervalMinutes === 45
+              ? 'custom'
+              : '1hour'),
+          customMinutes: parsed.customMinutes ?? 45,
+          soundEnabled: parsed.soundEnabled ?? true // Default: Sound ON
+        };
+      }
     } catch (e) {}
-    return { enabled: true, intervalMinutes: 60 };
+    return {
+      enabled: true,
+      intervalMinutes: 60,
+      scheduleType: '1hour',
+      customMinutes: 45,
+      soundEnabled: true
+    };
   });
 
-  const updateWaterReminder = (settings: { enabled?: boolean; intervalMinutes?: number }) => {
+  const [activeWaterAlert, setActiveWaterAlert] = useState<{ visible: boolean; timestamp: number } | null>(null);
+
+  const dismissWaterAlert = () => {
+    setActiveWaterAlert(null);
+  };
+
+  const triggerTestWaterReminder = async (overrideSound?: boolean): Promise<boolean> => {
+    waterSoundService.initOrUnlockAudio();
+    const shouldPlaySound =
+      overrideSound !== undefined
+        ? overrideSound
+        : waterReminderSettings.enabled && waterReminderSettings.soundEnabled;
+
+    let played = false;
+    if (shouldPlaySound) {
+      played = await waterSoundService.playWaterReminderSound();
+    }
+    setActiveWaterAlert({ visible: true, timestamp: Date.now() });
+    return played;
+  };
+
+  const updateWaterReminder = (settings: {
+    enabled?: boolean;
+    intervalMinutes?: number;
+    scheduleType?: '1hour' | '2hours' | '3hours' | 'custom';
+    customMinutes?: number;
+    soundEnabled?: boolean;
+  }) => {
+    // Initialize or unlock Web Audio on direct user interaction
+    waterSoundService.initOrUnlockAudio();
+
     setWaterReminderSettings((prev) => {
-      const updated = { ...prev, ...settings };
+      const updated = {
+        ...prev,
+        ...settings,
+        soundEnabled: settings.soundEnabled !== undefined ? settings.soundEnabled : (prev.soundEnabled ?? true)
+      };
       try {
         localStorage.setItem(STORAGE_KEY_WATER_SETTINGS, JSON.stringify(updated));
+        // Reset cadence so user doesn't get immediately alerted right after changing intervals
+        localStorage.setItem(STORAGE_KEY_WATER_REMINDER_TIME, String(Date.now()));
       } catch (e) {}
       if (currentUser) {
         authService.saveUserWaterReminder(currentUser.id, updated);
@@ -644,6 +798,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       return updated;
     });
   };
+
+  // Automated background interval checker for scheduled water reminders
+  useEffect(() => {
+    if (!waterReminderSettings.enabled) return;
+
+    // Seed initial timer timestamp if none exists
+    try {
+      if (!localStorage.getItem(STORAGE_KEY_WATER_REMINDER_TIME)) {
+        localStorage.setItem(STORAGE_KEY_WATER_REMINDER_TIME, String(Date.now()));
+      }
+    } catch (e) {}
+
+    const intervalMs = Math.max(15, waterReminderSettings.intervalMinutes || 60) * 60 * 1000;
+
+    const checkInterval = setInterval(() => {
+      try {
+        const lastTsStr = localStorage.getItem(STORAGE_KEY_WATER_REMINDER_TIME);
+        const lastTs = lastTsStr ? Number(lastTsStr) : 0;
+        const now = Date.now();
+
+        if (lastTs && now - lastTs >= intervalMs) {
+          localStorage.setItem(STORAGE_KEY_WATER_REMINDER_TIME, String(now));
+
+          // Play sound alert once if sound is enabled
+          if (waterReminderSettings.soundEnabled) {
+            waterSoundService.playWaterReminderSound().catch(() => {});
+          }
+
+          // Show visual notification banner/alert
+          setActiveWaterAlert({ visible: true, timestamp: now });
+        }
+      } catch (e) {}
+    }, 10000); // Check cadence every 10s
+
+    return () => clearInterval(checkInterval);
+  }, [waterReminderSettings.enabled, waterReminderSettings.intervalMinutes, waterReminderSettings.soundEnabled]);
 
   // Auth Action Handlers
   const handleAuthSuccess = (user: AuthUser, needsProfileSetup: boolean) => {
@@ -664,7 +854,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           setWaterIntakeMl(activeAccount.waterIntakeMl);
         }
         if (activeAccount.waterReminderSettings) {
-          setWaterReminderSettings(activeAccount.waterReminderSettings);
+          setWaterReminderSettings({
+            enabled: activeAccount.waterReminderSettings.enabled ?? true,
+            intervalMinutes: activeAccount.waterReminderSettings.intervalMinutes ?? 60,
+            scheduleType: activeAccount.waterReminderSettings.scheduleType ?? '1hour',
+            customMinutes: activeAccount.waterReminderSettings.customMinutes ?? 45,
+            soundEnabled: activeAccount.waterReminderSettings.soundEnabled ?? true
+          });
         }
       }
     }
@@ -1011,6 +1207,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setUserProfile(INITIAL_USER_PROFILE);
     setMeals(INITIAL_MEAL_PLAN);
     setWaterIntakeMl(1750);
+    setWaterReminderSettings({
+      enabled: true,
+      intervalMinutes: 60,
+      scheduleType: '1hour',
+      customMinutes: 45,
+      soundEnabled: true
+    });
     setLoggedMeals([]);
     setWeightRecords(INITIAL_WEIGHT_RECORDS);
     setClinicalReports(INITIAL_CLINICAL_REPORTS);
@@ -1047,9 +1250,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         getWeeklyNutrition,
         trimesterRdaTargets,
         waterIntakeMl,
+        dailyWaterLogs,
         updateWaterIntake,
+        logWaterForDate,
         waterReminderSettings,
         updateWaterReminder,
+        activeWaterAlert,
+        dismissWaterAlert,
+        triggerTestWaterReminder,
         loggedMeals,
         addLoggedMeal,
         deleteLoggedMeal,

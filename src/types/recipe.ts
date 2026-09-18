@@ -151,6 +151,7 @@ export interface RegionalRecipe {
   mealType?: 'Breakfast' | 'Lunch' | 'Dinner' | 'Snacks' | 'Drinks' | 'Desserts' | 'Main course' | 'Side dishes' | string;
   ingredients: RecipeIngredient[];
   preparationSteps?: string[]; // Clear numbered instructions
+  instructions?: string[]; // Alias for preparation steps
   servingSize: RecipeServingSize;
   totalRecipeWeight?: number; // in grams
   cookingTimeMinutes?: number;

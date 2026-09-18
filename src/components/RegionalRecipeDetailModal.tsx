@@ -10,8 +10,7 @@ import { RegionalRecipe, RecipeIngredient, NutritionDataSourceType } from '../ty
 import { MATERNAL_NUTRIENT_METADATA, DetailedNutrients, MATERNAL_DAILY_TARGETS } from '../nutrition_engine';
 import { checkRecipeAllergies } from '../utils/recipe_nutrition';
 import { VerifiedFoodImage } from './VerifiedFoodImage';
-import { DualFoodName, DualText, useLanguage } from '../services/language_service';
-import { FoodOrderingSection } from './FoodOrderingSection';
+import { DualFoodName, DualText, FoodSubtitle, useLanguage } from '../services/language_service';
 import { useAppContext, DayOfWeek, MealCategory } from '../context/AppContext';
 
 interface RegionalRecipeDetailModalProps {
@@ -82,25 +81,12 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
     }));
   };
 
-  if (!isOpen || !recipe) return null;
-
-  // Check if this recipe is already planned for the selected Day and Slot
-  const existingPlannedMeal = meals.find(m => 
-    m.day === selectedDay && 
-    m.category === selectedSlot &&
-    ((m.foodId && (m.foodId === recipe.foodId || m.foodId === recipe.recipeId)) ||
-     m.name.toLowerCase().trim() === (recipe.nameEnglish || recipe.traditionalName).toLowerCase().trim() ||
-     m.name.toLowerCase().trim() === recipe.traditionalName.toLowerCase().trim())
-  );
-
-  const allergyAlerts = checkRecipeAllergies(recipe, userProfile?.allergies || []);
-
   // Scale factor based on selected grams vs base recipe grams
   const scaleFactor = selectedGrams / (baseGrams || 200);
 
-  // Scaled nutrient values
+  // Scaled nutrient values (called unconditionally before early return)
   const scaledNutrition: DetailedNutrients = useMemo(() => {
-    if (!recipe.nutrition) return {} as DetailedNutrients;
+    if (!recipe?.nutrition) return {} as DetailedNutrients;
     const base = recipe.nutrition;
     const result: any = {};
     (Object.keys(base) as Array<keyof DetailedNutrients>).forEach(key => {
@@ -113,13 +99,14 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
       }
     });
     return result as DetailedNutrients;
-  }, [recipe.nutrition, scaleFactor]);
+  }, [recipe?.nutrition, scaleFactor]);
 
-  // Per 100g calculated nutrient values
+  // Per 100g calculated nutrient values (called unconditionally before early return)
   const nutrition100g = useMemo(() => {
+    if (!recipe) return {};
     if (recipe.nutritionPer100g) return recipe.nutritionPer100g;
     const factor = 100 / (baseGrams || 200);
-    const base = recipe.nutrition;
+    const base = recipe.nutrition || {};
     return {
       calories: Math.round((base.calories || 0) * factor),
       protein: Number(((base.protein || 0) * factor).toFixed(1)),
@@ -131,6 +118,19 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
       folate: Math.round((base.vitaminB9 || 0) * factor)
     };
   }, [recipe, baseGrams]);
+
+  if (!isOpen || !recipe) return null;
+
+  // Check if this recipe is already planned for the selected Day and Slot
+  const existingPlannedMeal = meals.find(m => 
+    m.day === selectedDay && 
+    m.category === selectedSlot &&
+    ((m.foodId && (m.foodId === recipe.foodId || m.foodId === recipe.recipeId)) ||
+     m.name.toLowerCase().trim() === (recipe.nameEnglish || recipe.traditionalName).toLowerCase().trim() ||
+     m.name.toLowerCase().trim() === recipe.traditionalName.toLowerCase().trim())
+  );
+
+  const allergyAlerts = checkRecipeAllergies(recipe, userProfile?.allergies || []);
 
   // Portion presets handling
   const handleServingChange = (newMultiplier: number) => {
@@ -299,11 +299,11 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
             <div className="pt-1">
               <h2 className="text-xl sm:text-2xl font-black text-[#EFEFE9] leading-tight flex items-baseline gap-2 flex-wrap">
                 <span>{recipe.nameEnglish || recipe.traditionalName}</span>
-                {recipe.nameLocal && recipe.nameLocal !== recipe.nameEnglish && (
-                  <span className="text-base sm:text-lg font-bold text-[#BBA58F]">
-                    / {recipe.nameLocal}
-                  </span>
-                )}
+                <FoodSubtitle
+                  foodName={recipe.nameEnglish || recipe.traditionalName}
+                  regionalName={recipe.nameLocal || recipe.traditionalName}
+                  className="text-base sm:text-lg font-bold text-[#BBA58F]"
+                />
               </h2>
               {recipe.traditionalName && recipe.traditionalName !== recipe.nameEnglish && (
                 <p className="text-xs font-semibold text-[#BBA58F]/90 mt-0.5">
@@ -878,19 +878,7 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
           </div>
 
           {/* ============================================================ */}
-          {/* 8. FOOD ORDERING & BUY INGREDIENTS SECTION (Swiggy, Zomato,  */}
-          {/*    Instamart, Blinkit, Zepto, BigBasket)                     */}
-          {/* ============================================================ */}
-          <FoodOrderingSection
-            foodName={recipe.nameEnglish || recipe.traditionalName}
-            category={recipe.category}
-            ingredients={recipe.ingredients}
-            tags={recipe.regionalTags}
-            location={globalLocation}
-          />
-
-          {/* ============================================================ */}
-          {/* 9. USER MEAL PLATE PHOTO LOGGING                            */}
+          {/* 8. USER MEAL PLATE PHOTO LOGGING                            */}
           {/* ============================================================ */}
           <div className="border border-[#959D90] bg-[#EFEFE9] rounded-3xl p-5 space-y-3">
             <div className="flex items-center justify-between">

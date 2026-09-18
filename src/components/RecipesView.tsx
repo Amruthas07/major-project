@@ -27,6 +27,8 @@ import {
 import { DualFoodName, DualText } from '../services/language_service';
 import { RegionalRecipeDetailModal } from './RegionalRecipeDetailModal';
 import { VerifiedFoodImage } from './VerifiedFoodImage';
+import { normalizeDietPreference, isRecipeEligibleForDiet } from '../utils/diet_preference';
+import { VoiceSearchButton } from './VoiceButton';
 
 export const RecipesView: React.FC = () => {
   const {
@@ -40,8 +42,7 @@ export const RecipesView: React.FC = () => {
 
   // Search & Filter States
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState<string>('all');
-  const [selectedState, setSelectedState] = useState<string>('all');
+  const [filterAreaRecipesOnly, setFilterAreaRecipesOnly] = useState<boolean>(false);
   const [selectedMealType, setSelectedMealType] = useState<string>('all');
   const [selectedTrimester, setSelectedTrimester] = useState<string>('all');
   const [selectedSafety, setSelectedSafety] = useState<string>('all');
@@ -72,16 +73,6 @@ export const RecipesView: React.FC = () => {
     return getAllCentralizedRecipes();
   }, [globalLocation, myRegionFirst]);
 
-  // Extract all unique states available in the catalog
-  const availableStates = useMemo(() => {
-    const statesSet = new Set<string>();
-    getAllCentralizedRecipes().forEach(r => {
-      if (selectedRegion === 'all' || r.region.toLowerCase() === selectedRegion.toLowerCase()) {
-        if (r.state) statesSet.add(r.state);
-      }
-    });
-    return Array.from(statesSet).sort();
-  }, [selectedRegion]);
 
   // Filtered & Ranked Recipes
   const filteredRecipes = useMemo(() => {
@@ -102,14 +93,14 @@ export const RecipesView: React.FC = () => {
         }
       }
 
-      // 2. Region Filter
-      if (selectedRegion !== 'all' && recipe.region.toLowerCase() !== selectedRegion.toLowerCase()) {
-        return false;
-      }
-
-      // 3. State Filter
-      if (selectedState !== 'all' && recipe.state.toLowerCase() !== selectedState.toLowerCase()) {
-        return false;
+      // 2. Area Recipes Filter (from profile location single source of truth)
+      if (filterAreaRecipesOnly) {
+        const userState = (userProfile?.state || globalLocation.state || 'Karnataka').toLowerCase();
+        const userRegion = (globalLocation.region || 'South India').toLowerCase().replace(' india', '');
+        const stateMatch = recipe.state && recipe.state.toLowerCase() === userState;
+        const regionMatch = recipe.region && recipe.region.toLowerCase().includes(userRegion);
+        const cuisineMatch = recipe.cuisine && recipe.cuisine.toLowerCase().includes(userState);
+        if (!stateMatch && !regionMatch && !cuisineMatch) return false;
       }
 
       // 4. Meal Type Filter
@@ -149,8 +140,11 @@ export const RecipesView: React.FC = () => {
         if (selectedNutrientFocus === 'fiber' && (nut.fiber || 0) < 5.0) return false;
       }
 
-      // 8. Vegetarian Filter
-      if (vegetarianOnly && !recipe.isVegetarian) {
+      // 8. Vegetarian & Profile Diet Preference Filter
+      const userDietPref = normalizeDietPreference(userProfile?.dietPreference);
+      if (userDietPref === 'vegetarian') {
+        if (!isRecipeEligibleForDiet(recipe, 'vegetarian')) return false;
+      } else if (vegetarianOnly && !isRecipeEligibleForDiet(recipe, 'vegetarian')) {
         return false;
       }
 
@@ -168,15 +162,16 @@ export const RecipesView: React.FC = () => {
   }, [
     baseRecipes,
     searchQuery,
-    selectedRegion,
-    selectedState,
+    filterAreaRecipesOnly,
     selectedMealType,
     selectedTrimester,
     selectedSafety,
     selectedNutrientFocus,
     vegetarianOnly,
     allergySafeOnly,
-    userAllergies
+    userAllergies,
+    userProfile?.state,
+    globalLocation
   ]);
 
   // Check if a recipe has been added to the currently selected day
@@ -275,68 +270,59 @@ export const RecipesView: React.FC = () => {
 
       {/* 2. Search & Multifaceted Filtering Controls */}
       <div className="bg-[#E8D9CD] border border-[#959D90]/60 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-        {/* Search Bar */}
-        <div className="relative">
+        {/* Search Bar with Voice Input */}
+        <div className="relative flex items-center">
           <Search className="w-5 h-5 text-[#523D35] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search recipes by name, ingredient, state, cuisine (e.g., Ragi, Saaru, Kadala, Thepla)..."
-            className="w-full pl-11 pr-10 py-3 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/60 text-[#223030] placeholder-[#523D35]/70 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#223030] transition"
+            className="w-full pl-11 pr-24 py-3 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/60 text-[#223030] placeholder-[#523D35]/70 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#223030] transition"
           />
-          {searchQuery && (
-            <button
-              onClick={() => setSearchQuery('')}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#523D35] hover:text-[#223030] p-1 cursor-pointer"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1.5">
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="text-[#523D35] hover:text-[#223030] p-1 cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            <VoiceSearchButton
+              onSearchResult={(transcript) => setSearchQuery(transcript)}
+              placeholder="Speak recipe name..."
+            />
+          </div>
         </div>
 
         {/* Dropdown and Option Filters */}
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {/* Region Filter */}
-          <div>
+          {/* Profile Area Indicator & Area Recipes Toggle */}
+          <div className="col-span-2">
             <label className="block text-[11px] font-bold uppercase tracking-wider text-[#523D35] mb-1">
-              Indian Region
+              Your Profile Area
             </label>
-            <select
-              value={selectedRegion}
-              onChange={(e) => {
-                setSelectedRegion(e.target.value);
-                setSelectedState('all');
-              }}
-              className="w-full py-2 px-3 rounded-xl bg-[#EFEFE9] border border-[#959D90]/60 text-xs font-semibold text-[#223030] focus:outline-none focus:ring-1 focus:ring-[#223030] cursor-pointer"
-            >
-              <option value="all">All Regions</option>
-              <option value="North">North India</option>
-              <option value="South">South India</option>
-              <option value="West">West India</option>
-              <option value="East">East India</option>
-              <option value="Central">Central India</option>
-              <option value="North-East">North-East India</option>
-            </select>
-          </div>
-
-          {/* State Filter */}
-          <div>
-            <label className="block text-[11px] font-bold uppercase tracking-wider text-[#523D35] mb-1">
-              State / Territory
-            </label>
-            <select
-              value={selectedState}
-              onChange={(e) => setSelectedState(e.target.value)}
-              className="w-full py-2 px-3 rounded-xl bg-[#EFEFE9] border border-[#959D90]/60 text-xs font-semibold text-[#223030] focus:outline-none focus:ring-1 focus:ring-[#223030] cursor-pointer"
-            >
-              <option value="all">All States ({availableStates.length})</option>
-              {availableStates.map(stateName => (
-                <option key={stateName} value={stateName}>
-                  {stateName}
-                </option>
-              ))}
-            </select>
+            <div className="flex items-center gap-2">
+              <div className="flex-1 flex items-center gap-1.5 py-2 px-3 rounded-xl bg-[#EFEFE9] border border-[#959D90]/60 text-xs font-bold text-[#223030]">
+                <MapPin className="w-3.5 h-3.5 text-[#523D35] shrink-0" />
+                <span className="truncate">
+                  {userProfile?.village ? `${userProfile.village}, ` : ''}
+                  {userProfile?.district || userProfile?.city || 'Mysuru'}, {userProfile?.state || globalLocation.state || 'Karnataka'}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFilterAreaRecipesOnly(!filterAreaRecipesOnly)}
+                className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
+                  filterAreaRecipesOnly
+                    ? 'bg-[#223030] text-[#EFEFE9]'
+                    : 'bg-[#E8D9CD] text-[#523D35] hover:text-[#223030]'
+                }`}
+              >
+                {filterAreaRecipesOnly ? '✓ Area Only' : 'Area Only'}
+              </button>
+            </div>
           </div>
 
           {/* Meal Type Filter */}
@@ -466,8 +452,7 @@ export const RecipesView: React.FC = () => {
           <button
             onClick={() => {
               setSearchQuery('');
-              setSelectedRegion('all');
-              setSelectedState('all');
+              setFilterAreaRecipesOnly(false);
               setSelectedMealType('all');
               setSelectedTrimester('all');
               setSelectedSafety('all');
@@ -553,19 +538,6 @@ export const RecipesView: React.FC = () => {
                         </p>
                       )}
                     </div>
-
-                    {/* Allergy Alert Warning */}
-                    {allergenCheck.hasAllergy && (
-                      <div className="bg-[#523D35] text-[#EFEFE9] p-2.5 rounded-xl text-xs flex items-start gap-2 border border-[#BBA58F]/40 shadow-xs">
-                        <AlertTriangle className="w-4 h-4 text-[#BBA58F] shrink-0 mt-0.5" />
-                        <div className="space-y-0.5 text-[11px] leading-tight">
-                          <span className="font-extrabold uppercase text-[10px] block text-[#BBA58F]">
-                            ⚠️ Contains Allergen
-                          </span>
-                          <p>Matches your saved allergy: <span className="font-bold text-white">{allergenCheck.matched.join(', ')}</span></p>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Short Description */}
                     <p className="text-xs text-[#523D35] line-clamp-2 leading-relaxed">

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { MealReminderSettings, DoctorReminderSettings } from '../types';
+import { waterSoundService } from '../services/water_sound_service';
 import {
   Bell,
   Droplets,
@@ -10,7 +11,9 @@ import {
   X,
   Clock,
   ShieldCheck,
-  Sparkles
+  Sparkles,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 
 interface SmartReminderModalProps {
@@ -28,14 +31,33 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
   } = useAppContext();
 
   // 1. Water Reminder local state initialized from centralized profile/settings
-  const [waterEnabled, setWaterEnabled] = useState(waterReminderSettings?.enabled ?? true);
-  const [waterSchedule, setWaterSchedule] = useState<'1hour' | '2hours' | 'custom'>(
+  const [waterEnabled, setWaterEnabled] = useState(
+    userProfile.waterReminderSettings?.enabled ?? waterReminderSettings?.enabled ?? true
+  );
+  const [waterSchedule, setWaterSchedule] = useState<'1hour' | '2hours' | '3hours' | 'custom'>(
     (userProfile.waterReminderSettings?.scheduleType as any) ||
-      (waterReminderSettings?.intervalMinutes === 120 ? '2hours' : '1hour')
+      (waterReminderSettings?.scheduleType as any) ||
+      (waterReminderSettings?.intervalMinutes === 180
+        ? '3hours'
+        : waterReminderSettings?.intervalMinutes === 120
+        ? '2hours'
+        : waterReminderSettings?.intervalMinutes === 45
+        ? 'custom'
+        : '1hour')
   );
   const [waterCustomMinutes, setWaterCustomMinutes] = useState(
-    waterReminderSettings?.intervalMinutes || 60
+    userProfile.waterReminderSettings?.customMinutes ??
+      waterReminderSettings?.customMinutes ??
+      (waterReminderSettings?.intervalMinutes && ![60, 120, 180].includes(waterReminderSettings.intervalMinutes)
+        ? waterReminderSettings.intervalMinutes
+        : 45)
   );
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(
+    userProfile.waterReminderSettings?.soundEnabled ??
+      waterReminderSettings?.soundEnabled ??
+      true // Default: Sound ON
+  );
+  const [isPlayingTestSound, setIsPlayingTestSound] = useState(false);
 
   // 2. Meal Reminders local state
   const defaultMealSettings: MealReminderSettings = {
@@ -85,12 +107,16 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
     // Determine interval minutes
     let interval = 60;
     if (waterSchedule === '2hours') interval = 120;
+    if (waterSchedule === '3hours') interval = 180;
     if (waterSchedule === 'custom') interval = Math.max(15, waterCustomMinutes);
 
     // Save Water reminder
     updateWaterReminder({
       enabled: waterEnabled,
-      intervalMinutes: interval
+      intervalMinutes: interval,
+      scheduleType: waterSchedule,
+      customMinutes: waterCustomMinutes,
+      soundEnabled: soundEnabled
     });
 
     // Save to userProfile (central persistent storage)
@@ -98,7 +124,9 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
       waterReminderSettings: {
         enabled: waterEnabled,
         intervalMinutes: interval,
-        scheduleType: waterSchedule
+        scheduleType: waterSchedule,
+        customMinutes: waterCustomMinutes,
+        soundEnabled: soundEnabled
       },
       mealReminderSettings: mealSettings,
       doctorReminderSettings: doctorSettings
@@ -172,13 +200,13 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
           </div>
 
           {waterEnabled && (
-            <div className="space-y-2 pt-2 border-t border-[#959D90]/30">
+            <div className="space-y-3 pt-2 border-t border-[#959D90]/30">
               <span className="text-xs font-bold text-[#223030] block">Schedule Frequency:</span>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
                   onClick={() => setWaterSchedule('1hour')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
                     waterSchedule === '1hour'
                       ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
                       : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
@@ -189,7 +217,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                 <button
                   type="button"
                   onClick={() => setWaterSchedule('2hours')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
                     waterSchedule === '2hours'
                       ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
                       : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
@@ -199,19 +227,30 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                 </button>
                 <button
                   type="button"
+                  onClick={() => setWaterSchedule('3hours')}
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
+                    waterSchedule === '3hours'
+                      ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
+                      : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
+                  }`}
+                >
+                  Every 3 Hours
+                </button>
+                <button
+                  type="button"
                   onClick={() => setWaterSchedule('custom')}
-                  className={`py-2 px-3 rounded-xl text-xs font-bold transition cursor-pointer ${
+                  className={`py-2 px-2.5 rounded-xl text-xs font-bold transition text-center cursor-pointer ${
                     waterSchedule === 'custom'
                       ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
                       : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
                   }`}
                 >
-                  Custom Schedule
+                  Custom
                 </button>
               </div>
 
               {waterSchedule === 'custom' && (
-                <div className="pt-2 flex items-center gap-2 text-xs">
+                <div className="pt-1 flex items-center gap-2 text-xs">
                   <span className="text-[#523D35] font-semibold">Notify every:</span>
                   <input
                     type="number"
@@ -225,6 +264,71 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                   <span className="text-[#523D35]">minutes</span>
                 </div>
               )}
+
+              {/* Sound Alert ON/OFF Control */}
+              <div className="pt-3 border-t border-[#959D90]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-1.5">
+                    {soundEnabled ? (
+                      <Volume2 className="w-4 h-4 text-[#223030]" />
+                    ) : (
+                      <VolumeX className="w-4 h-4 text-[#523D35]" />
+                    )}
+                    <span className="text-xs font-bold text-[#223030]">Sound Alert</span>
+                  </div>
+                  <p className="text-[11px] text-[#523D35]">
+                    Plays a gentle notification sound when reminder triggers
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = !soundEnabled;
+                      setSoundEnabled(next);
+                      waterSoundService.initOrUnlockAudio();
+                      if (next) {
+                        waterSoundService.testSound();
+                      }
+                    }}
+                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                      soundEnabled
+                        ? 'bg-[#223030] text-[#EFEFE9]'
+                        : 'bg-[#959D90]/40 text-[#523D35] hover:bg-[#959D90]/60'
+                    }`}
+                  >
+                    {soundEnabled ? (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5 text-[#BBA58F]" />
+                        <span>🔊 Sound ON</span>
+                      </>
+                    ) : (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5" />
+                        <span>🔇 Sound OFF</span>
+                      </>
+                    )}
+                  </button>
+
+                  {soundEnabled && (
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        setIsPlayingTestSound(true);
+                        await waterSoundService.testSound();
+                        setTimeout(() => setIsPlayingTestSound(false), 1200);
+                      }}
+                      disabled={isPlayingTestSound}
+                      className="px-2.5 py-1.5 rounded-xl text-[11px] font-bold bg-[#EFEFE9] text-[#223030] hover:bg-[#BBA58F]/30 border border-[#959D90]/40 transition cursor-pointer flex items-center gap-1"
+                      title="Test reminder sound"
+                    >
+                      <Sparkles className="w-3 h-3 text-[#523D35]" />
+                      <span>{isPlayingTestSound ? 'Playing...' : 'Test Sound'}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

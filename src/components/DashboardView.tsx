@@ -19,6 +19,8 @@ import {
   Scale,
   Bell,
   BellOff,
+  Volume2,
+  VolumeX,
   Hospital,
   AlertTriangle,
   ArrowUpRight,
@@ -32,6 +34,8 @@ import { useAppContext } from '../context/AppContext';
 import { useLanguage, DualText } from '../services/language_service';
 import { NavTabId } from './MainNavigation';
 import { WeightRecord } from '../types';
+import { normalizeDietPreference } from '../utils/diet_preference';
+import { TrimesterProgressBar } from './TrimesterProgressBar';
 
 interface DashboardViewProps {
   onNavigateTab?: (tab: NavTabId) => void;
@@ -51,6 +55,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
     updateWaterIntake,
     waterReminderSettings,
     updateWaterReminder,
+    triggerTestWaterReminder,
     weightRecords,
     addWeightRecord,
     updateDoctorVisit,
@@ -233,6 +238,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
         </div>
       </div>
 
+      {/* Trimester Progress Bar: Developmental Milestones & Nutrient Focus Areas */}
+      <TrimesterProgressBar
+        currentWeek={userProfile.weeksPregnant}
+        selectedTrimester={selectedTrimester}
+        dueDate={userProfile.dueDate}
+        globalLocation={globalLocation}
+        onNavigateToFoods={() => handleNavigate('food-database')}
+        onNavigateToMealPlan={() => handleNavigate('meal-planner')}
+      />
+
       {/* 2. Top Two-Column Grid: Section 1 (Profile Summary) & Section 2 (Weight & Health Progress) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
@@ -290,7 +305,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                 </span>
               </div>
 
-              <div className="p-3 bg-[#E8D9CD] rounded-2xl border border-[#959D90]/30 col-span-2">
+              <div className="p-3 bg-[#E8D9CD] rounded-2xl border border-[#959D90]/30">
+                <span className="text-[10px] uppercase font-bold text-[#523D35] tracking-wider block">Diet Preference</span>
+                {normalizeDietPreference(userProfile.dietPreference) === 'vegetarian' ? (
+                  <span className="text-sm font-black text-emerald-800 flex items-center gap-1">
+                    <span>🥬</span>
+                    <span>Vegetarian</span>
+                  </span>
+                ) : (
+                  <span className="text-sm font-black text-amber-900 flex items-center gap-1">
+                    <span>🍗</span>
+                    <span>Non-Vegetarian</span>
+                  </span>
+                )}
+                <span className="text-[10px] text-[#523D35] font-semibold">Strict Diet Filter On</span>
+              </div>
+
+              <div className="p-3 bg-[#E8D9CD] rounded-2xl border border-[#959D90]/30">
                 <span className="text-[10px] uppercase font-bold text-[#523D35] tracking-wider block flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-[#523D35]" />
                   <span>Location</span>
@@ -623,15 +654,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
               <div className="flex items-center gap-1.5 flex-wrap pt-1">
                 <span className="text-[11px] text-[#523D35]">Frequency:</span>
                 {[
-                  { label: 'Every 1 Hour', mins: 60 },
-                  { label: 'Every 2 Hours', mins: 120 },
-                  { label: 'Every 3 Hours', mins: 180 },
-                  { label: 'Custom (45m)', mins: 45 }
+                  { label: 'Every 1 Hour', mins: 60, type: '1hour' as const },
+                  { label: 'Every 2 Hours', mins: 120, type: '2hours' as const },
+                  { label: 'Every 3 Hours', mins: 180, type: '3hours' as const },
+                  { label: 'Custom (45m)', mins: 45, type: 'custom' as const }
                 ].map((sch) => (
                   <button
                     key={sch.mins}
                     type="button"
-                    onClick={() => updateWaterReminder({ intervalMinutes: sch.mins, enabled: true })}
+                    onClick={() =>
+                      updateWaterReminder({
+                        intervalMinutes: sch.mins,
+                        scheduleType: sch.type,
+                        enabled: true
+                      })
+                    }
                     className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
                       waterReminderSettings.intervalMinutes === sch.mins && waterReminderSettings.enabled
                         ? 'bg-[#223030] text-[#EFEFE9] border border-[#BBA58F]/50 shadow-xs'
@@ -641,6 +678,60 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                     {sch.label}
                   </button>
                 ))}
+              </div>
+
+              {/* Sound Alert ON/OFF Control */}
+              <div className="pt-2 border-t border-[#959D90]/20 flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  {waterReminderSettings.soundEnabled ? (
+                    <Volume2 className="w-4 h-4 text-emerald-700" />
+                  ) : (
+                    <VolumeX className="w-4 h-4 text-[#959D90]" />
+                  )}
+                  <span className="text-xs font-bold text-[#223030]">
+                    <DualText textKey="water.soundAlert" fallback="Sound Alert" className="text-xs font-bold text-[#223030]" />
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      updateWaterReminder({
+                        soundEnabled: !waterReminderSettings.soundEnabled
+                      })
+                    }
+                    className={`px-3 py-1 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs ${
+                      waterReminderSettings.soundEnabled
+                        ? 'bg-[#223030] text-[#EFEFE9]'
+                        : 'bg-[#959D90] text-[#223030]'
+                    }`}
+                    aria-label="Toggle water reminder sound alert"
+                  >
+                    {waterReminderSettings.soundEnabled ? (
+                      <>
+                        <Volume2 className="w-3.5 h-3.5 text-[#BBA58F]" />
+                        <span>🔊 Sound ON</span>
+                      </>
+                    ) : (
+                      <>
+                        <VolumeX className="w-3.5 h-3.5" />
+                        <span>🔇 Sound OFF</span>
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      await triggerTestWaterReminder();
+                    }}
+                    title="Test reminder alert and chime"
+                    className="px-2.5 py-1 rounded-lg text-xs font-bold bg-[#EFEFE9] text-[#223030] hover:bg-[#BBA58F]/30 border border-[#959D90]/40 transition cursor-pointer"
+                  >
+                    Test Alert
+                  </button>
+                </div>
               </div>
             </div>
           </div>

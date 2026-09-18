@@ -26,6 +26,7 @@ interface ProfileViewProps {
     heightCm?: number;
     state?: string;
     isVegetarian: boolean;
+    dietPreference?: string;
     hasGestationalDiabetes: boolean;
     hasHypertension: boolean;
     targetWaterMl: number;
@@ -219,18 +220,45 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           </div>
 
           <div className="space-y-3">
-            <label className="flex items-center justify-between p-3.5 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/40 cursor-pointer">
-              <div>
-                <span className="text-xs font-bold text-[#223030] block">Strict Vegetarian Diet</span>
-                <span className="text-[11px] text-[#523D35]">Filter out non-vegetarian dishes and prioritize plant proteins</span>
+            <div className="p-3.5 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/40">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-bold text-[#223030] block">Diet Preference</span>
+                <span className="text-[11px] font-extrabold text-[#523D35]">
+                  {(profile.dietPreference?.toLowerCase() === 'vegetarian' || profile.isVegetarian) ? '🥬 Vegetarian' : '🍗 Non-Vegetarian'}
+                </span>
               </div>
-              <input
-                type="checkbox"
-                checked={profile.isVegetarian}
-                onChange={(e) => setProfile({ ...profile, isVegetarian: e.target.checked })}
-                className="w-5 h-5 rounded text-[#523D35] focus:ring-[#523D35] border-[#959D90] accent-[#523D35]"
-              />
-            </label>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <button
+                  type="button"
+                  onClick={() => setProfile({ ...profile, dietPreference: 'Vegetarian', isVegetarian: true })}
+                  className={`p-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    (profile.dietPreference?.toLowerCase() === 'vegetarian' || profile.isVegetarian)
+                      ? 'bg-[#223030] text-white border-[#223030]'
+                      : 'bg-white text-[#523D35] border-[#959D90]/40 hover:bg-[#E8D9CD]/30'
+                  }`}
+                >
+                  <span>🥬</span>
+                  <span>Vegetarian</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setProfile({ ...profile, dietPreference: 'Non-Vegetarian', isVegetarian: false })}
+                  className={`p-2.5 rounded-xl border text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+                    (!profile.isVegetarian && profile.dietPreference?.toLowerCase() !== 'vegetarian')
+                      ? 'bg-[#223030] text-white border-[#223030]'
+                      : 'bg-white text-[#523D35] border-[#959D90]/40 hover:bg-[#E8D9CD]/30'
+                  }`}
+                >
+                  <span>🍗</span>
+                  <span>Non-Vegetarian</span>
+                </button>
+              </div>
+              <p className="text-[11px] text-[#523D35] mt-2 font-medium">
+                {(profile.dietPreference?.toLowerCase() === 'vegetarian' || profile.isVegetarian)
+                  ? 'Pure vegetarian & plant-based foods only across the entire app'
+                  : 'Includes nutritious vegetarian foods + verified safe non-vegetarian foods'}
+              </p>
+            </div>
 
             <label className="flex items-center justify-between p-3.5 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/40 cursor-pointer">
               <div>

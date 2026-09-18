@@ -1,7 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { UserProfile, GlobalLocationState, AuthUser } from '../types';
 import { Sparkles, Globe, User, LogOut, ChevronDown, Heart, ShieldCheck, MapPin, Search, Check, LogIn, Bell, X, Phone } from 'lucide-react';
-import { LocationSwitcherModal } from './LocationSwitcherModal';
 import { useLanguage, ALL_INDIAN_LANGUAGES, DualText } from '../services/language_service';
 import { useAppContext } from '../context/AppContext';
 
@@ -33,7 +32,6 @@ export const Header: React.FC<HeaderProps> = ({
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [langSearch, setLangSearch] = useState('');
   const [showConfirmReset, setShowConfirmReset] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
   const langDropdownRef = useRef<HTMLDivElement>(null);
 
   // Close dropdown on outside click or Escape key press
@@ -103,25 +101,24 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Right Side: Location Pill, Language, Profile, Week Info, Logout */}
           <div className="flex items-center space-x-2 sm:space-x-3">
-            {/* Global Location Pill */}
+            {/* Profile Location Indicator (Single Source of Truth in Edit Profile) */}
             <button
               type="button"
-              onClick={() => setShowLocationModal(true)}
+              onClick={onOpenProfile}
               className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#523D35]/70 hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold border border-[#BBA58F]/40 transition shadow-xs max-w-[180px] sm:max-w-[280px] cursor-pointer"
-              title={`Global Location: ${globalLocation.formattedAddress || `${globalLocation.city}, ${globalLocation.district || ''}, ${globalLocation.state}`}`}
+              title={`Profile Location: ${profile.village || globalLocation.village ? `${profile.village || globalLocation.village}, ` : ''}${profile.taluk || globalLocation.taluk ? `${profile.taluk || globalLocation.taluk}, ` : ''}${profile.district || globalLocation.district || ''}, ${profile.state || globalLocation.state || 'Karnataka'}. Click to manage in Edit Profile.`}
             >
               <MapPin className="w-3.5 h-3.5 text-[#BBA58F] shrink-0" />
               <span className="truncate hidden sm:inline text-[#EFEFE9]">
-                {globalLocation.village || globalLocation.townOrVillage || globalLocation.city}
-                {globalLocation.district && (globalLocation.village || globalLocation.city) !== globalLocation.district
-                  ? `, ${globalLocation.district}`
+                {profile.village || globalLocation.village || profile.taluk || globalLocation.taluk || profile.district || globalLocation.district || profile.city || globalLocation.city}
+                {(profile.district || globalLocation.district) && (profile.village || profile.city) !== (profile.district || globalLocation.district)
+                  ? `, ${profile.district || globalLocation.district}`
                   : ''}
-                {globalLocation.state ? `, ${globalLocation.state}` : ''}
+                {`, ${profile.state || globalLocation.state || 'Karnataka'}`}
               </span>
               <span className="truncate sm:hidden text-[#EFEFE9]">
-                {globalLocation.village || globalLocation.townOrVillage || globalLocation.city}
+                {profile.village || globalLocation.village || profile.taluk || profile.city || 'Mysuru'}
               </span>
-              <ChevronDown className="w-3 h-3 text-[#BBA58F] shrink-0" />
             </button>
 
             {/* Language Selector Dropdown / Modal */}
@@ -328,18 +325,6 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         </div>
       </div>
-
-      {/* Location Switcher Modal */}
-      {showLocationModal && (
-        <LocationSwitcherModal
-          currentLocation={globalLocation}
-          onClose={() => setShowLocationModal(false)}
-          onLocationSelected={(loc) => {
-            onUpdateLocation(loc);
-            setShowLocationModal(false);
-          }}
-        />
-      )}
 
       {/* Confirmation Modal for Logout / Reset */}
       {showConfirmReset && (

@@ -22,12 +22,17 @@ interface WelfareSchemesViewProps {
 
 export const WelfareSchemesView: React.FC<WelfareSchemesViewProps> = ({ schemes, globalLocation }) => {
   const activeState = globalLocation?.state || 'Karnataka';
-  const activeCity = globalLocation?.city || 'Bengaluru';
+  const activeCity = globalLocation?.city || globalLocation?.district || 'Bengaluru';
 
   const [selectedScheme, setSelectedScheme] = useState<WelfareScheme | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>('All');
 
-  const categories = ['All', 'Central Government', 'State Government'];
+  const categories = [
+    { id: 'All', label: 'All Schemes' },
+    { id: 'Central Government', label: '🇮🇳 Central Schemes' },
+    { id: 'My State', label: `📍 ${activeState} Schemes` },
+    { id: 'Other State Government', label: 'Other States' }
+  ];
 
   // Prioritize schemes matching current state
   const sortedSchemes = [...schemes].sort((a, b) => {
@@ -38,9 +43,25 @@ export const WelfareSchemesView: React.FC<WelfareSchemesViewProps> = ({ schemes,
     return 0;
   });
 
-  const filteredSchemes = sortedSchemes.filter(
-    (s) => activeCategory === 'All' || s.category === activeCategory
-  );
+  const filteredSchemes = sortedSchemes.filter((s) => {
+    if (activeCategory === 'All') return true;
+    if (activeCategory === 'Central Government') return s.category === 'Central Government';
+    if (activeCategory === 'My State') {
+      return (
+        s.category === 'State Government' &&
+        (s.title.toLowerCase().includes(activeState.toLowerCase()) ||
+          s.eligibility.toLowerCase().includes(activeState.toLowerCase()))
+      );
+    }
+    if (activeCategory === 'Other State Government') {
+      return (
+        s.category === 'State Government' &&
+        !s.title.toLowerCase().includes(activeState.toLowerCase()) &&
+        !s.eligibility.toLowerCase().includes(activeState.toLowerCase())
+      );
+    }
+    return true;
+  });
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
@@ -67,19 +88,19 @@ export const WelfareSchemesView: React.FC<WelfareSchemesViewProps> = ({ schemes,
             </p>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center gap-2">
             {categories.map((cat) => (
               <button
-                key={cat}
+                key={cat.id}
                 type="button"
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => setActiveCategory(cat.id)}
                 className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  activeCategory === cat
+                  activeCategory === cat.id
                     ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
                     : 'bg-[#EFEFE9] hover:bg-[#BBA58F]/30 text-[#523D35] border border-[#959D90]/40'
                 }`}
               >
-                {cat}
+                {cat.label}
               </button>
             ))}
           </div>

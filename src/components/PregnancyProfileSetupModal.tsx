@@ -16,11 +16,14 @@ import {
   ArrowRight,
   ShieldCheck,
   Building,
-  Home
+  Home,
+  Utensils
 } from 'lucide-react';
 import { UserProfile, GlobalLocationState, PregnancyTrimester, IndianRegion } from '../types';
 import { GlobalLocationService } from '../services/global_location_service';
 import { StateData, DistrictData, TalukData, VillageTownData } from '../data/india_geographic_hierarchy';
+import { useLanguage } from '../services/language_service';
+import { normalizeDietPreference } from '../utils/diet_preference';
 
 interface PregnancyProfileSetupModalProps {
   isOpen: boolean;
@@ -52,9 +55,16 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
   // 1. Personal Details
+  const { t } = useLanguage();
   const [fullName, setFullName] = useState(initialName || 'Amrutha');
   const [age, setAge] = useState<number>(27);
   const [mobileOrEmail, setMobileOrEmail] = useState(initialEmailOrPhone || '');
+  const [dietPreference, setDietPreference] = useState<'Vegetarian' | 'Non-Vegetarian'>(() => {
+    if (initialProfile?.dietPreference) {
+      return normalizeDietPreference(initialProfile.dietPreference) === 'non-vegetarian' ? 'Non-Vegetarian' : 'Vegetarian';
+    }
+    return 'Vegetarian';
+  });
 
   // 2. Pregnancy Details
   const [pregnancyMonth, setPregnancyMonth] = useState<number>(6);
@@ -255,7 +265,7 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
       currentWeightKg: Number(currentWeightKg) || 60.0,
       heightCm: Number(heightCm) || 162,
       bloodGroup: 'B Positive (B+)',
-      dietPreference: 'Vegetarian',
+      dietPreference: dietPreference,
       state: selectedState,
       city: selectedDistrict || activeVillage,
       district: selectedDistrict,
@@ -279,8 +289,11 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
       savedHealthcareFacility: initialProfile?.savedHealthcareFacility,
       waterIntakeGoalMl: 2500,
       waterReminderSettings: {
-        enabled: true,
-        intervalMinutes: 60
+        enabled: initialProfile?.waterReminderSettings?.enabled ?? true,
+        intervalMinutes: initialProfile?.waterReminderSettings?.intervalMinutes ?? 60,
+        scheduleType: initialProfile?.waterReminderSettings?.scheduleType ?? '1hour',
+        customMinutes: initialProfile?.waterReminderSettings?.customMinutes ?? 45,
+        soundEnabled: initialProfile?.waterReminderSettings?.soundEnabled ?? true
       },
       healthChecklist: [
         { id: 'chk-1', text: 'Daily Prenatal Folic Acid & Iron supplement', completed: true },
@@ -472,6 +485,82 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                       className="w-full pl-9 pr-3 py-2 bg-white rounded-xl border border-[#959D90]/50 text-xs font-bold text-[#223030] shadow-xs"
                     />
                   </div>
+                </div>
+              </div>
+
+              {/* Diet Preference Selection */}
+              <div className="pt-2 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold text-[#223030]">
+                    {t('diet.preference') || 'Diet Preference'} <span className="text-rose-600">*</span>
+                  </label>
+                  <span className="text-[11px] text-[#523D35] font-semibold">
+                    {t('diet.choosePreference') || 'Choose your food preference'}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDietPreference('Vegetarian')}
+                    className={`p-3 rounded-2xl border-2 text-left transition flex items-center gap-3 cursor-pointer ${
+                      normalizeDietPreference(dietPreference) === 'vegetarian'
+                        ? 'bg-[#E8D9CD] border-[#223030] shadow-xs'
+                        : 'bg-white border-[#959D90]/40 hover:bg-[#EFEFE9]'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${
+                      normalizeDietPreference(dietPreference) === 'vegetarian' ? 'bg-[#223030] text-white' : 'bg-[#EFEFE9]'
+                    }`}>
+                      🥬
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xs text-[#223030]">
+                          {t('diet.vegetarian') || 'Vegetarian'}
+                        </span>
+                        {normalizeDietPreference(dietPreference) === 'vegetarian' && (
+                          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px]">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[#523D35] font-semibold mt-0.5 leading-tight">
+                        {t('diet.vegetarianDesc') || 'Pure vegetarian & plant-based foods'}
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setDietPreference('Non-Vegetarian')}
+                    className={`p-3 rounded-2xl border-2 text-left transition flex items-center gap-3 cursor-pointer ${
+                      normalizeDietPreference(dietPreference) === 'non-vegetarian'
+                        ? 'bg-[#E8D9CD] border-[#223030] shadow-xs'
+                        : 'bg-white border-[#959D90]/40 hover:bg-[#EFEFE9]'
+                    }`}
+                  >
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${
+                      normalizeDietPreference(dietPreference) === 'non-vegetarian' ? 'bg-[#223030] text-white' : 'bg-[#EFEFE9]'
+                    }`}>
+                      🍗
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="font-black text-xs text-[#223030]">
+                          {t('diet.nonVegetarian') || 'Non-Vegetarian'}
+                        </span>
+                        {normalizeDietPreference(dietPreference) === 'non-vegetarian' && (
+                          <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-600 text-white text-[10px]">
+                            ✓
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-[#523D35] font-semibold mt-0.5 leading-tight">
+                        {t('diet.nonVegetarianDesc') || 'Vegetarian + verified safe non-veg'}
+                      </p>
+                    </div>
+                  </button>
                 </div>
               </div>
 

@@ -475,6 +475,95 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     portalUrl: 'https://nhm.gov.in',
     category: 'Central Government',
     badgeColor: 'emerald'
+  },
+  {
+    id: 'kerala-janani-smrithi',
+    title: 'JANANI SMRITHI & AARDRAM MATERNAL INITIATIVE (KERALA)',
+    shortName: 'Kerala Maternal Safe Delivery & Care',
+    description: 'Kerala comprehensive maternity scheme providing nutritional support, free institutional care at Aardram Family Health Centres, and financial aid.',
+    eligibility: 'All pregnant women registered in Kerala public health network through Anganwadis and Taluk hospitals.',
+    benefits: 'Direct financial assistance of ₹2,000 for nutritional supplements, free delivery services, and complete postpartum follow-ups with ASHA workers.',
+    cashAmountHighlight: '₹2,000 Nutrition Grant + Free ANC',
+    documentsNeeded: [
+      'MCP Registration Card',
+      'Kerala Ration Card',
+      'Aadhaar Card',
+      'Bank Account Passbook'
+    ],
+    portalUrl: 'https://dhs.kerala.gov.in',
+    category: 'State Government',
+    badgeColor: 'emerald'
+  },
+  {
+    id: 'maharashtra-matrutva-anudan',
+    title: 'MATRUTVA ANUDAN YOJANA & MANODHARYA (MAHARASHTRA)',
+    shortName: 'Maharashtra Maternal Nutrition Benefit',
+    description: 'State government initiative providing financial assistance and nutritional support to pregnant women in rural and tribal districts of Maharashtra.',
+    eligibility: 'Pregnant women residing in Maharashtra delivering in government hospitals, with prioritized coverage for rural and tribal tehsils.',
+    benefits: '₹4,000 direct benefit transfer in 2 phases for nutrition, plus free iron-folic acid kits and post-delivery maternal monitoring.',
+    cashAmountHighlight: '₹4,000 Financial Grant + Kit',
+    documentsNeeded: [
+      'Mother and Child Protection (MCP) Card',
+      'Maharashtra Domicile / Ration Card',
+      'Aadhaar Card',
+      'Bank Account Details'
+    ],
+    portalUrl: 'https://arogya.maharashtra.gov.in',
+    category: 'State Government',
+    badgeColor: 'amber'
+  },
+  {
+    id: 'gujarat-kpsy',
+    title: 'KASTURBA POSHAN SAHAY YOJANA - KPSY (GUJARAT)',
+    shortName: 'KPSY Maternal Nutrition Scheme',
+    description: 'Gujarat state welfare scheme providing cash incentives in 3 trimesters to ensure adequate maternal rest, nutrition, and institutional delivery.',
+    eligibility: 'All BPL pregnant women in Gujarat who register their pregnancy early and complete mandatory ANC checkups.',
+    benefits: 'Total assistance of ₹6,000 distributed in three installments across trimesters and post-delivery infant immunization.',
+    cashAmountHighlight: '₹6,000 Total Financial Support',
+    documentsNeeded: [
+      'Mamta Card / MCP Card',
+      'BPL Card / Gujarat Ration Card',
+      'Aadhaar Card',
+      'Bank Passbook'
+    ],
+    portalUrl: 'https://gujhealth.gujarat.gov.in',
+    category: 'State Government',
+    badgeColor: 'indigo'
+  },
+  {
+    id: 'up-kanya-sumangala',
+    title: 'MUKHYAMANTRI KANYA SUMANGALA & JANANI SHISHU (UTTAR PRADESH)',
+    shortName: 'UP Maternal & Child Safety Scheme',
+    description: 'Uttar Pradesh dedicated maternal health and girl child support program offering institutional delivery financial aid and nutritional encouragement.',
+    eligibility: 'Permanent residents of Uttar Pradesh delivering in public health institutions with family income within state thresholds.',
+    benefits: '₹1,400 JSY rural assistance + ₹2,000 initial grant upon birth under Kanya Sumangala for girl child + free ambulance drop.',
+    cashAmountHighlight: '₹3,400+ Delivery & Girl Child Aid',
+    documentsNeeded: [
+      'MCP Registration Card',
+      'UP Niwas Praman Patra / Ration Card',
+      'Aadhaar Card',
+      'Bank Account Details'
+    ],
+    portalUrl: 'https://mksy.up.gov.in',
+    category: 'State Government',
+    badgeColor: 'blue'
+  },
+  {
+    id: 'wb-matri-maa',
+    title: 'MATRI MAA MATERNAL HEALTH INITIATIVE (WEST BENGAL)',
+    shortName: 'West Bengal Maternal Care Scheme',
+    description: 'Comprehensive state program ensuring 100% institutional deliveries, free maternal diagnostic checkups, and nutritional take-home rations.',
+    eligibility: 'All pregnant mothers in West Bengal registered at Sub-Centres, BPHCs, and District Hospitals.',
+    benefits: 'Free nutritional kits, complete diagnostic waiver, dedicated Matriyaan vehicle transport to hospital, and post-delivery assistance.',
+    cashAmountHighlight: 'Free Transport + Nutrition Support',
+    documentsNeeded: [
+      'Swasthya Sathi Card / MCP Card',
+      'West Bengal Digital Ration Card',
+      'Aadhaar Card'
+    ],
+    portalUrl: 'https://wbhealth.gov.in',
+    category: 'State Government',
+    badgeColor: 'emerald'
   }
 ];
 

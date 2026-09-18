@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { UserProfile } from '../types';
-import { User, Heart, X, Check, Save, Shield, MapPin, AlertTriangle, Plus, Calendar, Scale, Ruler } from 'lucide-react';
+import { User, Heart, X, Check, Save, Shield, MapPin, AlertTriangle, Plus, Calendar, Scale, Ruler, Utensils, Search, CheckCircle2 } from 'lucide-react';
+import { useLanguage } from '../services/language_service';
+import { normalizeDietPreference } from '../utils/diet_preference';
+import { AdministrativeLocationService, AdminLocationEntry } from '../services/administrative_location_service';
 
 interface UserProfileModalProps {
   profile: UserProfile;
@@ -26,13 +29,49 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
   onClose,
   onSave
 }) => {
+  const { t } = useLanguage();
   const [formData, setFormData] = useState<UserProfile>({
     ...profile,
+    dietPreference: profile.dietPreference || 'Vegetarian',
     pregnancyMonth: profile.pregnancyMonth || Math.min(9, Math.max(1, Math.floor((profile.weeksPregnant - 1) / 4) + 1)),
     allergies: profile.allergies || []
   });
 
   const [customAllergy, setCustomAllergy] = useState('');
+  const [locationSearchQuery, setLocationSearchQuery] = useState('');
+  const [showManualLocation, setShowManualLocation] = useState(false);
+
+  // Multi-state quick village / taluk suggestions for easy one-tap selection
+  const POPULAR_LOCATION_SUGGESTIONS = [
+    { label: 'Hullahalli, KA', query: 'Hullahalli' },
+    { label: 'Nanjangud, KA', query: 'Nanjangud' },
+    { label: 'Pollachi, TN', query: 'Pollachi' },
+    { label: 'Aluva, KL', query: 'Aluva' },
+    { label: 'Gajwel, TS', query: 'Gajwel' },
+    { label: 'Gannavaram, AP', query: 'Gannavaram' },
+    { label: 'Baramati, MH', query: 'Baramati' },
+    { label: 'Sanand, GJ', query: 'Sanand' },
+    { label: 'Mohanlalganj, UP', query: 'Mohanlalganj' },
+    { label: 'Bolpur, WB', query: 'Bolpur' }
+  ];
+
+  const locationSearchResults = useMemo(() => {
+    if (!locationSearchQuery.trim()) return [];
+    return AdministrativeLocationService.search(locationSearchQuery).slice(0, 6);
+  }, [locationSearchQuery]);
+
+  const applyAdminLocation = (entry: AdminLocationEntry) => {
+    setFormData((prev) => ({
+      ...prev,
+      village: entry.village || '',
+      taluk: entry.taluk || '',
+      district: entry.district,
+      city: entry.district,
+      state: entry.state,
+      pincode: entry.pincode || prev.pincode
+    }));
+    setLocationSearchQuery('');
+  };
 
   if (!isOpen) return null;
 
@@ -255,55 +294,277 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             </div>
           </div>
 
-          {/* Section 4: Location */}
-          <div>
-            <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider mb-2.5 pb-1 border-b border-[#959D90]/30 flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-[#523D35]" />
-              <span>Location (Village, Taluk, District, State)</span>
-            </h4>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="font-bold text-[#523D35] block mb-1">State</label>
+          {/* Section 4: Location (Single Source of Truth) */}
+          <div className="bg-[#E8D9CD]/50 p-4 rounded-2xl border border-[#959D90]/50 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-[#523D35]" />
+                <span>Location (Single Source of Truth)</span>
+              </h4>
+              <span className="text-[10px] text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-md border border-emerald-300">
+                Single Source of Truth
+              </span>
+            </div>
+            
+            <p className="text-[11px] text-[#523D35] leading-relaxed">
+              Select your Village or Taluk once. The app automatically determines your Taluk, District, State, and broader region for local foods, recipes, and healthcare schemes.
+            </p>
+
+            {/* Smart Search Bar */}
+            <div className="relative">
+              <div className="relative">
+                <Search className="w-4 h-4 text-[#523D35] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <input
                   type="text"
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-[#223030] font-semibold outline-none"
+                  value={locationSearchQuery}
+                  onChange={(e) => setLocationSearchQuery(e.target.value)}
+                  placeholder="Type your Village or Taluk (e.g. Hullahalli, Debur, Nanjangud)..."
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#959D90]/60 text-xs text-[#223030] font-semibold outline-none focus:border-[#223030]"
                 />
               </div>
-              <div>
-                <label className="font-bold text-[#523D35] block mb-1">District / City</label>
-                <input
-                  type="text"
-                  value={formData.district || formData.city}
-                  onChange={(e) => setFormData({ ...formData, district: e.target.value, city: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-[#223030] font-semibold outline-none"
-                />
+
+              {/* Autocomplete dropdown */}
+              {locationSearchResults.length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-[#959D90]/50 rounded-xl shadow-lg z-20 overflow-hidden divide-y divide-[#959D90]/20 max-h-56 overflow-y-auto">
+                  {locationSearchResults.map((loc, idx) => (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => applyAdminLocation(loc)}
+                      className="w-full text-left px-3 py-2.5 hover:bg-[#E8D9CD]/60 flex items-center justify-between text-xs transition cursor-pointer"
+                    >
+                      <div>
+                        <span className="font-bold text-[#223030]">
+                          {loc.village ? `${loc.village} (Village)` : loc.taluk}
+                        </span>
+                        <span className="text-[11px] text-[#523D35] block">
+                          Taluk: {loc.taluk} • District: {loc.district} • {loc.state}
+                        </span>
+                      </div>
+                      <span className="text-[10px] font-bold text-[#523D35] bg-[#E8D9CD] px-2 py-0.5 rounded-full">
+                        Select
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Quick Suggestions for Rural Users */}
+            <div>
+              <span className="text-[10px] font-bold text-[#523D35] block mb-1.5 uppercase tracking-wide">
+                Quick Selection (Tap your area):
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {POPULAR_LOCATION_SUGGESTIONS.map((item) => (
+                  <button
+                    key={item.label}
+                    type="button"
+                    onClick={() => {
+                      const match = AdministrativeLocationService.search(item.query)[0];
+                      if (match) applyAdminLocation(match);
+                    }}
+                    className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-[#959D90]/40 text-[#223030] hover:bg-[#223030] hover:text-[#EFEFE9] hover:border-[#223030] transition cursor-pointer"
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
-              <div>
-                <label className="font-bold text-[#523D35] block mb-1">Taluk / Tehsil</label>
-                <input
-                  type="text"
-                  value={formData.taluk || ''}
-                  placeholder="e.g. Nanjangud"
-                  onChange={(e) => setFormData({ ...formData, taluk: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-[#223030] font-semibold outline-none"
-                />
+            </div>
+
+            {/* Verified Location Hierarchy Card */}
+            <div className="bg-white rounded-xl p-3 border border-[#959D90]/40 space-y-1.5">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                <span>Verified Administrative Location</span>
               </div>
-              <div>
-                <label className="font-bold text-[#523D35] block mb-1">Village / Town</label>
-                <input
-                  type="text"
-                  value={formData.village || ''}
-                  placeholder="e.g. Hullahalli"
-                  onChange={(e) => setFormData({ ...formData, village: e.target.value })}
-                  className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-[#223030] font-semibold outline-none"
-                />
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
+                <div className="bg-[#EFEFE9] p-2 rounded-lg">
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">Village</span>
+                  <span className="font-bold text-[#223030] truncate block">
+                    {formData.village || '—'}
+                  </span>
+                </div>
+                <div className="bg-[#EFEFE9] p-2 rounded-lg">
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">Taluk</span>
+                  <span className="font-bold text-[#223030] truncate block">
+                    {formData.taluk || formData.city || 'Nanjangud'}
+                  </span>
+                </div>
+                <div className="bg-[#EFEFE9] p-2 rounded-lg">
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">District</span>
+                  <span className="font-bold text-[#223030] truncate block">
+                    {formData.district || formData.city || 'Mysuru'}
+                  </span>
+                </div>
+                <div className="bg-[#EFEFE9] p-2 rounded-lg">
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">State</span>
+                  <span className="font-bold text-[#223030] truncate block">
+                    {formData.state || 'Karnataka'}
+                  </span>
+                </div>
               </div>
+            </div>
+
+            {/* Toggle Manual Overrides for any custom locations */}
+            <div>
+              <button
+                type="button"
+                onClick={() => setShowManualLocation(!showManualLocation)}
+                className="text-xs text-[#523D35] underline font-bold cursor-pointer hover:text-[#223030]"
+              >
+                {showManualLocation ? 'Hide detailed manual location inputs' : '+ Enter or adjust location details manually'}
+              </button>
+
+              {showManualLocation && (
+                <div className="grid grid-cols-2 gap-3 pt-3 mt-2 border-t border-[#959D90]/30">
+                  <div>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">State</label>
+                    <input
+                      type="text"
+                      value={formData.state}
+                      onChange={(e) => {
+                        const st = e.target.value;
+                        const res = AdministrativeLocationService.resolveHierarchy({ state: st, district: formData.district, taluk: formData.taluk, village: formData.village });
+                        setFormData({ ...formData, state: res.state, district: res.district || formData.district });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-xs text-[#223030] font-semibold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">District / City</label>
+                    <input
+                      type="text"
+                      value={formData.district || formData.city}
+                      onChange={(e) => {
+                        const dst = e.target.value;
+                        const res = AdministrativeLocationService.resolveHierarchy({ district: dst, state: formData.state, taluk: formData.taluk, village: formData.village });
+                        setFormData({ ...formData, district: dst, city: dst, state: res.state || formData.state });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-xs text-[#223030] font-semibold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">Taluk / Tehsil</label>
+                    <input
+                      type="text"
+                      value={formData.taluk || ''}
+                      placeholder="e.g. Nanjangud"
+                      onChange={(e) => {
+                        const tlk = e.target.value;
+                        const res = AdministrativeLocationService.resolveHierarchy({ taluk: tlk });
+                        setFormData({
+                          ...formData,
+                          taluk: tlk,
+                          district: res.district || formData.district,
+                          city: res.district || formData.city,
+                          state: res.state || formData.state
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-xs text-[#223030] font-semibold outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">Village / Town</label>
+                    <input
+                      type="text"
+                      value={formData.village || ''}
+                      placeholder="e.g. Hullahalli"
+                      onChange={(e) => {
+                        const vlg = e.target.value;
+                        const res = AdministrativeLocationService.resolveHierarchy({ village: vlg, taluk: formData.taluk });
+                        setFormData({
+                          ...formData,
+                          village: vlg,
+                          taluk: res.taluk || formData.taluk,
+                          district: res.district || formData.district,
+                          city: res.district || formData.city,
+                          state: res.state || formData.state
+                        });
+                      }}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-[#959D90]/50 text-xs text-[#223030] font-semibold outline-none"
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Section 5: Allergies */}
+          {/* Section 5: Diet Preference */}
+          <div>
+            <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider mb-2.5 pb-1 border-b border-[#959D90]/30 flex items-center gap-1.5">
+              <Utensils className="w-3.5 h-3.5 text-[#523D35]" />
+              <span>{t('diet.preference') || 'Diet Preference'}</span>
+            </h4>
+            <p className="text-[11px] text-[#523D35] mb-2 font-medium">
+              {t('diet.choosePreference') || 'Choose your food preference'}
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, dietPreference: 'Vegetarian', isVegetarian: true })}
+                className={`p-3 rounded-2xl border-2 text-left transition flex items-center gap-3 cursor-pointer ${
+                  normalizeDietPreference(formData.dietPreference) === 'vegetarian'
+                    ? 'bg-[#E8D9CD] border-[#223030] shadow-xs'
+                    : 'bg-white border-[#959D90]/40 hover:bg-[#EFEFE9]'
+                }`}
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${
+                  normalizeDietPreference(formData.dietPreference) === 'vegetarian' ? 'bg-[#223030] text-white' : 'bg-[#EFEFE9]'
+                }`}>
+                  🥬
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-[#223030]">
+                      {t('diet.vegetarian') || 'Vegetarian'}
+                    </span>
+                    {normalizeDietPreference(formData.dietPreference) === 'vegetarian' && (
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-600 text-white text-[10px]">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-[#523D35] font-semibold mt-0.5 leading-tight">
+                    {t('diet.vegetarianDesc') || 'Pure vegetarian & plant-based foods'}
+                  </p>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, dietPreference: 'Non-Vegetarian', isVegetarian: false })}
+                className={`p-3 rounded-2xl border-2 text-left transition flex items-center gap-3 cursor-pointer ${
+                  normalizeDietPreference(formData.dietPreference) === 'non-vegetarian'
+                    ? 'bg-[#E8D9CD] border-[#223030] shadow-xs'
+                    : 'bg-white border-[#959D90]/40 hover:bg-[#EFEFE9]'
+                }`}
+              >
+                <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${
+                  normalizeDietPreference(formData.dietPreference) === 'non-vegetarian' ? 'bg-[#223030] text-white' : 'bg-[#EFEFE9]'
+                }`}>
+                  🍗
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-[#223030]">
+                      {t('diet.nonVegetarian') || 'Non-Vegetarian'}
+                    </span>
+                    {normalizeDietPreference(formData.dietPreference) === 'non-vegetarian' && (
+                      <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-amber-600 text-white text-[10px]">
+                        ✓
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[10px] text-[#523D35] font-semibold mt-0.5 leading-tight">
+                    {t('diet.nonVegetarianDesc') || 'Vegetarian + verified safe non-veg'}
+                  </p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* Section 6: Allergies */}
           <div>
             <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider mb-2.5 pb-1 border-b border-[#959D90]/30 flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-[#523D35]" />

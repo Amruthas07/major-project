@@ -41,6 +41,7 @@ import { RegionalRecipe } from '../types/recipe';
 import { RegionalRecipeDetailModal } from './RegionalRecipeDetailModal';
 import { WeeklyNutritionSummaryView } from './WeeklyNutritionSummaryView';
 import { checkFoodAllergies } from '../utils/allergy_checker';
+import { normalizeDietPreference, isFoodEligibleForDiet, validateFoodAdditionForDiet } from '../utils/diet_preference';
 
 export const MealPlannerView: React.FC = () => {
   const {
@@ -83,12 +84,21 @@ export const MealPlannerView: React.FC = () => {
   // Selected Day Nutrition
   const dayNutrition = getSelectedDayNutrition();
 
+  const userDietPref = normalizeDietPreference(userProfile.dietPreference);
+
   // Clinical recommendations for active trimester & location
   const trimesterPlanInfo = LocationNutritionEngine.getTrimesterMealRecommendations(
     selectedTrimester,
     globalLocation,
-    userProfile.dietPreference
+    userDietPref
   );
+
+  // Eligible foods for Quick Pick based on user diet preference
+  const eligibleKaggleFoods = React.useMemo(() => {
+    return KAGGLE_PROCESSED_FOOD_DATABASE.filter((f) =>
+      isFoodEligibleForDiet(f, userDietPref)
+    );
+  }, [userDietPref]);
 
   // Percentage calculations against RDA
   const calPercent = Math.min(100, Math.round((dayNutrition.calories / trimesterRdaTargets.calories) * 100));
@@ -115,6 +125,18 @@ export const MealPlannerView: React.FC = () => {
   const handleSaveCustom = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customName.trim()) return;
+
+    // Strict Diet Preference Validation
+    const dietCheck = validateFoodAdditionForDiet(
+      customName.trim(),
+      userDietPref
+    );
+    if (!dietCheck.allowed) {
+      alert(
+        `⚠️ DIET PREFERENCE NOTICE:\n\n${dietCheck.reason}\n\nYour profile is set to Vegetarian. Please select a vegetarian food or switch your diet preference in your Profile.`
+      );
+      return;
+    }
 
     // Check custom food against user's saved allergy profile
     const allergyCheck = checkFoodAllergies(
@@ -229,6 +251,21 @@ export const MealPlannerView: React.FC = () => {
                 {t}
               </button>
             ))}
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs font-bold text-[#523D35] uppercase">Diet:</span>
+            {userDietPref === 'vegetarian' ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-800 text-white text-xs font-black shadow-xs">
+                <span>🥬</span>
+                <span>Vegetarian (Pure-Veg Active)</span>
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-900 text-white text-xs font-black shadow-xs">
+                <span>🍗</span>
+                <span>Non-Vegetarian (Safe Balanced)</span>
+              </span>
+            )}
           </div>
 
           <div className="text-xs font-semibold text-[#223030] bg-[#EFEFE9] px-3 py-1.5 rounded-xl border border-[#959D90]/40">
@@ -526,6 +563,7 @@ export const MealPlannerView: React.FC = () => {
                             <div>
                               <DualFoodName
                                 foodName={meal.name}
+                                regionalName={meal.regionalName}
                                 className={`text-sm font-extrabold tracking-tight ${
                                   meal.isCompleted ? 'line-through text-[#523D35]' : 'text-[#223030]'
                                 }`}
@@ -643,7 +681,11 @@ export const MealPlannerView: React.FC = () => {
                         Suggested for {globalLocation.state}:
                       </span>
                       {trimesterPlanInfo.recommendedDishes
-                        .filter((d) => d.category === category || slotMeals.length === 0)
+                        .filter(
+                          (d) =>
+                            (d.category === category || slotMeals.length === 0) &&
+                            isFoodEligibleForDiet({ name: d.name }, userDietPref)
+                        )
                         .slice(0, 2)
                         .map((rec) => (
                           <button
@@ -688,7 +730,9 @@ export const MealPlannerView: React.FC = () => {
             <div className="flex items-center justify-between border-b border-[#959D90]/30 pb-3">
               <div>
                 <h3 className="text-lg font-black text-[#223030]">Add Meal Item to {selectedDay}</h3>
-                <p className="text-xs text-[#523D35]">Add from verified maternal food database or enter custom meal</p>
+                <p className="text-xs text-[#523D35]">
+                  Add from verified maternal food database ({userDietPref === 'vegetarian' ? '🥬 Pure Vegetarian Only' : '🍗 Vegetarian & Non-Veg'})
+                </p>
               </div>
               <button
                 type="button"
@@ -719,15 +763,15 @@ export const MealPlannerView: React.FC = () => {
               {/* Quick Pick from ICMR Database */}
               <div>
                 <label className="text-xs font-bold text-[#223030] block mb-1">
-                  Quick Pick from Maternal Food Database ({globalLocation.state})
+                  Quick Pick from Maternal Food Database ({globalLocation.state} • {userDietPref === 'vegetarian' ? '🥬 Veg Only' : 'All'})
                 </label>
                 <select
                   value={selectedKaggleId}
                   onChange={(e) => handleDropdownSelect(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#E8D9CD] border border-[#959D90]/60 text-xs font-semibold text-[#223030] outline-none cursor-pointer"
                 >
-                  <option value="">-- Choose from ICMR Verified Foods --</option>
-                  {KAGGLE_PROCESSED_FOOD_DATABASE.map((f) => (
+                  <option value="">-- Choose from ICMR Verified Foods ({eligibleKaggleFoods.length} available) --</option>
+                  {eligibleKaggleFoods.map((f) => (
                     <option key={f.id} value={f.id}>
                       {f.name} ({f.cuisine} • {f.calories} kcal • {f.protein}g Protein • {f.iron}mg Fe)
                     </option>

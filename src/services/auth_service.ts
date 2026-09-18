@@ -12,7 +12,13 @@ export interface StoredUserAccount {
   profile?: UserProfile;
   location?: GlobalLocationState;
   waterIntakeMl?: number;
-  waterReminderSettings?: { enabled: boolean; intervalMinutes: number };
+  waterReminderSettings?: {
+    enabled: boolean;
+    intervalMinutes: number;
+    scheduleType?: '1hour' | '2hours' | '3hours' | 'custom';
+    customMinutes?: number;
+    soundEnabled?: boolean;
+  };
 }
 
 const STORAGE_USERS_KEY = 'pregnutri_registered_accounts_v1';
@@ -64,7 +70,9 @@ const DEFAULT_DEMO_ACCOUNT: StoredUserAccount = {
     waterIntakeGoalMl: 2500,
     waterReminderSettings: {
       enabled: true,
-      intervalMinutes: 60
+      intervalMinutes: 60,
+      scheduleType: '1hour',
+      soundEnabled: true
     }
   },
   location: {
@@ -85,7 +93,9 @@ const DEFAULT_DEMO_ACCOUNT: StoredUserAccount = {
   waterIntakeMl: 1750,
   waterReminderSettings: {
     enabled: true,
-    intervalMinutes: 60
+    intervalMinutes: 60,
+    scheduleType: '1hour',
+    soundEnabled: true
   }
 };
 
@@ -354,7 +364,13 @@ class AuthService {
 
   public saveUserWaterReminder(
     userId: string,
-    settings: { enabled: boolean; intervalMinutes: number }
+    settings: {
+      enabled: boolean;
+      intervalMinutes: number;
+      scheduleType?: '1hour' | '2hours' | '3hours' | 'custom';
+      customMinutes?: number;
+      soundEnabled?: boolean;
+    }
   ): void {
     const users = this.getAllUsers();
     const user = users[userId];

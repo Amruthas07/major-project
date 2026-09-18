@@ -9,21 +9,24 @@ import {
   Hospital,
   BotMessageSquare,
   ShoppingBag,
-  FileBarChart2
+  FileBarChart2,
+  BookOpen
 } from 'lucide-react';
 import { useLanguage, DualText } from '../services/language_service';
 
 export type NavTabId =
   | 'dashboard'
-  | 'food-scanner'
   | 'food-database'
-  | 'recipes'
   | 'meal-planner'
+  | 'food-scanner'
+  | 'reports'
   | 'welfare-schemes'
   | 'health-facilities'
+  | 'recipes'
   | 'ask-ai'
   | 'order-delivery'
-  | 'clinical-report';
+  | 'clinical-report'
+  | 'research-paper';
 
 interface MainNavigationProps {
   activeTab: NavTabId;
@@ -34,16 +37,13 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({ activeTab, onSel
   const { isEnglish } = useLanguage();
 
   const tabs = [
-    { id: 'dashboard' as NavTabId, textKey: 'nav.dashboard', label: 'Dashboard', icon: '🧘', LucideIcon: LayoutDashboard },
+    { id: 'dashboard' as NavTabId, textKey: 'nav.dashboard', label: 'Dashboard', icon: '🏠', LucideIcon: LayoutDashboard },
     { id: 'food-database' as NavTabId, textKey: 'nav.foodDatabase', label: 'Food Database', icon: '🥦', LucideIcon: Apple },
-    { id: 'recipes' as NavTabId, textKey: 'nav.recipes', label: 'Recipes', icon: '🍲', LucideIcon: ChefHat },
-    { id: 'meal-planner' as NavTabId, textKey: 'nav.mealPlanner', label: 'Meal Planner', icon: '🗓️', LucideIcon: CalendarCheck },
-    { id: 'food-scanner' as NavTabId, textKey: 'nav.foodScanner', label: 'Food Scanner', icon: '📸', LucideIcon: Camera },
+    { id: 'meal-planner' as NavTabId, textKey: 'nav.mealPlanner', label: 'Meal Planner', icon: '📅', LucideIcon: CalendarCheck },
+    { id: 'food-scanner' as NavTabId, textKey: 'nav.foodScanner', label: 'Food Scanner', icon: '📷', LucideIcon: Camera },
+    { id: 'reports' as NavTabId, textKey: 'nav.reports', label: 'Reports', icon: '📊', LucideIcon: FileBarChart2 },
     { id: 'welfare-schemes' as NavTabId, textKey: 'nav.welfareSchemes', label: 'Welfare Schemes', icon: '📋', LucideIcon: Award },
-    { id: 'health-facilities' as NavTabId, textKey: 'nav.healthFacilities', label: 'Nearby Health Facilities', icon: '🏥', LucideIcon: Hospital },
-    { id: 'ask-ai' as NavTabId, textKey: 'nav.askAi', label: 'Ask PregNutri AI', icon: '💬', LucideIcon: BotMessageSquare },
-    { id: 'order-delivery' as NavTabId, textKey: 'nav.orderDelivery', label: 'Order & Delivery', icon: '🛒', LucideIcon: ShoppingBag },
-    { id: 'clinical-report' as NavTabId, textKey: 'nav.clinicalReport', label: 'Clinical Report', icon: '📊', LucideIcon: FileBarChart2 }
+    { id: 'health-facilities' as NavTabId, textKey: 'nav.nearby', label: 'Nearby', icon: '🏥', LucideIcon: Hospital }
   ];
 
   return (

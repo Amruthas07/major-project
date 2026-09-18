@@ -20,7 +20,7 @@ import { FOOD_DATABASE_ITEMS } from '../foods_db';
 import { FoodItem } from '../data';
 import { UserProfile, PlannedMeal, GlobalLocationState } from '../types';
 import { auth, firestoreService } from '../firebase';
-import { useLanguage, DualFoodName, DualText } from '../services/language_service';
+import { useLanguage, DualFoodName, DualText, FoodSubtitle } from '../services/language_service';
 import { useAppContext } from '../context/AppContext';
 import { getRecipeForFood } from '../services/recipe_service';
 import { RegionalRecipe } from '../types/recipe';
@@ -1760,7 +1760,11 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
                         <div className="flex items-start justify-between gap-2">
                           <div>
                             <h5 className="text-xs font-extrabold text-slate-900">{food.name}</h5>
-                            <p className="text-[11px] font-semibold text-slate-500">{food.regionalName}</p>
+                            <FoodSubtitle
+                              foodName={food.name}
+                              regionalName={food.regionalName}
+                              className="text-[11px] font-semibold text-slate-500"
+                            />
                           </div>
                           <span className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-100 text-emerald-800 font-bold shrink-0">
                             {food.safetyLevel || 'Safe'}
@@ -1808,7 +1812,11 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
                           {recipe.trimester}
                         </div>
                         <h5 className="text-xs font-bold text-slate-900 leading-snug">{recipe.recipeName}</h5>
-                        <p className="text-[11px] text-slate-400 font-medium">{recipe.regionalName}</p>
+                        <FoodSubtitle
+                          foodName={recipe.recipeName}
+                          regionalName={recipe.regionalName}
+                          className="text-[11px] text-slate-400 font-medium"
+                        />
                         <p className="text-[11px] text-slate-600 leading-relaxed">{recipe.preparationSummary}</p>
                         <div className="p-2 bg-emerald-50/60 rounded-xl border border-emerald-100 text-[11px] font-semibold text-emerald-800">
                           ✨ {recipe.primaryNutrientBoost}

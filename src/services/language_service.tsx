@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { getFoodLocalizedSubtitle, COMPREHENSIVE_FOOD_TRANSLATIONS } from './food_translations';
 
 export interface LanguageOption {
   code: string;
@@ -140,6 +141,126 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     ur: 'قریبی طبی مراکز',
     as: 'ওচৰৰ স্বাস্থ্য কেন্দ্ৰ'
   },
+  'nav.nearby': {
+    en: 'Nearby',
+    hi: 'निकटतम',
+    kn: 'ಹತ್ತಿರದ',
+    ta: 'அருகிலுள்ளவை',
+    te: 'సమీపంలోనివి',
+    ml: 'അടുത്തുള്ളവ',
+    mr: 'जवळपास',
+    bn: 'নিকটবর্তী',
+    gu: 'નજીકના',
+    pa: 'ਨੇੜੇ',
+    or: 'ନିକଟସ୍ଥ',
+    ur: 'قریبی',
+    as: 'ওচৰৰ'
+  },
+  'recipe.recipe': {
+    en: 'Recipe',
+    hi: 'विधि (रेसिपी)',
+    kn: 'ಪಾಕವಿಧಾನ (ರೆಸಿಪಿ)',
+    ta: 'செய்முறை',
+    te: 'వంటకం (రెసిపీ)',
+    ml: 'പാചകക്കുറിപ്പ്',
+    mr: 'कृती (रेसिपी)',
+    bn: 'রেসিপি',
+    gu: 'વાનગી વિધિ',
+    pa: 'ਵਿਧੀ',
+    or: 'ରନ୍ଧନ ବିଧି',
+    ur: 'ترکیب',
+    as: 'ৰেচিপি'
+  },
+  'recipe.ingredients': {
+    en: 'Ingredients',
+    hi: 'सामग्री',
+    kn: 'ಪದಾರ್ಥಗಳು',
+    ta: 'தேவையான பொருட்கள்',
+    te: 'కావలసిన పదార్థాలు',
+    ml: 'ചേരുവകൾ',
+    mr: 'साहित्य',
+    bn: 'উপকরণ',
+    gu: 'સામગ્રી',
+    pa: 'ਸਮੱਗਰੀ',
+    or: 'ଉପାଦାନ',
+    ur: 'اجزاء',
+    as: 'উপকৰণ'
+  },
+  'recipe.preparation': {
+    en: 'Preparation Steps',
+    hi: 'बनाने की विधि',
+    kn: 'ತಯಾರಿಸುವ ವಿಧಾನ',
+    ta: 'செய்முறை படிகள்',
+    te: 'తయారీ విధానం',
+    ml: 'തയ്യാറാക്കുന്ന വിധം',
+    mr: 'तयार करण्याची पद्धत',
+    bn: 'প্রস্তুত প্রণালী',
+    gu: 'બનાવવાની રીત',
+    pa: 'ਤਿਆਰੀ ਦੇ ਕਦਮ',
+    or: 'ପ୍ରସ୍ତୁତି ପ୍ରଣାଳୀ',
+    ur: 'تیاری کے مراحل',
+    as: 'প্ৰস্তুতি প্রণালী'
+  },
+  'recipe.cookingMethod': {
+    en: 'Cooking Method',
+    hi: 'पकाने की विधि',
+    kn: 'ಅಡುಗೆ ವಿಧಾನ',
+    ta: 'சமையல் முறை',
+    te: 'వంట పద్ధతి',
+    ml: 'പാചക രീതി',
+    mr: 'पाक कृती पद्धत',
+    bn: 'রান্নার পদ্ধতি',
+    gu: 'રાંધવાની રીત',
+    pa: 'ਪਕਾਉਣ ਦਾ ਢੰਗ',
+    or: 'ରନ୍ଧା ପ୍ରଣାଳୀ',
+    ur: 'پکانے کا طریقہ',
+    as: 'ৰন্ধন পদ্ধতি'
+  },
+  'recipe.servingSize': {
+    en: 'Serving Size',
+    hi: 'परोसने की मात्रा',
+    kn: 'ಬಡಿಸುವ ಪ್ರಮಾಣ',
+    ta: 'பரிமாறும் அளவு',
+    te: 'వడ్డించే పరిమాణం',
+    ml: 'വിളമ്പുന്ന അളവ്',
+    mr: 'सर्व्हिंग प्रमाण',
+    bn: 'পরিবেশন মাপ',
+    gu: 'પીરસવાનું માપ',
+    pa: 'ਪਰੋਸਣ ਦਾ ਮਾਪ',
+    or: 'ପରିବେଷଣ ମାପ',
+    ur: 'پیشکش کی مقدار',
+    as: 'পৰিবেশনৰ পৰিমাণ'
+  },
+  'recipe.addToMealPlan': {
+    en: '+ Add to Meal Planner',
+    hi: '+ भोजन योजना में जोड़ें',
+    kn: '+ ಊಟದ ಯೋಜನೆಗೆ ಸೇರಿಸಿ',
+    ta: '+ உணவுத் திட்டத்தில் சேர்க்கவும்',
+    te: '+ భోజన ప్రణాళికలో చేర్చండి',
+    ml: '+ ഭക്ഷണ പദ്ധതിയിലേക്ക് ചേർക്കുക',
+    mr: '+ जेवण नियोजनात जोडा',
+    bn: '+ খাবার পরিকল্পনায় যোগ করুন',
+    gu: '+ ભોજન યોજનામાં ઉમેરો',
+    pa: '+ ਖਾਣਾ ਯੋਜਨਾ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ',
+    or: '+ ଖାଦ୍ୟ ଯୋଜନାରେ ଯୋଡନ୍ତୁ',
+    ur: '+ کھانے کے منصوبے میں شامل کریں',
+    as: '+ আহাৰ পৰিকল্পনাত যোগ কৰক'
+  },
+  'recipe.viewFullRecipe': {
+    en: 'Open Full Recipe Card',
+    hi: 'पूरा रेसिपी कार्ड खोलें',
+    kn: 'ಪೂರ್ಣ ಪಾಕವಿಧಾನ ಕಾರ್ಡ್ ತೆರೆಯಿರಿ',
+    ta: 'முழு செய்முறை அட்டையைத் திறக்கவும்',
+    te: 'పూర్తి రెసిపీ కార్డు తెరవండి',
+    ml: 'പൂർണ്ണ പാചക കാർഡ് തുറക്കുക',
+    mr: 'पूर्ण रेसिपी कार्ड उघडा',
+    bn: 'সম্পূর্ণ রেসিপি কার্ড খুলুন',
+    gu: 'સંપૂર્ણ રેસિપી કાર્ડ ખોલો',
+    pa: 'ਪੂਰਾ ਰੈਸਿਪੀ ਕਾਰਡ ਖੋਲ੍ਹੋ',
+    or: 'ସମ୍ପୂର୍ଣ୍ଣ ରେସିପି କାର୍ଡ ଖୋଲନ୍ତୁ',
+    ur: 'مکمل نسخہ کارڈ کھولیں',
+    as: 'সম্পূৰ্ণ ৰেচিপি কাৰ্ড খোলক'
+  },
   'nav.askAi': {
     en: 'Ask PregNutri AI',
     hi: 'प्रेगन्यूट्री AI से पूछें',
@@ -156,19 +277,19 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     as: 'প্ৰেগনিউত্ৰি AI ক সোধক'
   },
   'nav.orderDelivery': {
-    en: 'Order & Delivery',
-    hi: 'ऑर्डर और डिलीवरी',
-    kn: 'ಆರ್ಡರ್ ಮತ್ತು ವಿತರಣೆ',
-    ta: 'ஆர்டர் & டெலிவரி',
-    te: 'ఆర్డర్ & డెలివరీ',
-    ml: 'ഓർഡറും ഡെലിവറിയും',
-    mr: 'ऑर्डर आणि डिलिव्हरी',
-    bn: 'অর্ডার ও ডেলিভারি',
-    gu: 'ઓર્ડર અને ડિલિવરી',
-    pa: 'ਆਰਡਰ ਅਤੇ ਡਿਲੀਵਰੀ',
-    or: 'ଅର୍ଡର ଏବଂ ଡେଲିଭରୀ',
-    ur: 'آرڈر اور ترسیل',
-    as: 'অৰ্ডাৰ আৰু ডেলিভাৰী'
+    en: 'Food Ordering',
+    hi: 'भोजन ऑर्डर',
+    kn: 'ಆಹಾರ ಆರ್ಡರ್',
+    ta: 'உணவு ஆர்டர்',
+    te: 'ఆహార ఆర్డర్',
+    ml: 'ഭക്ഷണ ഓർഡർ',
+    mr: 'अन्न ऑर्डर',
+    bn: 'খাবার অর্ডার',
+    gu: 'ખોરાક ઓર્ડર',
+    pa: 'ਭੋਜਨ ਆਰਡਰ',
+    or: 'ଖାଦ୍ୟ ଅର୍ଡର',
+    ur: 'کھانے کا آرڈر',
+    as: 'খাদ্য অৰ্ডাৰ'
   },
   'nav.clinicalReport': {
     en: 'Clinical Report',
@@ -184,6 +305,201 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     or: 'କ୍ଲିନିକାଲ୍ ରିପୋର୍ଟ',
     ur: 'طبی رپورٹ',
     as: 'ক্লিনিকেল ৰিপোৰ্ট'
+  },
+  'nav.reports': {
+    en: 'Reports',
+    hi: 'रिपोर्ट्स',
+    kn: 'ವರದಿಗಳು',
+    ta: 'அறிக்கைகள்',
+    te: 'నివేదికలు',
+    ml: 'റിപ്പോർട്ടുകൾ',
+    mr: 'अहवाल',
+    bn: 'প্রতিবেদন',
+    gu: 'અહેવાલો',
+    pa: 'ਰਿਪੋਰਟਾਂ',
+    or: 'ରିପୋର୍ଟ',
+    ur: 'رپورٹس',
+    as: 'প্ৰতিবেদনসমূহ'
+  },
+  'reports.title': {
+    en: 'Your Nutrition & Activity Report',
+    hi: 'आपकी पोषण और गतिविधि रिपोर्ट',
+    kn: 'ನಿಮ್ಮ ಪೌಷ್ಟಿಕಾಂಶ ಮತ್ತು ಚಟುವಟಿಕೆ ವರದಿ',
+    ta: 'உங்கள் ஊட்டச்சத்து மற்றும் செயல்பாட்டு அறிக்கை',
+    te: 'మీ పోషకాహారం మరియు కార్యాచరణ నివేదిక',
+    ml: 'നിങ്ങളുടെ പോഷകാഹാരവും പ്രവർത്തന റിപ്പോർട്ടും',
+    mr: 'तुमचा पोषण आणि क्रियाकलाप अहवाल',
+    bn: 'আপনার পুষ্টি ও কার্যকলাপ প্রতিবেদন',
+    gu: 'તમારો પોષણ અને પ્રવૃત્તિ અહેવાલ',
+    pa: 'ਤੁਹਾਡੀ ਪੋਸ਼ਣ ਅਤੇ ਗਤੀਵਿਧੀ ਰਿਪੋਰਟ',
+    or: 'ଆପଣଙ୍କ ପୋଷଣ ଏବଂ କାର୍ଯ୍ୟକଳାପ ରିପୋର୍ଟ',
+    ur: 'آپ کی غذائیت اور سرگرمی کی رپورٹ',
+    as: 'আপোনাৰ পুষ্টি আৰু কাৰ্য্যকলাপ প্ৰতিবেদন'
+  },
+  'reports.subtitle': {
+    en: 'Based on your activity recorded in PregNutri AI',
+    hi: 'PregNutri AI में दर्ज आपकी गतिविधियों पर आधारित',
+    kn: 'PregNutri AI ನಲ್ಲಿ ದಾಖಲಿಸಲಾದ ನಿಮ್ಮ ಚಟುವಟಿಕೆಯನ್ನು ಆಧರಿಸಿದೆ',
+    ta: 'PregNutri AI இல் பதிவுசெய்யப்பட்ட உங்கள் செயல்பாட்டின் அடிப்படையில்',
+    te: 'PregNutri AI లో నమోదు చేయబడిన మీ కార్యాచరణ ఆధారంగా',
+    ml: 'PregNutri AI-ൽ രേഖപ്പെടുത്തിയ നിങ്ങളുടെ പ്രവർത്തനത്തെ അടിസ്ഥാനമാക്കി',
+    mr: 'PregNutri AI मध्ये नोंदवलेल्या तुमच्या क्रियाकलापांवर आधारित',
+    bn: 'PregNutri AI-তে রেকর্ড করা আপনার কার্যকলাপের উপর ভিত্তি করে',
+    gu: 'PregNutri AI માં રેકોર્ડ કરેલ તમારી પ્રવૃત્તિ પર આધારિત',
+    pa: 'PregNutri AI ਵਿੱਚ ਦਰਜ ਕੀਤੀ ਤੁਹਾਡੀ ਗਤੀਵਿਧੀ ਦੇ ਆਧਾਰ ਤੇ',
+    or: 'PregNutri AI ରେ ରେକର୍ଡ ହୋଇଥିବା ଆପଣଙ୍କ କାର୍ଯ୍ୟକଳାପ ଉପରେ ଆଧାରିତ',
+    ur: 'PregNutri AI میں ریکارڈ شدہ آپ کی سرگرمی پر مبنی',
+    as: 'PregNutri AI ত ৰেকৰ্ড কৰা আপোনাৰ কাৰ্য্যকলাপৰ ওপৰত ভিত্তি কৰি'
+  },
+  'reports.weekly': {
+    en: 'Weekly Report',
+    hi: 'साप्ताहिक रिपोर्ट',
+    kn: 'ಸಾಪ್ತಾಹಿಕ ವರದಿ',
+    ta: 'வாராந்திர அறிக்கை',
+    te: 'వారపు నివేదిక',
+    ml: 'പ്രതിവാര റിപ്പോർട്ട്',
+    mr: 'साप्ताहिक अहवाल',
+    bn: 'সাপ্তাহিক প্রতিবেদন',
+    gu: 'સાપ્તાહિક અહેવાલ',
+    pa: 'ਹਫ਼ਤਾਵਾਰੀ ਰਿਪੋਰਟ',
+    or: 'ସାପ୍ତାହିକ ରିପୋର୍ଟ',
+    ur: 'ہفتہ وار رپورٹ',
+    as: 'সাপ্তাহিক প্ৰতিবেদন'
+  },
+  'reports.monthly': {
+    en: 'Monthly Report',
+    hi: 'मासिक रिपोर्ट',
+    kn: 'ಮಾಸಿಕ ವರದಿ',
+    ta: 'மாதாந்திர அறிக்கை',
+    te: 'నెలవారీ నివేదిక',
+    ml: 'പ്രതിമാസ റിപ്പോർട്ട്',
+    mr: 'मासिक अहवाल',
+    bn: 'মাসিক প্রতিবেদন',
+    gu: 'માસિક અહેવાલ',
+    pa: 'ਮਹੀਨਾਵਾਰ ਰਿਪੋਰਟ',
+    or: 'ମାସିକ ରିପୋର୍ଟ',
+    ur: 'ماہانہ رپورٹ',
+    as: 'মাহেকীয়া প্ৰতিবেদন'
+  },
+  'reports.custom': {
+    en: 'Custom Date Range',
+    hi: 'कस्टम तिथि सीमा',
+    kn: 'ಕಸ್ಟಮ್ ದಿನಾಂಕ ಶ್ರೇಣಿ',
+    ta: 'தனிப்பயன் தேதி வரம்பு',
+    te: 'అనుకూల తేదీ పరిధి',
+    ml: 'ഇഷ്‌ടാനുസൃത തീയതി പരിധി',
+    mr: 'सानुकूल तारीख श्रेणी',
+    bn: 'কাস্টম তারিখের ব্যাপ্তি',
+    gu: 'કસ્ટમ તારીખ શ્રેણી',
+    pa: 'ਕਸਟਮ ਮਿਤੀ ਸੀਮਾ',
+    or: 'କଷ୍ଟମ୍ ତାରିଖ ପରିସର',
+    ur: 'حسب ضرورت تاریخ کی حد',
+    as: 'কাষ্টম তাৰিখ পৰিসৰ'
+  },
+  'reports.listen': {
+    en: 'Listen to Report',
+    hi: 'रिपोर्ट सुनें',
+    kn: 'ವರದಿಯನ್ನು ಆಲಿಸಿ',
+    ta: 'அறிக்கையைக் கேளுங்கள்',
+    te: 'నివేదిక వినండి',
+    ml: 'റിപ്പോർട്ട് കേൾക്കുക',
+    mr: 'अहवाल ऐका',
+    bn: 'প্রতিবেদন শুনুন',
+    gu: 'અહેવાલ સાંભળો',
+    pa: 'ਰਿਪੋਰਟ ਸੁਣੋ',
+    or: 'ରିପୋର୍ଟ ଶୁଣନ୍ତୁ',
+    ur: 'رپورٹ سنیں',
+    as: 'প্ৰতিবেদন শুনক'
+  },
+  'reports.stopListening': {
+    en: 'Stop Audio',
+    hi: 'ऑडियो रोकें',
+    kn: 'ಆಡಿಯೋ ನಿಲ್ಲಿಸಿ',
+    ta: 'ஆடியோவை நிறுத்து',
+    te: 'ఆడియోను ఆపండి',
+    ml: 'ഓഡിയോ നിർത്തുക',
+    mr: 'ऑडिओ थांबवा',
+    bn: 'অডিও বন্ধ করুন',
+    gu: 'ઓડિયો બંધ કરો',
+    pa: 'ਆਡੀਓ ਰੋਕੋ',
+    or: 'ଅଡିଓ ବନ୍ଦ କରନ୍ତୁ',
+    ur: 'آڈیو بند کریں',
+    as: 'অডিঅ’ বন্ধ কৰক'
+  },
+  'reports.print': {
+    en: 'Print / Save Report',
+    hi: 'रिपोर्ट प्रिंट / सहेजें',
+    kn: 'ವರದಿಯನ್ನು ಮುದ್ರಿಸಿ / ಉಳಿಸಿ',
+    ta: 'அறிக்கையை அச்சிடுக / சேமிக்க',
+    te: 'నివేదికను ప్రింట్ / సేవ్ చేయండి',
+    ml: 'റിപ്പോർട്ട് പ്രിന്റ് ചെയ്യുക / സംരക്ഷിക്കുക',
+    mr: 'अहवाल मुद्रित / जतन करा',
+    bn: 'প্রতিবেদন প্রিন্ট / সংরক্ষণ করুন',
+    gu: 'અહેવાલ પ્રિન્ટ / સાચવો',
+    pa: 'ਰਿਪੋਰਟ ਪ੍ਰਿੰਟ / ਸੰਭਾਲੋ',
+    or: 'ରିପୋର୍ଟ ପ୍ରିଣ୍ଟ / ସେଭ୍ କରନ୍ତୁ',
+    ur: 'رپورٹ پرنٹ / محفوظ کریں',
+    as: 'প্ৰতিবেদন প্ৰিন্ট / সংৰক্ষণ কৰক'
+  },
+  'reports.noActivityTitle': {
+    en: 'No activity recorded yet',
+    hi: 'अभी तक कोई गतिविधि दर्ज नहीं है',
+    kn: 'ಇನ್ನೂ ಯಾವುದೇ ಚಟುವಟಿಕೆ ದಾಖಲಾಗಿಲ್ಲ',
+    ta: 'இன்னும் எந்த நடவடிக்கையும் பதிவு செய்யப்படவில்லை',
+    te: 'ఇంకా ఎలాంటి కార్యాచరణ నమోదు కాలేదు',
+    ml: 'ഇതുവരെ പ്രവർത്തനങ്ങളൊന്നും രേഖപ്പെടുത്തിയിട്ടില്ല',
+    mr: 'अद्याप कोणताही क्रियाकलाप नोंदवलेला नाही',
+    bn: 'এখনও কোনো কার্যকলাপ রেকর্ড করা হয়নি',
+    gu: 'હજુ સુધી કોઈ પ્રવૃત્તિ નોંધાઈ નથી',
+    pa: 'ਅਜੇ ਤੱਕ ਕੋਈ ਗਤੀਵਿਧੀ ਦਰਜ ਨਹੀਂ ਹੋਈ',
+    or: 'ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି କାର୍ଯ୍ୟକଳାପ ରେକର୍ଡ ହୋଇନାହିଁ',
+    ur: 'ابھی تک کوئی سرگرمی ریکارڈ نہیں ہوئی',
+    as: 'এতিয়ালৈকে কোনো কাৰ্য্যকলাপ ৰেকৰ্ড হোৱা নাই'
+  },
+  'reports.noActivityDesc': {
+    en: 'Start logging your meals and water intake to generate your personal nutrition report.',
+    hi: 'अपनी व्यक्तिगत पोषण रिपोर्ट तैयार करने के लिए अपने भोजन और पानी का सेवन दर्ज करना शुरू करें।',
+    kn: 'ನಿಮ್ಮ ವೈಯಕ್ತಿಕ ಪೌಷ್ಟಿಕಾಂಶ ವರದಿಯನ್ನು ರಚಿಸಲು ನಿಮ್ಮ ಊಟ ಮತ್ತು ನೀರಿನ ಸೇವನೆಯನ್ನು ದಾಖಲಿಸಲು ಪ್ರಾರಂಭಿಸಿ.',
+    ta: 'உங்கள் தனிப்பயனாக்கப்பட்ட ஊட்டச்சத்து அறிக்கையை உருவாக்க உங்கள் உணவு மற்றும் தண்ணீர் உட்கொள்ளலைப் பதிவு செய்யத் தொடங்குங்கள்.',
+    te: 'మీ వ్యక్తిగత పోషకాహార నివేదికను రూపొందించడానికి మీ భోజనం మరియు నీటి వినియోగాన్ని నమోదు చేయడం ప్రారంభించండి.',
+    ml: 'നിങ്ങളുടെ വ്യക്തിഗത പോഷകാഹാര റിപ്പോർട്ട് സൃഷ്ടിക്കുന്നതിന് നിങ്ങളുടെ ഭക്ഷണവും വെള്ളവും രേഖപ്പെടുത്താൻ ആരംഭിക്കുക.',
+    mr: 'तुमचा वैयक्तिक पोषण अहवाल तयार करण्यासाठी तुमचे जेवण आणि पाणी पिणे नोंदवणे सुरू करा.',
+    bn: 'আপনার ব্যক্তিগত পুষ্টি প্রতিবেদন তৈরি করতে আপনার খাবার এবং জল খাওয়ার পরিমাণ রেকর্ড করা শুরু করুন।',
+    gu: 'તમારો વ્યક્તિગત પોષણ અહેવાલ જનરેટ કરવા માટે તમારા ભોજન અને પાણીનું સેવન રેકોર્ડ કરવાનું શરૂ કરો.',
+    pa: 'ਆਪਣੀ ਨਿੱਜੀ ਪੋਸ਼ਣ ਰਿਪੋਰਟ ਤਿਆਰ ਕਰਨ ਲਈ ਆਪਣੇ ਭੋਜਨ ਅਤੇ ਪਾਣੀ ਦੇ ਸੇਵਨ ਨੂੰ ਰਿਕਾਰਡ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ।',
+    or: 'ଆପଣଙ୍କର ବ୍ୟକ୍ତିଗତ ପୋଷଣ ରିପୋର୍ଟ ପ୍ରସ୍ତୁତ କରିବାକୁ ଆପଣଙ୍କର ଭୋଜନ ଏବଂ ଜଳ ଗ୍ରହଣ ରେକର୍ଡ କରିବା ଆରମ୍ଭ କରନ୍ତୁ।',
+    ur: 'اپنی ذاتی غذائیت کی رپورٹ تیار کرنے کے لیے اپنے کھانوں اور پانی کی مقدار کو ریکارڈ کرنا شروع کریں۔',
+    as: 'আপোনাৰ ব্যক্তিগত পুষ্টি প্ৰতিবেদন প্ৰস্তুত কৰিবলৈ আপোনাৰ খাদ্য আৰু পানী গ্ৰহণ ৰেকৰ্ড কৰা আৰম্ভ কৰক।'
+  },
+  'reports.goToMealPlanner': {
+    en: 'Go to Meal Planner',
+    hi: 'भोजन योजनाकार पर जाएं',
+    kn: 'ಊಟದ ಯೋಜಕಕ್ಕೆ ಹೋಗಿ',
+    ta: 'உணவுத் திட்டமிடுபவருக்குச் செல்லவும்',
+    te: 'మీల్ ప్లానర్‌కి వెళ్లండి',
+    ml: 'മീൽ പ്ലാനറിലേക്ക് പോകുക',
+    mr: 'मील प्लॅनरवर जा',
+    bn: 'খাবার পরিকল্পনাকারীতে যান',
+    gu: 'મીલ પ્લાનર પર જાઓ',
+    pa: 'ਮੀਲ ਪਲੈਨਰ ਤੇ ਜਾਓ',
+    or: 'ମିଲ୍ ପ୍ଲାନର୍ କୁ ଯାଆନ୍ତୁ',
+    ur: 'کھانے کے منصوبہ ساز پر جائیں',
+    as: 'মিল প্লেনাৰলৈ যাওক'
+  },
+  'reports.logMeal': {
+    en: "Log Today's Meal",
+    hi: 'आज का भोजन दर्ज करें',
+    kn: 'ಇಂದಿನ ಊಟವನ್ನು ದಾಖಲಿಸಿ',
+    ta: 'இன்றைய உணவைப் பதிவு செய்யவும்',
+    te: 'ఈనాటి భోజనాన్ని నమోదు చేయండి',
+    ml: 'ഇന്നത്തെ ഭക്ഷണം രേഖപ്പെടുത്തുക',
+    mr: 'आजचे जेवण नोंदवा',
+    bn: 'আজকের খাবার রেকর্ড করুন',
+    gu: 'આજનું ભોજન રેકોર્ડ કરો',
+    pa: 'ਅੱਜ ਦਾ ਭੋਜਨ ਰਿਕਾਰਡ ਕਰੋ',
+    or: 'ଆଜିର ଖାଦ୍ୟ ରେକର୍ଡ କରନ୍ତୁ',
+    ur: 'آج کا کھانا ریکارڈ کریں',
+    as: 'আজিৰ খাদ্য ৰেকৰ্ড কৰক'
   },
 
   // Key Nutrients
@@ -829,6 +1145,186 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     ur: 'یاد دہانی بند کریں',
     as: 'সোঁৱৰণী বন্ধ কৰক'
   },
+  'water.soundAlert': {
+    en: 'Sound Alert',
+    hi: 'ध्वनि अलर्ट',
+    kn: 'ಧ್ವನಿ ಎಚ್ಚರಿಕೆ',
+    ta: 'ஒலி எச்சரிக்கை',
+    te: 'ధ్వని హెచ్చరిక',
+    ml: 'ശബ്ദ മുന്നറിയിപ്പ്',
+    mr: 'ध्वनी सूचना',
+    bn: 'শব্দ সতর্কতা',
+    gu: 'ધ્વનિ ચેતવણી',
+    pa: 'ਆਵਾਜ਼ ਚੇਤਾਵਨੀ',
+    or: 'ଶବ୍ଦ ଚେତାବନୀ',
+    ur: 'صوتی الرٹ',
+    as: 'শব্দ সতৰ্কবাৰ্তা'
+  },
+  'water.soundOn': {
+    en: 'Sound ON',
+    hi: 'ध्वनि चालू',
+    kn: 'ಧ್ವನಿ ಆನ್',
+    ta: 'ஒலி ஆன்',
+    te: 'సౌండ్ ఆన్',
+    ml: 'ശബ്ദം ഓൺ',
+    mr: 'आवाज चालू',
+    bn: 'শব্দ চালু',
+    gu: 'સાઉન્ડ ચાલુ',
+    pa: 'ਆਵਾਜ਼ ਚਾਲੂ',
+    or: 'ଶବ୍ଦ ଅନ୍',
+    ur: 'صدا آن',
+    as: 'শব্দ অন'
+  },
+  'water.soundOff': {
+    en: 'Sound OFF',
+    hi: 'ध्वनि बंद',
+    kn: 'ಧ್ವನಿ ಆಫ್',
+    ta: 'ஒலி ஆஃப்',
+    te: 'సౌండ్ ఆఫ్',
+    ml: 'ശബ്ദം ഓഫ്',
+    mr: 'आवाज बंद',
+    bn: 'শব্দ বন্ধ',
+    gu: 'સાઉન્ડ બંધ',
+    pa: 'ਆਵਾਜ਼ ਬੰਦ',
+    or: 'ଶବ୍ଦ ଅଫ୍',
+    ur: 'صدا آف',
+    as: 'শব্দ অফ'
+  },
+  'water.reminderOn': {
+    en: 'Reminder ON',
+    hi: 'रिमाइंडर चालू',
+    kn: 'ರಿಮೈಂಡರ್ ಆನ್',
+    ta: 'நினைவூட்டல் ஆன்',
+    te: 'రిమైండర్ ఆన్',
+    ml: 'ഓർമ്മപ്പെടുത്തൽ ഓൺ',
+    mr: 'रिमाइंडर चालू',
+    bn: 'অনুস্মারক চালু',
+    gu: 'રિમાઇન્ડર ચાલુ',
+    pa: 'ਰੀਮਾਈਂਡਰ ਚਾਲੂ',
+    or: 'ରିମାଇଣ୍ଡର ଅନ୍',
+    ur: 'یاد دہانی آن',
+    as: 'সোঁৱৰণী অন'
+  },
+  'water.reminderOff': {
+    en: 'Reminder OFF',
+    hi: 'रिमाइंडर बंद',
+    kn: 'ರಿಮೈಂಡರ್ ಆಫ್',
+    ta: 'நினைவூட்டல் ஆஃப்',
+    te: 'రిమైండర్ ఆఫ్',
+    ml: 'ഓർമ്മപ്പെടുത്തൽ ഓഫ്',
+    mr: 'रिमाइंडर बंद',
+    bn: 'অনুস্মারক বন্ধ',
+    gu: 'રિમાઇન્ડਰ બંધ',
+    pa: 'ਰੀਮਾਈਂਡਰ ਬੰਦ',
+    or: 'ରିମାଇଣ୍ଡର ଅଫ୍',
+    ur: 'یاد دہانی آف',
+    as: 'সোঁৱৰণী অফ'
+  },
+  'water.reminderMessage': {
+    en: 'Time to drink some water.',
+    hi: 'थोड़ा पानी पीने का समय हो गया है।',
+    kn: 'ಸ್ವಲ್ಪ ನೀರು ಕುಡಿಯುವ ಸಮಯ.',
+    ta: 'கொஞ்சம் தண்ணீர் குடிக்கும் நேரம் வந்துவிட்டது.',
+    te: 'కొంచెం నీరు త్రాగడానికి సమయం ఆసన్నమైంది.',
+    ml: 'കുറച്ച് വെള്ളം കുടിക്കാനുള്ള സമയമായി.',
+    mr: 'थोडे पाणी पिण्याची वेळ झाली आहे.',
+    bn: 'কিছু জল খাওয়ার সময় হয়েছে।',
+    gu: 'થોડું પાણી પીવાનો સમય થયો છે.',
+    pa: 'ਕੁਝ ਪਾਣੀ ਪੀਣ ਦਾ ਸਮਾਂ ਹੋ ਗਿਆ ਹੈ।',
+    or: 'କିଛି ପାଣି ପିଇବାର ସମୟ ହୋଇଛି।',
+    ur: 'کچھ پانی پینے کا وقت ہو گیا ہے۔',
+    as: 'কিছু পানী খোৱাৰ সময় হৈছে।'
+  },
+  'water.every1Hour': {
+    en: 'Every 1 Hour',
+    hi: 'हर 1 घंटे में',
+    kn: 'ಪ್ರತಿ 1 ಗಂಟೆಗೆ',
+    ta: 'ஒவ்வொரு 1 மணி நேரமும்',
+    te: 'ప్రతి 1 గంటకు',
+    ml: 'ഓരോ 1 മണിക്കൂറിലും',
+    mr: 'दर 1 तासाने',
+    bn: 'প্রতি ১ ঘণ্টায়',
+    gu: 'દર 1 કલાકે',
+    pa: 'ਹਰ 1 ਘੰਟੇ ਬਾਅਦ',
+    or: 'ପ୍ରତି ୧ ଘଣ୍ଟାରେ',
+    ur: 'ہر 1 گھنٹے بعد',
+    as: 'প্ৰতি ১ ঘণ্টাত'
+  },
+  'water.every2Hours': {
+    en: 'Every 2 Hours',
+    hi: 'हर 2 घंटे में',
+    kn: 'ಪ್ರತಿ 2 ಗಂಟೆಗೆ',
+    ta: 'ஒவ்வொரு 2 மணி நேரமும்',
+    te: 'ప్రతి 2 గంటలకు',
+    ml: 'ഓരോ 2 മണിക്കൂറിലും',
+    mr: 'दर 2 तासांनी',
+    bn: 'প্রতি ২ ঘণ্টায়',
+    gu: 'દર 2 કલાકે',
+    pa: 'ਹਰ 2 ਘੰਟੇ ਬਾਅਦ',
+    or: 'ପ୍ରତି ୨ ଘଣ୍ଟାରେ',
+    ur: 'ہر 2 گھنٹے بعد',
+    as: 'প্ৰতি ২ ঘণ্টাত'
+  },
+  'water.every3Hours': {
+    en: 'Every 3 Hours',
+    hi: 'हर 3 घंटे में',
+    kn: 'ಪ್ರತಿ 3 ಗಂಟೆಗೆ',
+    ta: 'ஒவ்வொரு 3 மணி நேரமும்',
+    te: 'ప్రతి 3 గంటలకు',
+    ml: 'ഓരോ 3 മണിക്കൂറിലും',
+    mr: 'दर 3 तासांनी',
+    bn: 'প্রতি ৩ ঘণ্টায়',
+    gu: 'દર 3 કલાકે',
+    pa: 'ਹਰ 3 ਘੰਟੇ ਬਾਅਦ',
+    or: 'ପ୍ରତି ୩ ଘଣ୍ଟାରେ',
+    ur: 'ہر 3 گھنٹے بعد',
+    as: 'প্ৰতি ৩ ঘণ্টাত'
+  },
+  'water.custom': {
+    en: 'Custom',
+    hi: 'कस्टम',
+    kn: 'ಕಸ್ಟಮ್',
+    ta: 'விருப்பப்படி',
+    te: 'అనుకూల',
+    ml: 'കസ്റ്റം',
+    mr: 'सानुकूल',
+    bn: 'কাস্টম',
+    gu: 'કસ્ટમ',
+    pa: 'ਕਸਟਮ',
+    or: 'କଷ୍ଟମ୍',
+    ur: 'کسٹم',
+    as: 'কাষ্টম'
+  },
+  'water.testAlert': {
+    en: 'Test Alert',
+    hi: 'अलर्ट टेस्ट करें',
+    kn: 'ಎಚ್ಚರಿಕೆ ಪರೀಕ್ಷಿಸಿ',
+    ta: 'சோதிக்கவும்',
+    te: 'పరీక్షించండి',
+    ml: 'ടെസ്റ്റ് ചെയ്യുക',
+    mr: 'चाचणी करा',
+    bn: 'পরীক্ষা করুন',
+    gu: 'ચકાસો',
+    pa: 'ਪਰੀਖਣ ਕਰੋ',
+    or: 'ପରୀକ୍ଷା କରନ୍ତୁ',
+    ur: 'ٹیسٹ کریں',
+    as: 'পৰীক্ষা কৰক'
+  },
+  'water.testSound': {
+    en: 'Test Sound',
+    hi: 'ध्वनि टेस्ट करें',
+    kn: 'ಧ್ವನಿ ಪರೀಕ್ಷಿಸಿ',
+    ta: 'ஒலியை சோதிக்கவும்',
+    te: 'ధ్వనిని పరీక్షించండి',
+    ml: 'ശബ്ദം പരിശോധിക്കുക',
+    mr: 'आवाज तपासा',
+    bn: 'শব্দ পরীক্ষা করুন',
+    gu: 'સાઉન્ડ ચકાસો',
+    pa: 'ਆਵਾਜ਼ ਟੈਸਟ ਕਰੋ',
+    or: 'ଶବ୍ଦ ପରୀକ୍ଷା କରନ୍ତୁ',
+    ur: 'آواز ٹیسٹ کریں',
+    as: 'শব্দ পৰীক্ষা কৰক'
+  },
 
   // Meal Planner Specific Keys
   'planner.title': {
@@ -1070,6 +1566,96 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     or: 'ଜାତୀୟ ଆମ୍ବୁଲାନ୍ସ ସେବା',
     ur: 'قومی ایمبولینس سروس',
     as: 'ৰাষ্ট্ৰীয় এম্বুলেন্স সেৱা'
+  },
+  'diet.preference': {
+    en: 'Diet Preference',
+    hi: 'आहार प्राथमिकता',
+    kn: 'ಆಹಾರದ ಆದ್ಯತೆ',
+    ta: 'உணவு விருப்பம்',
+    te: 'ఆహార ప్రాధాన్యత',
+    ml: 'ഭക്ഷണ മുൻഗണന',
+    mr: 'आहार प्राधान्य',
+    bn: 'খাদ্য পছন্দ',
+    gu: 'આહાર પસંદગી',
+    pa: 'ਖੁਰਾਕ ਤਰਜੀਹ',
+    or: 'ଖାଦ୍ୟ ପସନ୍ଦ',
+    ur: 'غذائی ترجیح',
+    as: 'খাদ্য পছন্দ'
+  },
+  'diet.choosePreference': {
+    en: 'Choose your food preference',
+    hi: 'अपनी आहार प्राथमिकता चुनें',
+    kn: 'ನಿಮ್ಮ ಆಹಾರದ ಆದ್ಯತೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ',
+    ta: 'உங்கள் உணவு விருப்பத்தைத் தேர்ந்தெடுக்கவும்',
+    te: 'మీ ఆహార ప్రాధాన్యతను ఎంచుకోండి',
+    ml: 'നിങ്ങളുടെ ഭക്ഷണ മുൻഗണന തിരഞ്ഞെടുക്കുക',
+    mr: 'तुमचे अन्न प्राधान्य निवडा',
+    bn: 'আপনার খাদ্য পছন্দ নির্বাচন করুন',
+    gu: 'તમારી આહાર પસંદગી પસંદ કરો',
+    pa: 'ਆਪਣੀ ਭੋਜਨ ਤਰਜੀਹ ਚੁਣੋ',
+    or: 'ଆପଣଙ୍କ ଖାଦ୍ୟ ପସନ୍ଦ ବାଛନ୍ତୁ',
+    ur: 'اپنی غذائی ترجیح منتخب کریں',
+    as: 'আপোনাৰ খাদ্য পছন্দ বাছক'
+  },
+  'diet.vegetarian': {
+    en: 'Vegetarian',
+    hi: 'शाकाहारी',
+    kn: 'ಸಸ್ಯಾಹಾರಿ',
+    ta: 'சைவம்',
+    te: 'శాకాహారి',
+    ml: 'സസ്യാഹാരം',
+    mr: 'शाकाहारी',
+    bn: 'নিরামিষ',
+    gu: 'શાકાહારી',
+    pa: 'ਸ਼ਾਕਾਹਾਰੀ',
+    or: 'ନିରାମିଷ',
+    ur: 'سبزی خور',
+    as: 'নিৰামিষ'
+  },
+  'diet.nonVegetarian': {
+    en: 'Non-Vegetarian',
+    hi: 'मांसाहारी',
+    kn: 'ಮಾಂಸಾಹಾರಿ',
+    ta: 'அசைவம்',
+    te: 'మాంసాహారి',
+    ml: 'മാംസാഹാരം',
+    mr: 'मांसाहारी',
+    bn: 'আমিষ',
+    gu: 'માંસાહારી',
+    pa: 'ਮਾਸਾਹਾਰੀ',
+    or: 'ଆମିଷ',
+    ur: 'ماںس خور',
+    as: 'আমিষ'
+  },
+  'diet.vegetarianDesc': {
+    en: 'Plant-based/vegetarian foods',
+    hi: 'पौधों पर आधारित / शुद्ध शाकाहारी भोजन',
+    kn: 'ಸಸ್ಯ ಆಧಾರಿತ / ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ ಆಹಾರಗಳು',
+    ta: 'தாவர அடிப்படையிலான / சைவ உணவுகள்',
+    te: 'మొక్కల ఆధారిత / శాకాహార ఆహారాలు',
+    ml: 'സസ്യ അധിഷ്ഠിത / സസ്യാഹാരം',
+    mr: 'वनस्पती-आधारित / शाकाहारी अन्न',
+    bn: 'উদ্ভিদ-ভিত্তিক / নিরামিষ খাদ্য',
+    gu: 'વનસ્પતિ આધારિત / શાકાહારી ખોરાક',
+    pa: 'ਪੌਦਾ-ਅਧਾਰਿਤ / ਸ਼ਾਕਾਹਾਰੀ ਭੋਜਨ',
+    or: 'ଉଦ୍ଭିଦ-ଭିତ୍ତିକ / ନିରାମିଷ ଖାଦ୍ୟ',
+    ur: 'پودوں پر مبنی / سبزی خور غذائیں',
+    as: 'উদ্ভিদ-ভিত্তিক / নিৰামিষ খাদ্য'
+  },
+  'diet.nonVegetarianDesc': {
+    en: 'Vegetarian + verified non-vegetarian foods',
+    hi: 'शाकाहारी + चिकित्सकीय सत्यापित मांसाहारी भोजन',
+    kn: 'ಸಸ್ಯಾಹಾರಿ + ಪರಿಶೀಲಿಸಿದ ಮಾಂಸಾಹಾರಿ ಆಹಾರಗಳು',
+    ta: 'சைவம் + சரிபார்க்கப்பட்ட அசைவ உணவுகள்',
+    te: 'శాకాహారం + ధృవీకరించిన మాంసాహార ఆహారాలు',
+    ml: 'സസ്യാഹാരം + പരിശോധിച്ചുറപ്പിച്ച മാംസാഹാരം',
+    mr: 'शाकाहारी + सत्यापित मांसाहारी अन्न',
+    bn: 'নিরামিষ + যাচাইকৃত আমিষ খাদ্য',
+    gu: 'શાકાહારી + ચકાસાયેલ માંસાહારી ખોરાક',
+    pa: 'ਸ਼ਾਕਾਹਾਰੀ + ਪ੍ਰਮਾਣਿਤ ਮਾਸਾਹਾਰੀ ਭੋਜਨ',
+    or: 'ନିରାମିଷ + ଯାଞ୍ଚ ହୋଇଥିବା ଆମିଷ ଖାଦ୍ୟ',
+    ur: 'سبزی خور + تصدیق شدہ گوشت والی غذائیں',
+    as: 'নিৰামিষ + পৰীক্ষিত আমিষ খাদ্য'
   }
 };
 
@@ -1394,6 +1980,7 @@ export const INGREDIENT_TRANSLATIONS: Record<string, Record<string, string>> = {
 
 // Comprehensive Food Name Translations across all 13 supported languages
 export const FOOD_NAME_TRANSLATIONS: Record<string, Record<string, string>> = {
+  ...COMPREHENSIVE_FOOD_TRANSLATIONS,
   // Karnataka Staples
   'Ragi Mudde (Finger Millet Ball)': {
     en: 'Ragi Mudde (Finger Millet Ball)',
@@ -1848,30 +2435,50 @@ class LanguageServiceImpl {
    *    - If no translation in the chosen language exists, primary is English, secondary is undefined.
    */
   public tFood(foodName: string): { primary: string; secondary?: string } {
-    const cleanName = foodName.trim();
-    if (this.isEnglish()) {
+    const cleanName = (foodName || '').trim();
+    if (this.isEnglish() || !cleanName) {
       return { primary: cleanName };
     }
 
-    const dict = FOOD_NAME_TRANSLATIONS[cleanName];
+    const lang = this.currentLanguageCode;
+
+    // 1. Direct match in COMPREHENSIVE_FOOD_TRANSLATIONS
+    if (COMPREHENSIVE_FOOD_TRANSLATIONS[cleanName]?.[lang]) {
+      return {
+        primary: COMPREHENSIVE_FOOD_TRANSLATIONS[cleanName][lang],
+        secondary: cleanName
+      };
+    }
+
+    // 2. Base name match without parentheses
+    const baseName = cleanName.replace(/\s*\([^)]+\)/g, '').split('/')[0].trim();
+    if (baseName && COMPREHENSIVE_FOOD_TRANSLATIONS[baseName]?.[lang]) {
+      return {
+        primary: COMPREHENSIVE_FOOD_TRANSLATIONS[baseName][lang],
+        secondary: cleanName
+      };
+    }
+
+    // 3. Match in FOOD_NAME_TRANSLATIONS
+    const dict = FOOD_NAME_TRANSLATIONS[cleanName] || (baseName ? FOOD_NAME_TRANSLATIONS[baseName] : undefined);
     let localized: string | undefined;
 
     if (dict) {
-      if (dict[this.currentLanguageCode]) {
-        localized = dict[this.currentLanguageCode];
+      if (dict[lang]) {
+        localized = dict[lang];
       } else {
         const fallbackMap: Record<string, string> = { bho: 'hi', mai: 'hi', kok: 'mr', ks: 'hi', ne: 'hi', sa: 'hi', mni: 'bn', sat: 'or' };
-        const fb = fallbackMap[this.currentLanguageCode];
+        const fb = fallbackMap[lang];
         if (fb && dict[fb]) localized = dict[fb];
       }
     }
 
     if (!localized) {
       // Check fuzzy match in dictionary
-      for (const [key, translations] of Object.entries(FOOD_NAME_TRANSLATIONS)) {
+      for (const [key, translations] of Object.entries(COMPREHENSIVE_FOOD_TRANSLATIONS)) {
         if (cleanName.toLowerCase().startsWith(key.toLowerCase()) || key.toLowerCase().startsWith(cleanName.toLowerCase())) {
-          if (translations[this.currentLanguageCode]) {
-            localized = translations[this.currentLanguageCode];
+          if (translations[lang]) {
+            localized = translations[lang];
             break;
           }
         }
@@ -1885,10 +2492,26 @@ class LanguageServiceImpl {
       };
     }
 
+    const fallbackSubtitle = getFoodLocalizedSubtitle(cleanName, undefined, this.currentLanguageCode);
+    if (fallbackSubtitle) {
+      return {
+        primary: fallbackSubtitle,
+        secondary: cleanName
+      };
+    }
+
     return {
       primary: cleanName,
       secondary: undefined
     };
+  }
+
+  /**
+   * Retrieves strictly language-conforming subtitle for any food item.
+   * If Hindi is selected, it will NEVER return Kannada text.
+   */
+  public tFoodSubtitle(foodName: string, fallbackRegionalName?: string): string {
+    return getFoodLocalizedSubtitle(foodName, fallbackRegionalName, this.currentLanguageCode);
   }
 
   /**
@@ -1952,24 +2575,28 @@ export const LanguageService = new LanguageServiceImpl();
 // React Context
 interface LanguageContextType {
   currentLanguage: LanguageOption;
+  currentLanguageCode: string;
   setLanguage: (code: string) => void;
   languages: LanguageOption[];
   isEnglish: boolean;
   t: (key: string, fallback?: string) => string;
   tDual: (key: string, fallback?: string) => { primary: string; secondary?: string };
   tFood: (foodName: string) => { primary: string; secondary?: string };
+  tFoodSubtitle: (foodName: string, fallbackRegionalName?: string) => string;
   tIngredient: (ingredientName: string) => { primary: string; secondary?: string };
   tCategory: (category: string) => string;
 }
 
 export const LanguageContext = createContext<LanguageContextType>({
   currentLanguage: ALL_INDIAN_LANGUAGES[0],
+  currentLanguageCode: 'en',
   setLanguage: () => {},
   languages: ALL_INDIAN_LANGUAGES,
   isEnglish: true,
   t: (k, f) => f || k,
   tDual: (k, f) => ({ primary: f || k }),
   tFood: (n) => ({ primary: n }),
+  tFoodSubtitle: (n, r) => '',
   tIngredient: (n) => ({ primary: n }),
   tCategory: (c) => c
 });
@@ -1995,6 +2622,8 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const t = (key: string, fallback?: string) => LanguageService.t(key, fallback);
   const tDual = (key: string, fallback?: string) => LanguageService.tDual(key, fallback);
   const tFood = (name: string) => LanguageService.tFood(name);
+  const tFoodSubtitle = (name: string, fallbackRegionalName?: string) =>
+    LanguageService.tFoodSubtitle(name, fallbackRegionalName);
   const tIngredient = (name: string) => LanguageService.tIngredient(name);
   const tCategory = (cat: string) => LanguageService.tCategory(cat);
 
@@ -2002,12 +2631,14 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     <LanguageContext.Provider
       value={{
         currentLanguage,
+        currentLanguageCode: currentLanguage.code,
         setLanguage: handleSetLanguage,
         languages: ALL_INDIAN_LANGUAGES,
         isEnglish,
         t,
         tDual,
         tFood,
+        tFoodSubtitle,
         tIngredient,
         tCategory
       }}
@@ -2071,30 +2702,43 @@ export const DualText: React.FC<{
  * Secondary: English canonical food name (only when selected language is NOT English)
  */
 export const DualFoodName: React.FC<{
-  foodName: string;
+  foodName?: string;
+  name?: string;
+  fallbackName?: string;
+  foodId?: string;
+  regionalName?: string;
   className?: string;
   miniClassName?: string;
   inline?: boolean;
 }> = ({
   foodName,
+  name,
+  fallbackName,
+  regionalName,
   className = 'font-bold text-[#223030]',
   miniClassName = 'text-xs text-[#523D35]/80 font-medium mt-0.5',
   inline = false
 }) => {
-  const { tFood, isEnglish } = useLanguage();
+  const actualName = (foodName || name || fallbackName || '').trim();
+  const { tFood, tFoodSubtitle, isEnglish } = useLanguage();
 
   if (isEnglish) {
-    return <span className={className}>{foodName}</span>;
+    return <span className={className}>{actualName}</span>;
   }
 
-  const { primary, secondary } = tFood(foodName);
+  const { primary, secondary } = tFood(actualName);
+  const displayPrimary =
+    primary && primary !== actualName
+      ? primary
+      : tFoodSubtitle(actualName, regionalName) || primary || actualName;
+  const displaySecondary = displayPrimary !== actualName ? actualName : secondary;
 
   if (inline) {
     return (
       <span className="inline-flex items-baseline gap-1.5 flex-wrap">
-        <span className={className}>{primary}</span>
-        {secondary && (
-          <span className={miniClassName}>({secondary})</span>
+        <span className={className}>{displayPrimary}</span>
+        {displaySecondary && (
+          <span className={miniClassName}>({displaySecondary})</span>
         )}
       </span>
     );
@@ -2102,12 +2746,36 @@ export const DualFoodName: React.FC<{
 
   return (
     <div className="flex flex-col text-left">
-      <span className={className}>{primary}</span>
-      {secondary && (
-        <span className={miniClassName}>{secondary}</span>
+      <span className={className}>{displayPrimary}</span>
+      {displaySecondary && (
+        <span className={miniClassName}>{displaySecondary}</span>
       )}
     </div>
   );
+};
+
+/**
+ * Food Subtitle Component
+ * STRICT RULE: Subtitle ALWAYS matches the selected language.
+ * E.g., when Hindi is selected, it will NEVER show Kannada text like "ಚಿತರನ್ನ".
+ */
+export const FoodSubtitle: React.FC<{
+  foodName?: string;
+  name?: string;
+  regionalName?: string;
+  className?: string;
+}> = ({
+  foodName,
+  name,
+  regionalName,
+  className = 'text-xs text-[#523D35] font-medium'
+}) => {
+  const actualName = foodName || name || '';
+  const { tFoodSubtitle } = useLanguage();
+  const subtitle = tFoodSubtitle(actualName, regionalName);
+
+  if (!subtitle) return null;
+  return <p className={className}>{subtitle}</p>;
 };
 
 /**

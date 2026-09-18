@@ -10,8 +10,12 @@ import {
   HelpCircle,
   RotateCcw,
   User,
-  MapPin
+  MapPin,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
+import { useLanguage } from '../services/language_service';
+import { voiceService } from '../services/voice_service';
 
 interface AskAiViewProps {
   profile: UserProfile;
@@ -19,15 +23,35 @@ interface AskAiViewProps {
 }
 
 export const AskAiView: React.FC<AskAiViewProps> = ({ profile, globalLocation }) => {
+  const { currentLanguageCode } = useLanguage();
   const activeState = globalLocation?.state || profile.state || 'Karnataka';
-  const activeCity = globalLocation?.city || 'Bengaluru';
+  const activeCity = globalLocation?.city || profile.city || 'Bengaluru';
   const activeRegion = globalLocation?.region || 'South India';
+
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
+
+  const getWelcomeText = () => {
+    switch (currentLanguageCode) {
+      case 'hi':
+        return `नमस्ते! मैं प्रेगन्यूट्री एआई मातृत्व पोषण सहायक हूँ। आपका स्वागत है। मैं आपकी गर्भावस्था (सप्ताह ${profile.weeksPregnant}) और ${activeState} के स्थानीय आहार के अनुसार सहायता के लिए तैयार हूँ।`;
+      case 'kn':
+        return `ನಮಸ್ಕಾರ! ನಾನು ಪ್ರೆಗ್ನ್ಯೂಟ್ರಿ ಎಐ ಪೌಷ್ಟಿಕಾಂಶ ಸಹಾಯಕ. ನಿಮ್ಮ ${activeState} ಪ್ರದೇಶ ಮತ್ತು ${profile.weeksPregnant}ನೇ ವಾರದ ಗರ್ಭಾವಸ್ಥೆಗೆ ಸೂಕ್ತವಾದ ಆಹಾರ ಸಲಹೆಗಳನ್ನು ಕೇಳಿ.`;
+      case 'ta':
+        return `வணக்கம்! நான் உங்கள் தாய்மை ஊட்டச்சத்து உதவியாளர். ${activeState} பாரம்பரிய உணவுகள் மற்றும் உங்கள் கர்ப்ப கால ஊட்டச்சத்து பற்றிய கேள்விகளைக் கேட்கலாம்.`;
+      case 'te':
+        return `నమస్కారం! నేను మీ ప్రెగ్‌న్యూట్రి AI సహాయకురాలిని. ${activeState} స్థానిక ఆహారాలు మరియు ప్రసూతి పోషకాలపై సందేహాలను అడగండి.`;
+      case 'ml':
+        return `നമസ്കാരം! ഞാൻ നിങ്ങളുടെ പ്രെഗ്ന്യൂട്രി എഐ സഹായിയാണ്. ${activeState}-ലെ പരമ്പരാഗത ഭക്ഷണങ്ങളെക്കുറിച്ചും ഗർഭകാല ആരോഗ്യത്തെക്കുറിച്ചും ചോദിക്കാം.`;
+      default:
+        return `Hello mother! I am PregNutri AI, your clinical maternal nutrition companion. I am currently tailored for your location in **${activeCity}, ${activeState}** (${activeRegion}). Ask me any pregnancy nutrition, local food safety, or regional meal questions!`;
+    }
+  };
 
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: 'init-1',
       sender: 'assistant',
-      text: `Hello mother! I am PregNutri AI, your clinical maternal nutrition companion. I am currently tailored for your location in **${activeCity}, ${activeState}** (${activeRegion}). Ask me any pregnancy nutrition, local food safety, or regional meal questions!`,
+      text: getWelcomeText(),
       timestamp: 'Just now'
     }
   ]);
@@ -35,7 +59,34 @@ export const AskAiView: React.FC<AskAiViewProps> = ({ profile, globalLocation })
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const quickQuestions = [
+  useEffect(() => {
+    if (messages.length <= 1) {
+      setMessages([
+        {
+          id: 'init-1',
+          sender: 'assistant',
+          text: getWelcomeText(),
+          timestamp: 'Just now'
+        }
+      ]);
+    }
+  }, [currentLanguageCode]);
+
+  const quickQuestions = currentLanguageCode === 'hi' ? [
+    `${activeState} के आयरन युक्त स्थानीय खाद्य पदार्थ`,
+    'क्या पका पपीता गर्भावस्था में सुरक्षित है?',
+    'केसर का उपयोग कितना सुरक्षित है?',
+    `${activeState} के लिए पारंपरिक नाश्ता`,
+    'मॉर्निंग सिकनेस के उपाय',
+    'कैल्शियम से भरपूर बाजरा और रागी'
+  ] : currentLanguageCode === 'kn' ? [
+    `${activeState}ದ ಕಬ್ಬಿಣಾಂಶದ ಆಹಾರಗಳು`,
+    'ಮಾಗಿದ ಪಪ್ಪಾಯಿ ಸುರಕ್ಷಿತವೇ?',
+    'ಕೇಸರಿ ಬಳಕೆ ಎಷ್ಟು ಸುರಕ್ಷಿತ?',
+    `${activeState}ದ ಪೌಷ್ಟಿಕ ಬೆಳಗಿನ ಉಪಾಹಾರ`,
+    'ವಾಂತಿ ಮತ್ತು ಆಯಾಸಕ್ಕೆ ಪರಿಹಾರ',
+    'ಕ್ಯಾಲ್ಸಿಯಂ ಭರಿತ ರಾಗಿ ಮತ್ತು ಸಿರಿಧಾನ್ಯಗಳು'
+  ] : [
     `Local iron foods in ${activeState}`,
     'Is ripe papaya safe?',
     'How safe is saffron?',
@@ -158,12 +209,21 @@ Would you like specific recipe ideas or food safety checks for any particular di
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message: query,
-          language: 'en',
+          language: currentLanguageCode,
           profile: {
+            name: profile.name,
             weeksPregnant: profile.weeksPregnant,
+            pregnancyMonth: profile.pregnancyMonth,
+            heightCm: profile.heightCm || 162,
+            currentWeightKg: profile.currentWeightKg || 60,
+            prePregnancyWeightKg: profile.prePregnancyWeightKg || 54,
             diet: profile.dietPreference,
+            dietPreference: profile.dietPreference,
             state: activeState,
             city: activeCity,
+            district: profile.district || activeCity,
+            taluk: profile.taluk,
+            village: profile.village,
             region: activeRegion,
             deficiencies: profile.medicalConditions,
             allergies: profile.allergies
@@ -299,12 +359,48 @@ Would you like specific recipe ideas or food safety checks for any particular di
                   }`}
                 >
                   <div className="whitespace-pre-line">{msg.text}</div>
-                  <div
-                    className={`text-[10px] mt-1.5 font-medium ${
-                      isUser ? 'text-[#959D90] text-right' : 'text-[#523D35]'
-                    }`}
-                  >
-                    {msg.timestamp}
+                  <div className="flex items-center justify-between mt-2 pt-1 border-t border-[#959D90]/20 text-[10px]">
+                    <span className={isUser ? 'text-[#959D90]' : 'text-[#523D35]'}>
+                      {msg.timestamp}
+                    </span>
+                    {!isUser && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (speakingMessageId === msg.id) {
+                            voiceService.stopSpeaking();
+                            setSpeakingMessageId(null);
+                          } else {
+                            voiceService.stopSpeaking();
+                            setSpeakingMessageId(msg.id);
+                            voiceService.speak(
+                              msg.text,
+                              currentLanguageCode,
+                              () => setSpeakingMessageId(msg.id),
+                              () => setSpeakingMessageId(null),
+                              () => setSpeakingMessageId(null)
+                            );
+                          }
+                        }}
+                        className={`flex items-center space-x-1 px-2 py-0.5 rounded cursor-pointer transition ${
+                          speakingMessageId === msg.id
+                            ? 'bg-emerald-700 text-white font-bold'
+                            : 'hover:bg-[#BBA58F]/30 text-[#523D35]'
+                        }`}
+                      >
+                        {speakingMessageId === msg.id ? (
+                          <>
+                            <VolumeX className="w-3 h-3" />
+                            <span>Stop</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 className="w-3 h-3" />
+                            <span>Listen</span>
+                          </>
+                        )}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>

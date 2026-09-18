@@ -39,7 +39,7 @@ export interface UserProfile {
   currentWeightKg: number; // in kg
   heightCm: number; // in cm
   bloodGroup: string;
-  dietPreference: 'Vegetarian' | 'Non-Vegetarian' | 'Eggetarian' | 'Vegan';
+  dietPreference: 'Vegetarian' | 'Non-Vegetarian' | 'vegetarian' | 'non-vegetarian' | 'Eggetarian' | 'Vegan';
   state: string;
   city: string;
   district?: string;
@@ -85,7 +85,9 @@ export interface UserProfile {
   waterReminderSettings?: {
     enabled: boolean;
     intervalMinutes: number;
-    scheduleType?: '1hour' | '2hours' | 'custom';
+    scheduleType?: '1hour' | '2hours' | '3hours' | 'custom';
+    customMinutes?: number;
+    soundEnabled?: boolean;
   };
   mealReminderSettings?: {
     enabled: boolean;
@@ -153,12 +155,28 @@ export interface KaggleFoodItem {
   safetyLevel: 'Safe' | 'Safe in Moderation' | 'Avoid';
   safetyExplanation: string;
   isVegetarian: boolean;
+  dietType?: 'vegetarian' | 'non-vegetarian';
   trimesterRecommended: '1st Trimester' | '2nd Trimester' | '3rd Trimester' | 'All Trimesters' | string;
+  trimesterSuitability?: '1st Trimester' | '2nd Trimester' | '3rd Trimester' | 'All Trimesters' | string;
   tags: string[];
   maternalBenefits: string;
   maternalTip: string;
   dataSource: string; // 'Kaggle Indian Food & Nutrition Dataset (ICMR-IFCT Standardized)'
   image?: string;
+  imageUrl?: string;
+  imageSource?: 'Project Food Dataset' | 'PregNutri AI Food Dataset' | 'User Uploaded Food Photo' | 'Verified Food Photography' | 'AI Generated Food Image' | string;
+  imageSourceType?: 'project-dataset' | 'user-uploaded' | 'verified-web-source' | 'food-composition-source' | 'verified-photography' | 'ai-generated' | 'unavailable' | string;
+  imageSourceName?: string;
+  imageAttribution?: string;
+  imageLicense?: string;
+  recipe?: {
+    ingredients: string[];
+    instructions: string[];
+    prepTimeMinutes?: number;
+    cookTimeMinutes?: number;
+    storageAdvice?: string;
+    pregnancySafetyTips?: string;
+  };
   // Computed ranking & transparency explanation
   recommendationPriority?: 1 | 2 | 3 | 4; // 1: Exact State, 2: Region, 3: Country, 4: General
   whyRecommended?: string;
@@ -211,6 +229,7 @@ export interface PlannedMeal {
   day: 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
   category: 'Breakfast' | 'Mid-Morning Snack' | 'Lunch' | 'Evening Snack' | 'Dinner';
   name: string;
+  regionalName?: string;
   portion: string;
   calories: number;
   protein: number;
@@ -219,6 +238,8 @@ export interface PlannedMeal {
   folate: number;
   isCompleted?: boolean;
   foodId?: string;
+  image?: string;
+  imageSource?: string;
   servings?: number;
   unitCalories?: number;
   unitProtein?: number;
