@@ -611,38 +611,6 @@ export const VERIFIED_INDIAN_HEALTH_FACILITIES: HealthFacility[] = [
     lng: 77.5824
   },
   {
-    id: 'fac-kar-cheluvamba-mys',
-    name: 'Cheluvamba Hospital for Women and Children (Govt MMCRI)',
-    category: 'Government General Hospital',
-    facilityType: 'Government Tertiary Maternal & Pediatric Hospital',
-    address: 'Irwin Road, Next to K.R. Hospital, Devaraja Mohalla, Mysuru, Karnataka 570001',
-    city: 'Mysuru',
-    district: 'Mysuru',
-    state: 'Karnataka',
-    distanceKm: 2.1,
-    phone: '+91 821 252 0512',
-    emergencyPhone: '108 / 102 / +91 821 242 0800',
-    doctorInCharge: 'Medical Superintendent',
-    timing: '24 Hours Emergency Obstetric & Neonatal Unit',
-    bedCapacity: 410,
-    hasMaternityWard: true,
-    hasDeliveryRoom: true,
-    hasMaternalIcu: true,
-    hasNicu: true,
-    hasEmergencyServices: true,
-    hasCashlessSchemes: true,
-    specialties: ['Tertiary Obstetric Care', 'High-Risk Labor Suite', 'Level III NICU', 'Blood Component Bank'],
-    maternalServices: [
-      '24/7 Comprehensive Emergency Obstetric & Newborn Care (CEmONC)',
-      'Free Normal & Caesarean Deliveries under JSSK',
-      'Advanced 40-bed SNCU / Neonatal Unit',
-      'KMC (Kangaroo Mother Care) Ward & Lactation Support'
-    ],
-    rating: 4.7,
-    lat: 12.3168,
-    lng: 76.6508
-  },
-  {
     id: 'fac-kar-mangaluru-ladygoschen',
     name: 'Govt Lady Goschen Hospital (KMC Mangaluru)',
     category: 'Government General Hospital',

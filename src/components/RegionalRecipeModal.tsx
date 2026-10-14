@@ -211,7 +211,8 @@ export const RegionalRecipeModal: React.FC<RegionalRecipeModalProps> = ({
           city,
           traditionalName: traditionalName.trim(),
           image: photoUrl,
-          profile: userProfile
+          profile: userProfile,
+          language
         })
       });
 

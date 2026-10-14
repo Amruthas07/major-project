@@ -12,6 +12,12 @@ import { KAGGLE_PROCESSED_FOOD_DATABASE } from '../services/kaggle_food_pipeline
 import { LocationNutritionEngine } from '../services/location_nutrition_engine';
 import { useLanguage, DualText, DualFoodName } from '../services/language_service';
 import {
+  getDateForDayOfWeekInCurrentWeek,
+  formatLocalizedDate,
+  formatLocalizedWeekday,
+  getIndiaDate
+} from '../utils/date_utils';
+import {
   CalendarCheck,
   Plus,
   Trash2,
@@ -63,7 +69,7 @@ export const MealPlannerView: React.FC = () => {
     openAddToPlanModal
   } = useAppContext();
 
-  const { t } = useLanguage();
+  const { t, currentLanguageCode } = useLanguage();
 
   // Sub-view toggle: Daily Meal Schedule vs 7-Day Weekly Summary
   const [activePlannerView, setActivePlannerView] = useState<'daily' | 'weekly-summary'>('daily');
@@ -107,6 +113,32 @@ export const MealPlannerView: React.FC = () => {
   const calcPercent = Math.min(100, Math.round((dayNutrition.calcium / trimesterRdaTargets.calcium) * 100));
   const folPercent = Math.min(100, Math.round((dayNutrition.folate / trimesterRdaTargets.folate) * 100));
 
+  // Category title translation helper
+  const getCategoryTitle = (cat: MealCategory | string) => {
+    switch (cat) {
+      case 'Breakfast':
+        return t('meal.breakfastSimple', 'Breakfast');
+      case 'Mid-Morning':
+      case 'Mid-Morning Snack':
+        return t('meal.midMorningSimple', 'Mid-Morning Snack');
+      case 'Lunch':
+        return t('meal.lunchSimple', 'Lunch');
+      case 'Evening Snack':
+        return t('meal.eveningSnackSimple', 'Evening Snack');
+      case 'Dinner':
+        return t('meal.dinnerSimple', 'Dinner');
+      default:
+        return cat;
+    }
+  };
+
+  // Trimester title translation helper
+  const getTrimesterTitle = (trim: PregnancyTrimester) => {
+    if (trim === '1st Trimester') return t('trimester.1st', '1st Trimester');
+    if (trim === '2nd Trimester') return t('trimester.2nd', '2nd Trimester');
+    return t('trimester.3rd', '3rd Trimester');
+  };
+
   // Handle selecting from dropdown in custom modal
   const handleDropdownSelect = (foodId: string) => {
     setSelectedKaggleId(foodId);
@@ -138,58 +170,53 @@ export const MealPlannerView: React.FC = () => {
       return;
     }
 
-    // Check custom food against user's saved allergy profile
-    const allergyCheck = checkFoodAllergies(
-      { name: customName.trim() },
-      userProfile.allergies
-    );
-    if (allergyCheck.hasAllergy) {
-      const confirmed = confirm(
-        `⚠️ ALLERGY WARNING:\n"${customName.trim()}" contains ${allergyCheck.matchedAllergens.join(', ')}, which is in your saved allergy profile.\n\nDo you still want to proceed and add this item?`
-      );
-      if (!confirmed) return;
-    }
-
     addFoodToPlan({
       food: {
-        id: selectedKaggleId || `custom-${Date.now()}`,
+        id: selectedKaggleId || undefined,
         name: customName.trim(),
-        calories: Number(calories) || 0,
-        protein: Number(protein) || 0,
-        iron: Number(iron) || 0,
-        calcium: Number(calcium) || 0,
-        folate: Number(folate) || 0,
+        calories,
+        protein,
+        iron,
+        calcium,
+        folate,
         servingSize: portion
       },
       day: selectedDay,
       category: customCategory,
-      servings: 1,
-      customPortion: portion
+      servings: 1
     });
 
-    setCustomName('');
-    setSelectedKaggleId('');
     setShowCustomModal(false);
+    setSelectedKaggleId('');
+    setCustomName('');
+    setCalories(250);
+    setProtein(10);
+    setIron(3.5);
+    setCalcium(150);
+    setFolate(60);
+    setPortion('1 Serving');
   };
 
+  const todayIndiaDay = getIndiaDate().dayOfWeek;
+
   return (
-    <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
-      {/* 1. Header & Navigation Controls */}
-      <div className="bg-[#E8D9CD] rounded-3xl p-6 sm:p-8 border border-[#959D90] shadow-xs space-y-5">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-8 animate-in fade-in duration-300">
+      {/* 1. Header with Controls, Trimester Switcher & View Mode Toggle */}
+      <div className="bg-[#E8D9CD] rounded-3xl p-6 sm:p-8 border border-[#959D90]/50 shadow-sm space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center space-x-1.5 px-3 py-1 rounded-full bg-[#523D35] text-[#E8D9CD] border border-[#BBA58F]/30 text-xs font-bold uppercase tracking-wider mb-2">
               <CalendarCheck className="w-3.5 h-3.5 text-[#BBA58F]" />
-              <span>Personalized Maternal Meal Planner</span>
+              <span>{t('planner.title', 'Personalized Maternal Meal Planner')}</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#223030] tracking-tight flex items-center gap-2 flex-wrap">
-              <span>🗓️ Maternal Meal Schedule</span>
+              <span>🗓️ {activePlannerView === 'weekly-summary' ? t('planner.weeklyTitle', '7-Day Maternal Nutrition Summary & Compliance') : t('planner.schedule', 'Maternal Meal Schedule')}</span>
               <span className="text-sm font-bold text-[#523D35] bg-[#EFEFE9] border border-[#959D90]/40 px-3 py-1 rounded-full">
                 📍 {globalLocation.village || globalLocation.city}, {globalLocation.state}
               </span>
             </h1>
-            <p className="text-sm text-[#523D35] mt-1 max-w-3xl">
-              Plan and log all 5 daily pregnancy meal intervals to guarantee optimal micro and macronutrient distribution without maternal blood sugar spikes.
+            <p className="text-sm text-[#523D35] mt-1 max-w-3xl leading-relaxed">
+              {t('planner.desc', 'Plan and log all 5 daily pregnancy meal intervals to guarantee optimal micro and macronutrient distribution without maternal blood sugar spikes.')}
             </p>
           </div>
 
@@ -206,7 +233,7 @@ export const MealPlannerView: React.FC = () => {
               title="Toggle between Daily Meal Schedule and 7-Day Comprehensive Summary"
             >
               <BarChart3 className="w-4 h-4 text-[#BBA58F]" />
-              <span>{activePlannerView === 'weekly-summary' ? 'View Daily Planner' : '📊 7-Day Nutrition Summary'}</span>
+              <span>{activePlannerView === 'weekly-summary' ? t('planner.viewDaily', 'View Daily Planner') : `📊 ${t('planner.viewSummary', '7-Day Nutrition Summary')}`}</span>
             </button>
 
             <button
@@ -216,7 +243,7 @@ export const MealPlannerView: React.FC = () => {
               title={`Regenerate authentic meal plan for ${globalLocation.state} (${selectedTrimester})`}
             >
               <RotateCcw className="w-3.5 h-3.5 text-[#523D35]" />
-              <span>Auto-Plan for {globalLocation.state}</span>
+              <span>{t('planner.autoPlan', 'Auto-Plan for')} {globalLocation.state}</span>
             </button>
 
             <button
@@ -228,7 +255,7 @@ export const MealPlannerView: React.FC = () => {
               className="px-4 py-2.5 rounded-xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold shadow-xs flex items-center gap-1.5 transition cursor-pointer"
             >
               <Plus className="w-4 h-4 text-[#BBA58F]" />
-              <span>+ Add Food Item</span>
+              <span>{t('planner.addFood', '+ Add Food Item')}</span>
             </button>
           </div>
         </div>
@@ -236,63 +263,78 @@ export const MealPlannerView: React.FC = () => {
         {/* Trimester Selector Tabs */}
         <div className="pt-2 border-t border-[#959D90]/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center space-x-2">
-            <span className="text-xs font-bold text-[#523D35] uppercase">Trimester Focus:</span>
-            {(['1st Trimester', '2nd Trimester', '3rd Trimester'] as PregnancyTrimester[]).map((t) => (
+            <span className="text-xs font-bold text-[#523D35] uppercase">{t('planner.trimesterFocus', 'Trimester Focus:')}</span>
+            {(['1st Trimester', '2nd Trimester', '3rd Trimester'] as PregnancyTrimester[]).map((tVal) => (
               <button
-                key={t}
+                key={tVal}
                 type="button"
-                onClick={() => setSelectedTrimester(t)}
+                onClick={() => setSelectedTrimester(tVal)}
                 className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
-                  selectedTrimester === t
+                  selectedTrimester === tVal
                     ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
                     : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/40'
                 }`}
               >
-                {t}
+                {getTrimesterTitle(tVal)}
               </button>
             ))}
           </div>
 
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-[#523D35] uppercase">Diet:</span>
+            <span className="text-xs font-bold text-[#523D35] uppercase">{t('planner.diet', 'Diet:')}</span>
             {userDietPref === 'vegetarian' ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-800 text-white text-xs font-black shadow-xs">
-                <span>🥬</span>
-                <span>Vegetarian (Pure-Veg Active)</span>
+                <span>{t('planner.pureVeg', '🥬 Pure Vegetarian')}</span>
               </span>
             ) : (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-900 text-white text-xs font-black shadow-xs">
-                <span>🍗</span>
-                <span>Non-Vegetarian (Safe Balanced)</span>
+                <span>{t('planner.nonVeg', '🍗 Vegetarian & Non-Veg')}</span>
               </span>
             )}
           </div>
 
           <div className="text-xs font-semibold text-[#223030] bg-[#EFEFE9] px-3 py-1.5 rounded-xl border border-[#959D90]/40">
-            ICMR RDA Targets: <span className="font-extrabold">{trimesterRdaTargets.calories} kcal</span> • <span className="font-extrabold">{trimesterRdaTargets.protein}g Protein</span> • <span className="font-extrabold">{trimesterRdaTargets.iron}mg Iron</span>
+            {t('planner.rdaTargets', 'ICMR RDA Targets:')} <span className="font-extrabold">{trimesterRdaTargets.calories} kcal</span> • <span className="font-extrabold">{trimesterRdaTargets.protein}g {t('nutrient.protein', 'Protein')}</span> • <span className="font-extrabold">{trimesterRdaTargets.iron}mg {t('nutrient.iron', 'Iron')}</span>
           </div>
         </div>
 
-        {/* 7-Day Selector Pills with Live Counts */}
+        {/* 7-Day Selector Pills with Live Counts AND Real Current Week Calendar Dates */}
         <div className="pt-2 border-t border-[#959D90]/30">
           <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1">
             {DAYS_OF_WEEK.map((day) => {
               const isSelected = selectedDay === day;
               const count = meals.filter((m) => m.day === day).length;
+              const dateStr = getDateForDayOfWeekInCurrentWeek(day);
+              const formattedWeekday = formatLocalizedWeekday(day, currentLanguageCode, true);
+              const formattedDate = formatLocalizedDate(dateStr, currentLanguageCode, { short: true });
+              const isToday = todayIndiaDay === day;
+
               return (
                 <button
                   key={day}
                   type="button"
                   onClick={() => setSelectedDay(day)}
-                  className={`px-4 py-2.5 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-2 shrink-0 cursor-pointer ${
+                  className={`px-3.5 py-2 rounded-2xl text-xs font-bold whitespace-nowrap transition-all flex items-center space-x-2 shrink-0 cursor-pointer ${
                     isSelected
                       ? 'bg-[#223030] text-[#EFEFE9] shadow-md ring-2 ring-[#523D35]/50'
                       : 'bg-[#EFEFE9] hover:bg-[#BBA58F]/20 text-[#523D35] border border-[#959D90]/50'
                   }`}
                 >
-                  <span className="text-sm">{day}</span>
+                  <div className="flex flex-col text-left">
+                    <span className="text-xs font-extrabold flex items-center gap-1">
+                      <span>{formattedWeekday}</span>
+                      {isToday && (
+                        <span className="text-[9px] px-1.5 py-0.2 rounded bg-emerald-600 text-white font-black tracking-wide">
+                          {t('common.today', 'Today')}
+                        </span>
+                      )}
+                    </span>
+                    <span className={`text-[10px] font-medium leading-tight ${isSelected ? 'text-[#BBA58F]' : 'text-[#959D90]'}`}>
+                      {formattedDate}
+                    </span>
+                  </div>
                   <span
-                    className={`text-[11px] px-2 py-0.5 rounded-full font-black ${
+                    className={`text-[11px] px-2 py-0.5 rounded-full font-black ml-1 ${
                       isSelected
                         ? 'bg-[#523D35] text-[#EFEFE9]'
                         : count > 0
@@ -322,10 +364,10 @@ export const MealPlannerView: React.FC = () => {
             </div>
             <div>
               <h2 className="text-lg font-black tracking-tight text-[#EFEFE9]">
-                {selectedDay} Nutrition Summary ({dayNutrition.totalMealCount} Meals Planned)
+                {formatLocalizedWeekday(selectedDay, currentLanguageCode, false)} {t('planner.nutritionSummaryFor', 'Nutrition Summary')} ({dayNutrition.totalMealCount} {t('planner.mealsPlanned', 'Meals Planned')})
               </h2>
               <p className="text-xs text-[#959D90]">
-                Calculated strictly from meals planned for <span className="text-[#BBA58F] font-bold">{selectedDay}</span> vs. ICMR {selectedTrimester} RDA
+                {t('planner.calculatedStrictly', 'Calculated strictly from meals planned for')} <span className="text-[#BBA58F] font-bold">{formatLocalizedWeekday(selectedDay, currentLanguageCode, false)}</span> vs. ICMR {getTrimesterTitle(selectedTrimester)} RDA
               </p>
             </div>
           </div>
@@ -338,23 +380,23 @@ export const MealPlannerView: React.FC = () => {
               title="Open full 7-day maternal nutrition summary & consistency report"
             >
               <BarChart3 className="w-3.5 h-3.5" />
-              <span>7-Day Trends</span>
+              <span>{t('planner.sevenDayTrends', '7-Day Trends')}</span>
             </button>
             {dayNutrition.totalMealCount > 0 && (
               <button
                 type="button"
                 onClick={() => {
-                  if (confirm(`Clear all ${dayNutrition.totalMealCount} planned meals for ${selectedDay}?`)) {
+                  if (confirm(`${t('planner.clearDayMeals', 'Clear')} ${dayNutrition.totalMealCount} (${formatLocalizedWeekday(selectedDay, currentLanguageCode, false)})?`)) {
                     clearDayMeals(selectedDay);
                   }
                 }}
                 className="text-[11px] font-bold text-[#BBA58F] hover:text-[#E8D9CD] hover:underline px-2 py-1 cursor-pointer"
               >
-                Clear {selectedDay} Meals
+                {t('planner.clearDayMeals', 'Clear Day Meals')}
               </button>
             )}
             <span className="text-xs px-3 py-1 rounded-full bg-[#523D35] text-[#E8D9CD] border border-[#BBA58F]/30 font-extrabold">
-              {dayNutrition.completedMealCount} of {dayNutrition.totalMealCount} Eaten
+              {dayNutrition.completedMealCount} {t('planner.of', 'of')} {dayNutrition.totalMealCount} {t('planner.eaten', 'Eaten')}
             </span>
           </div>
         </div>
@@ -363,7 +405,7 @@ export const MealPlannerView: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
           {/* Energy */}
           <div className="bg-[#223030]/90 rounded-2xl p-4 border border-[#959D90]/40 space-y-1.5">
-            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">Calories</span>
+            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">{t('nutrient.calories', 'Calories')}</span>
             <div className="flex items-baseline space-x-1">
               <span className="text-2xl font-black text-[#E8D9CD]">{dayNutrition.calories}</span>
               <span className="text-xs text-[#959D90]">/ {trimesterRdaTargets.calories} kcal</span>
@@ -374,12 +416,12 @@ export const MealPlannerView: React.FC = () => {
                 style={{ width: `${calPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-semibold text-[#959D90] block">{calPercent}% of RDA</span>
+            <span className="text-[10px] font-semibold text-[#959D90] block">{calPercent}% {t('planner.rdaPercent', 'of RDA')}</span>
           </div>
 
           {/* Protein */}
           <div className="bg-[#223030]/90 rounded-2xl p-4 border border-[#959D90]/40 space-y-1.5">
-            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">Protein</span>
+            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">{t('nutrient.protein', 'Protein')}</span>
             <div className="flex items-baseline space-x-1">
               <span className="text-2xl font-black text-[#E8D9CD]">{dayNutrition.protein}</span>
               <span className="text-xs text-[#959D90]">/ {trimesterRdaTargets.protein}g</span>
@@ -390,12 +432,12 @@ export const MealPlannerView: React.FC = () => {
                 style={{ width: `${protPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-semibold text-[#959D90] block">{protPercent}% of RDA</span>
+            <span className="text-[10px] font-semibold text-[#959D90] block">{protPercent}% {t('planner.rdaPercent', 'of RDA')}</span>
           </div>
 
           {/* Iron */}
           <div className="bg-[#223030]/90 rounded-2xl p-4 border border-[#959D90]/40 space-y-1.5">
-            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">Iron</span>
+            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">{t('nutrient.iron', 'Iron')}</span>
             <div className="flex items-baseline space-x-1">
               <span className="text-2xl font-black text-[#E8D9CD]">{dayNutrition.iron}</span>
               <span className="text-xs text-[#959D90]">/ {trimesterRdaTargets.iron}mg</span>
@@ -406,12 +448,12 @@ export const MealPlannerView: React.FC = () => {
                 style={{ width: `${ironPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-semibold text-[#959D90] block">{ironPercent}% of RDA</span>
+            <span className="text-[10px] font-semibold text-[#959D90] block">{ironPercent}% {t('planner.rdaPercent', 'of RDA')}</span>
           </div>
 
           {/* Calcium */}
           <div className="bg-[#223030]/90 rounded-2xl p-4 border border-[#959D90]/40 space-y-1.5">
-            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">Calcium</span>
+            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">{t('nutrient.calcium', 'Calcium')}</span>
             <div className="flex items-baseline space-x-1">
               <span className="text-2xl font-black text-[#E8D9CD]">{dayNutrition.calcium}</span>
               <span className="text-xs text-[#959D90]">/ {trimesterRdaTargets.calcium}mg</span>
@@ -422,12 +464,12 @@ export const MealPlannerView: React.FC = () => {
                 style={{ width: `${calcPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-semibold text-[#959D90] block">{calcPercent}% of RDA</span>
+            <span className="text-[10px] font-semibold text-[#959D90] block">{calcPercent}% {t('planner.rdaPercent', 'of RDA')}</span>
           </div>
 
           {/* Folate */}
           <div className="bg-[#223030]/90 rounded-2xl p-4 border border-[#959D90]/40 space-y-1.5 col-span-2 sm:col-span-1">
-            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">Folate (B9)</span>
+            <span className="text-[10px] text-[#959D90] font-bold uppercase tracking-wider block">{t('nutrient.folate', 'Folate (B9)')}</span>
             <div className="flex items-baseline space-x-1">
               <span className="text-2xl font-black text-[#E8D9CD]">{dayNutrition.folate}</span>
               <span className="text-xs text-[#959D90]">/ {trimesterRdaTargets.folate}µg</span>
@@ -438,7 +480,7 @@ export const MealPlannerView: React.FC = () => {
                 style={{ width: `${folPercent}%` }}
               />
             </div>
-            <span className="text-[10px] font-semibold text-[#959D90] block">{folPercent}% of RDA</span>
+            <span className="text-[10px] font-semibold text-[#959D90] block">{folPercent}% {t('planner.rdaPercent', 'of RDA')}</span>
           </div>
         </div>
 
@@ -447,7 +489,7 @@ export const MealPlannerView: React.FC = () => {
           <Info className="w-5 h-5 text-[#BBA58F] shrink-0 mt-0.5" />
           <div>
             <span className="font-bold text-[#EFEFE9] block mb-0.5">
-              {selectedTrimester} Maternal Focus ({globalLocation.state}):
+              {getTrimesterTitle(selectedTrimester)} {t('planner.maternalFocus', 'Maternal Focus')} ({globalLocation.state}):
             </span>
             <p className="text-[#E8D9CD] leading-relaxed">
               {trimesterPlanInfo.clinicalFocus} Prioritizing authentic {globalLocation.state} dishes like {trimesterPlanInfo.recommendedDishes.slice(0, 3).map(d => d.name.split('(')[0]).join(', ')}.
@@ -460,10 +502,11 @@ export const MealPlannerView: React.FC = () => {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-extrabold text-[#223030] tracking-tight flex items-center gap-2">
-            <span>5 Maternal Meal Intervals for {selectedDay}</span>
+            <span>{t('planner.fiveIntervalsFor', '5 Maternal Meal Intervals for')} </span>
+            <span className="text-[#523D35]">{formatLocalizedWeekday(selectedDay, currentLanguageCode, false)}</span>
           </h2>
           <span className="text-xs font-semibold text-[#523D35]">
-            Target: 5 timed meals to stabilize glycemic &amp; fetal nutrient supply
+            {t('planner.fiveIntervalsTarget', 'Target: 5 timed meals to stabilize glycemic & fetal nutrient supply')}
           </span>
         </div>
 
@@ -491,14 +534,14 @@ export const MealPlannerView: React.FC = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-base font-extrabold text-[#223030] tracking-tight">
-                          {category}
+                          {getCategoryTitle(category)}
                         </h3>
                         <span className="text-xs px-2.5 py-0.5 rounded-full bg-[#EFEFE9] text-[#523D35] font-bold">
                           {timeInfo.time}
                         </span>
                       </div>
                       <p className="text-xs text-[#523D35] mt-0.5">
-                        {slotMeals.length === 0 ? 'No items planned yet' : `${slotMeals.length} item${slotMeals.length > 1 ? 's' : ''} planned`}
+                        {slotMeals.length === 0 ? t('meal.noItemsPlanned', 'No items planned yet') : `${slotMeals.length} ${t('meal.itemsPlanned', 'items planned')}`}
                       </p>
                     </div>
                   </div>
@@ -527,7 +570,7 @@ export const MealPlannerView: React.FC = () => {
                       className="px-3 py-1.5 rounded-xl bg-[#EFEFE9] hover:bg-[#BBA58F]/30 text-[#523D35] text-xs font-bold border border-[#959D90]/50 flex items-center gap-1 transition shrink-0 cursor-pointer"
                     >
                       <Plus className="w-3.5 h-3.5 text-[#523D35]" />
-                      <span>Add to {category}</span>
+                      <span>{t('meal.addMeal', 'Add Meal')} ({getCategoryTitle(category)})</span>
                     </button>
                   </div>
                 </div>
@@ -555,7 +598,7 @@ export const MealPlannerView: React.FC = () => {
                                   ? 'bg-[#223030] border-[#223030] text-[#EFEFE9] shadow-xs'
                                   : 'border-[#959D90] bg-[#E8D9CD] hover:border-[#523D35]'
                               }`}
-                              title={meal.isCompleted ? 'Mark as not eaten' : 'Mark as eaten'}
+                              title={meal.isCompleted ? t('meal.markNotConsumed', 'Mark as not eaten') : t('meal.markConsumed', 'Mark as eaten')}
                             >
                               {meal.isCompleted && <Check className="w-4 h-4 stroke-[3]" />}
                             </button>
@@ -571,11 +614,11 @@ export const MealPlannerView: React.FC = () => {
                               />
                               <div className="flex items-center space-x-2 mt-1">
                                 <span className="text-xs text-[#523D35] font-medium">
-                                  Portion: {meal.portion}
+                                  {t('planner.portion', 'Portion')}: {meal.portion}
                                 </span>
                                 {meal.isCompleted && (
                                   <span className="text-[10px] font-extrabold text-[#E8D9CD] bg-[#523D35] px-2 py-0.5 rounded-md">
-                                    ✓ Consumed
+                                    {t('planner.consumed', '✓ Consumed')}
                                   </span>
                                 )}
                                 {(() => {
@@ -589,7 +632,7 @@ export const MealPlannerView: React.FC = () => {
                                       title="View complete recipe and preparation guidance"
                                     >
                                       <ChefHat className="w-3 h-3 text-[#523D35]" />
-                                      <span>View Recipe</span>
+                                      <span>{t('planner.viewRecipe', 'View Recipe')}</span>
                                     </button>
                                   );
                                 })()}
@@ -605,7 +648,7 @@ export const MealPlannerView: React.FC = () => {
                                 return (
                                   <div className="mt-1.5 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-red-100 text-red-950 border border-red-300 text-[11px] font-extrabold">
                                     <AlertTriangle className="w-3.5 h-3.5 text-red-600 shrink-0" />
-                                    <span>⚠️ Allergy Alert: Contains {allergyCheck.matchedAllergens.join(', ')}</span>
+                                    <span>{t('planner.allergyAlert', '⚠️ Allergy Alert: Contains')} {allergyCheck.matchedAllergens.join(', ')}</span>
                                   </div>
                                 );
                               })()}
@@ -674,11 +717,11 @@ export const MealPlannerView: React.FC = () => {
                   /* Empty state for category with suggested recommendations */
                   <div className="p-4 rounded-2xl bg-[#EFEFE9] border border-dashed border-[#959D90]/60 text-center space-y-2">
                     <p className="text-xs text-[#523D35] font-medium">
-                      No foods scheduled for {selectedDay} {category}.
+                      {t('planner.noFoodsScheduled', 'No foods scheduled for')} {formatLocalizedWeekday(selectedDay, currentLanguageCode, false)} ({getCategoryTitle(category)}).
                     </p>
                     <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
                       <span className="text-[11px] font-bold text-[#523D35]">
-                        Suggested for {globalLocation.state}:
+                        {t('planner.suggestedFor', 'Suggested for')} {globalLocation.state}:
                       </span>
                       {trimesterPlanInfo.recommendedDishes
                         .filter(
@@ -709,7 +752,7 @@ export const MealPlannerView: React.FC = () => {
                             className="px-2.5 py-1 rounded-lg bg-[#E8D9CD] border border-[#959D90]/50 hover:border-[#523D35] hover:text-[#223030] text-[11px] font-bold text-[#523D35] transition flex items-center gap-1 shadow-xs cursor-pointer"
                           >
                             <Plus className="w-3 h-3 text-[#523D35]" />
-                            <span>{rec.name.split('(')[0]}</span>
+                            <DualFoodName foodName={rec.name} className="text-[11px] font-bold text-[#523D35]" />
                           </button>
                         ))}
                     </div>
@@ -729,9 +772,9 @@ export const MealPlannerView: React.FC = () => {
           <div className="bg-[#EFEFE9] rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-[#959D90] animate-in fade-in space-y-5">
             <div className="flex items-center justify-between border-b border-[#959D90]/30 pb-3">
               <div>
-                <h3 className="text-lg font-black text-[#223030]">Add Meal Item to {selectedDay}</h3>
+                <h3 className="text-lg font-black text-[#223030]">{t('planner.addCustomItem', 'Add Meal Item to')} {formatLocalizedWeekday(selectedDay, currentLanguageCode, false)}</h3>
                 <p className="text-xs text-[#523D35]">
-                  Add from verified maternal food database ({userDietPref === 'vegetarian' ? '🥬 Pure Vegetarian Only' : '🍗 Vegetarian & Non-Veg'})
+                  {t('planner.verifiedDatabase', 'Add from verified maternal food database')} ({userDietPref === 'vegetarian' ? t('planner.pureVeg', '🥬 Pure Vegetarian Only') : t('planner.nonVeg', '🍗 Vegetarian & Non-Veg')})
                 </p>
               </div>
               <button
@@ -746,7 +789,7 @@ export const MealPlannerView: React.FC = () => {
             <form onSubmit={handleSaveCustom} className="space-y-4">
               {/* Category selector */}
               <div>
-                <label className="text-xs font-bold text-[#223030] block mb-1">Meal Category</label>
+                <label className="text-xs font-bold text-[#223030] block mb-1">{t('planner.mealCategory', 'Meal Category')}</label>
                 <select
                   value={customCategory}
                   onChange={(e) => setCustomCategory(e.target.value as MealCategory)}
@@ -754,7 +797,7 @@ export const MealPlannerView: React.FC = () => {
                 >
                   {MEAL_CATEGORIES.map((cat) => (
                     <option key={cat} value={cat}>
-                      {MEAL_TIME_RANGES[cat].icon} {cat} ({MEAL_TIME_RANGES[cat].time})
+                      {MEAL_TIME_RANGES[cat].icon} {getCategoryTitle(cat)} ({MEAL_TIME_RANGES[cat].time})
                     </option>
                   ))}
                 </select>
@@ -763,17 +806,17 @@ export const MealPlannerView: React.FC = () => {
               {/* Quick Pick from ICMR Database */}
               <div>
                 <label className="text-xs font-bold text-[#223030] block mb-1">
-                  Quick Pick from Maternal Food Database ({globalLocation.state} • {userDietPref === 'vegetarian' ? '🥬 Veg Only' : 'All'})
+                  {t('planner.quickSelect', 'Quick Select from Database')} ({globalLocation.state} • {userDietPref === 'vegetarian' ? '🥬' : '🍗'})
                 </label>
                 <select
                   value={selectedKaggleId}
                   onChange={(e) => handleDropdownSelect(e.target.value)}
                   className="w-full px-3.5 py-2.5 rounded-xl bg-[#E8D9CD] border border-[#959D90]/60 text-xs font-semibold text-[#223030] outline-none cursor-pointer"
                 >
-                  <option value="">-- Choose from ICMR Verified Foods ({eligibleKaggleFoods.length} available) --</option>
+                  <option value="">-- {t('planner.quickSelect', 'Quick Select from Database')} ({eligibleKaggleFoods.length}) --</option>
                   {eligibleKaggleFoods.map((f) => (
                     <option key={f.id} value={f.id}>
-                      {f.name} ({f.cuisine} • {f.calories} kcal • {f.protein}g Protein • {f.iron}mg Fe)
+                      {f.name} ({f.cuisine} • {f.calories} kcal • {f.protein}g • {f.iron}mg)
                     </option>
                   ))}
                 </select>
@@ -781,7 +824,7 @@ export const MealPlannerView: React.FC = () => {
 
               {/* Food Name */}
               <div>
-                <label className="text-xs font-bold text-[#223030] block mb-1">Dish / Food Name *</label>
+                <label className="text-xs font-bold text-[#223030] block mb-1">{t('planner.foodItemName', 'Food Item Name')} *</label>
                 <input
                   type="text"
                   required
@@ -794,7 +837,7 @@ export const MealPlannerView: React.FC = () => {
 
               {/* Portion */}
               <div>
-                <label className="text-xs font-bold text-[#223030] block mb-1">Serving Portion</label>
+                <label className="text-xs font-bold text-[#223030] block mb-1">{t('planner.portionSize', 'Portion Size (e.g. 1 Katori, 2 Idlis, 1 Glass)')}</label>
                 <input
                   type="text"
                   value={portion}
@@ -807,7 +850,7 @@ export const MealPlannerView: React.FC = () => {
               {/* Nutrients Row */}
               <div className="grid grid-cols-5 gap-2">
                 <div>
-                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">Calories</label>
+                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">{t('nutrient.calories', 'Calories')}</label>
                   <input
                     type="number"
                     value={calories}
@@ -816,7 +859,7 @@ export const MealPlannerView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">Protein (g)</label>
+                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">{t('nutrient.protein', 'Protein')}</label>
                   <input
                     type="number"
                     step="0.1"
@@ -826,7 +869,7 @@ export const MealPlannerView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">Iron (mg)</label>
+                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">{t('nutrient.iron', 'Iron')}</label>
                   <input
                     type="number"
                     step="0.1"
@@ -836,7 +879,7 @@ export const MealPlannerView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">Calcium (mg)</label>
+                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">{t('nutrient.calcium', 'Calcium')}</label>
                   <input
                     type="number"
                     value={calcium}
@@ -845,7 +888,7 @@ export const MealPlannerView: React.FC = () => {
                   />
                 </div>
                 <div>
-                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">Folate (µg)</label>
+                  <label className="text-[10px] font-bold text-[#523D35] uppercase block mb-1">{t('nutrient.folate', 'Folate')}</label>
                   <input
                     type="number"
                     value={folate}
@@ -862,13 +905,13 @@ export const MealPlannerView: React.FC = () => {
                   onClick={() => setShowCustomModal(false)}
                   className="px-4 py-2 rounded-xl text-xs font-bold text-[#523D35] hover:bg-[#E8D9CD] cursor-pointer"
                 >
-                  Cancel
+                  {t('planner.cancel', 'Cancel')}
                 </button>
                 <button
                   type="submit"
                   className="px-5 py-2 rounded-xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-black shadow-xs cursor-pointer"
                 >
-                  Save to {selectedDay} ({customCategory})
+                  {t('planner.addToSchedule', 'Add to Meal Schedule')}
                 </button>
               </div>
             </form>

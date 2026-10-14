@@ -10,6 +10,7 @@ import { RegionalRecipe, RecipeIngredient, NutritionDataSourceType } from '../ty
 import { MATERNAL_NUTRIENT_METADATA, DetailedNutrients, MATERNAL_DAILY_TARGETS } from '../nutrition_engine';
 import { checkRecipeAllergies } from '../utils/recipe_nutrition';
 import { VerifiedFoodImage } from './VerifiedFoodImage';
+import { VoiceRecipeButton } from './VoiceButton';
 import { DualFoodName, DualText, FoodSubtitle, useLanguage } from '../services/language_service';
 import { useAppContext, DayOfWeek, MealCategory } from '../context/AppContext';
 
@@ -295,21 +296,21 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
               </span>
             </div>
 
-            {/* Title: English + Local Script */}
-            <div className="pt-1">
-              <h2 className="text-xl sm:text-2xl font-black text-[#EFEFE9] leading-tight flex items-baseline gap-2 flex-wrap">
-                <span>{recipe.nameEnglish || recipe.traditionalName}</span>
-                <FoodSubtitle
-                  foodName={recipe.nameEnglish || recipe.traditionalName}
-                  regionalName={recipe.nameLocal || recipe.traditionalName}
-                  className="text-base sm:text-lg font-bold text-[#BBA58F]"
-                />
-              </h2>
-              {recipe.traditionalName && recipe.traditionalName !== recipe.nameEnglish && (
-                <p className="text-xs font-semibold text-[#BBA58F]/90 mt-0.5">
-                  Traditional Name: {recipe.traditionalName}
-                </p>
-              )}
+            {/* Title: English + Local Script and Voice Action */}
+            <div className="pt-1 flex items-start justify-between gap-3 flex-wrap sm:flex-nowrap">
+              <div>
+                <h2 className="text-xl sm:text-2xl font-black text-[#EFEFE9] leading-tight flex items-baseline gap-2 flex-wrap">
+                  <span>{recipe.nameEnglish || recipe.traditionalName}</span>
+                </h2>
+                {recipe.traditionalName && recipe.traditionalName !== recipe.nameEnglish && (
+                  <p className="text-xs font-semibold text-[#BBA58F]/90 mt-0.5">
+                    Traditional Name: {recipe.traditionalName}
+                  </p>
+                )}
+              </div>
+              <div className="shrink-0 pt-0.5">
+                <VoiceRecipeButton recipe={recipe} />
+              </div>
             </div>
           </div>
         </div>
@@ -360,15 +361,17 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
 
           {/* Cooking Time, Servings & Weight Summary Card */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-            <div className="bg-[#EFEFE9] border border-[#959D90]/50 rounded-2xl p-3 text-center">
-              <span className="text-[10px] font-bold text-[#523D35] uppercase block flex items-center justify-center gap-1">
-                <Clock className="w-3 h-3" />
-                <span>Cooking Time</span>
-              </span>
-              <p className="text-sm sm:text-base font-black text-[#223030] mt-0.5">
-                {recipe.cookingTimeMinutes || recipe.preparationTimeMinutes || 25} Mins
-              </p>
-            </div>
+            {(recipe.cookingTimeMinutes || recipe.preparationTimeMinutes) ? (
+              <div className="bg-[#EFEFE9] border border-[#959D90]/50 rounded-2xl p-3 text-center">
+                <span className="text-[10px] font-bold text-[#523D35] uppercase block flex items-center justify-center gap-1">
+                  <Clock className="w-3 h-3" />
+                  <span>Cooking Time</span>
+                </span>
+                <p className="text-sm sm:text-base font-black text-[#223030] mt-0.5">
+                  {recipe.cookingTimeMinutes || recipe.preparationTimeMinutes} Mins
+                </p>
+              </div>
+            ) : null}
 
             <div className="bg-[#EFEFE9] border border-[#959D90]/50 rounded-2xl p-3 text-center">
               <span className="text-[10px] font-bold text-[#523D35] uppercase block">
@@ -633,12 +636,6 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
                         <span className={`font-bold text-[#223030] block ${isChecked ? 'line-through text-[#523D35]' : ''}`}>
                           {localized.primary}
                         </span>
-                        {localized.secondary && (
-                          <span className="text-[10px] text-[#523D35] block">{localized.secondary}</span>
-                        )}
-                        {!localized.secondary && ing.localName && (
-                          <span className="text-[10px] text-[#523D35] block">{ing.localName}</span>
-                        )}
                         {ing.preparationNotes && (
                           <span className="text-[9px] text-[#523D35] italic block">({ing.preparationNotes})</span>
                         )}

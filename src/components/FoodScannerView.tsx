@@ -44,6 +44,7 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
   onNavigateTab
 }) => {
   const { addFoodToPlan, openAddToPlanModal, selectedDay } = useAppContext();
+  const { t, currentLanguageCode } = useLanguage();
   const [activeSubTab, setActiveSubTab] = useState<'scanner' | 'receipt' | 'history' | 'analytics'>('scanner');
   
   // Scanner Workflow Step
@@ -661,10 +662,10 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
             <span>AI Maternal Nutrition Vision • ICMR-NIN IFCT 2017</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#EFEFE9] flex items-center gap-2.5">
-            <span>📸 Food Scanner</span>
+            <span>📸 {t('scanner.title', 'Food Scanner')}</span>
           </h1>
           <p className="text-[#E8D9CD] text-xs sm:text-sm leading-relaxed">
-            Snap your meal and track your nutrition automatically. Review detected foods, confirm portions, and compute all 13 vitamins &amp; 11 minerals.
+            {t('scanner.snapMeal', 'Snap your meal and track your nutrition automatically. Review detected foods, confirm portions, and compute all 13 vitamins & 11 minerals.')}
           </p>
         </div>
       </div>
@@ -694,13 +695,13 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
           {/* Breadcrumb / Step Indicator */}
           <div className="flex items-center justify-between border-b border-[#959D90]/30 pb-4">
             <div className="flex items-center gap-2 text-xs font-bold text-[#523D35]">
-              <span className={step === 'capture' ? 'text-[#223030] font-black underline' : ''}>1. Photo</span>
+              <span className={step === 'capture' ? 'text-[#223030] font-black underline' : ''}>{t('scanner.stepPhoto', '1. Photo')}</span>
               <span>→</span>
-              <span className={step === 'confirm' ? 'text-[#223030] font-black underline' : ''}>2. Confirm Foods</span>
+              <span className={step === 'confirm' ? 'text-[#223030] font-black underline' : ''}>{t('scanner.stepConfirm', '2. Confirm Foods')}</span>
               <span>→</span>
-              <span className={step === 'portions' ? 'text-emerald-700 font-extrabold' : ''}>3. Portions</span>
+              <span className={step === 'portions' ? 'text-emerald-700 font-extrabold' : ''}>{t('scanner.stepPortions', '3. Portions')}</span>
               <span>→</span>
-              <span className={step === 'results' ? 'text-emerald-700 font-extrabold' : ''}>4. Nutrition Calculation</span>
+              <span className={step === 'results' ? 'text-emerald-700 font-extrabold' : ''}>{t('scanner.stepResults', '4. Nutrition Calculation')}</span>
             </div>
 
             {step !== 'capture' && (
@@ -711,9 +712,9 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
                   else if (step === 'results') setStep('portions');
                   else if (step === 'manual') setStep('capture');
                 }}
-                className="text-xs text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1"
+                className="text-xs text-slate-500 hover:text-slate-800 font-semibold flex items-center gap-1 cursor-pointer"
               >
-                <ArrowLeft className="w-3.5 h-3.5" /> Back
+                <ArrowLeft className="w-3.5 h-3.5" /> {t('action.back', 'Back')}
               </button>
             )}
           </div>

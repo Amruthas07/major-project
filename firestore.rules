@@ -2,36 +2,49 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    match /users/{userId} {
-      allow read, write: if true;
+    function isAuthenticated() {
+      return request.auth != null;
     }
 
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // User Profile Documents
+    match /users/{userId} {
+      allow read, write: if isOwner(userId);
+    }
+
+    // Maternal Clinical Data
     match /appointments_data/{userId} {
-      allow read, write: if true;
+      allow read, write: if isOwner(userId);
     }
 
     match /medicines_data/{userId} {
-      allow read, write: if true;
+      allow read, write: if isOwner(userId);
     }
 
     match /daily_reminders_data/{userId} {
-      allow read, write: if true;
+      allow read, write: if isOwner(userId);
     }
 
     match /medical_reports_data/{userId} {
-      allow read, write: if true;
+      allow read, write: if isOwner(userId);
     }
 
+    // Public Government Welfare Schemes & Health Facilities
     match /governmentSchemes/{state} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if false;
     }
 
     match /healthCenters/{id} {
-      allow read, write: if true;
+      allow read: if true;
+      allow write: if false;
     }
 
     match /{document=**} {
-      allow read, write: if true;
+      allow read, write: if isAuthenticated();
     }
   }
 }

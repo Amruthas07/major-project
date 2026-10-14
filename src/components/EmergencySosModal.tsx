@@ -8,6 +8,7 @@ import {
   ShieldAlert
 } from 'lucide-react';
 import { useAppContext } from '../context/AppContext';
+import { useLanguage } from '../services/language_service';
 
 interface EmergencySosModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
   onNavigateFacilities
 }) => {
   const { globalLocation } = useAppContext();
+  const { t } = useLanguage();
 
   // Call confirmation state to avoid accidental calls without confirmation
   const [confirmCall, setConfirmCall] = useState<{
@@ -84,10 +86,10 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
             </div>
             <div>
               <h2 id="sos-modal-title" className="text-base sm:text-lg font-black tracking-wide flex items-center gap-1.5">
-                <span>SOS / Emergency</span>
+                <span>{t('sos.title', 'SOS / Emergency')}</span>
               </h2>
               <p className="text-[11px] text-red-100 font-medium">
-                Verified Emergency Helplines (24x7)
+                {t('sos.helplines', 'Verified Emergency Helplines (24x7)')}
               </p>
             </div>
           </div>
@@ -101,11 +103,11 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
           </button>
         </div>
 
-        {/* User Location Bar - strictly connected to user profile / dashboard location */}
+        {/* User Location Bar */}
         <div className="bg-[#E8D9CD] px-5 py-2.5 border-b border-[#959D90]/40 flex items-center justify-between text-xs text-[#223030]">
           <div className="flex items-center space-x-1.5 truncate">
             <MapPin className="w-3.5 h-3.5 text-[#523D35] shrink-0" />
-            <span className="font-semibold text-[#523D35]">Current Location:</span>
+            <span className="font-semibold text-[#523D35]">{t('sos.currentLocation', 'Current Location:')}</span>
             <span className="font-bold truncate">
               {userCity}{userDistrict ? `, ${userDistrict}` : ''}, {userState}
             </span>
@@ -119,17 +121,17 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
             <div className="space-y-0.5">
               <div className="flex items-center gap-2">
                 <span className="px-2 py-0.5 rounded-md bg-red-600 text-white font-black text-xs">
-                  Primary
+                  {t('sos.primary', 'Primary')}
                 </span>
                 <span className="text-base sm:text-lg font-black text-red-600">
-                  Emergency Number: 112
+                  {t('sos.number112', 'Emergency Number: 112')}
                 </span>
               </div>
               <div className="text-xs font-semibold text-[#523D35]">
-                India Emergency Response Support System
+                {t('sos.erndDesc', 'India Emergency Response Support System')}
               </div>
-              <div className="text-[11px] text-[#959D90]">
-                Single unified emergency line (Police, Medical, Fire) 24x7
+              <div className="text-[11px] text-[#523D35]/90">
+                {t('sos.erndSubtitle', 'Single unified emergency line (Police, Medical, Fire) 24x7')}
               </div>
             </div>
             <button
@@ -138,14 +140,14 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
               onClick={() =>
                 handleInitiateCall(
                   '112',
-                  'Emergency Number: 112',
-                  'India Emergency Response Support System'
+                  t('sos.number112', 'Emergency Number: 112'),
+                  t('sos.erndDesc', 'India Emergency Response Support System')
                 )
               }
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 active:bg-red-800 text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
             >
               <Phone className="w-3.5 h-3.5 fill-current" />
-              <span>Call 112</span>
+              <span>{t('sos.call112', 'Call 112')}</span>
             </button>
           </div>
 
@@ -155,14 +157,14 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
               <div className="flex items-center gap-2">
                 <Ambulance className="w-4 h-4 text-red-600" />
                 <span className="text-sm sm:text-base font-black text-[#223030]">
-                  Ambulance: 108
+                  {t('sos.ambulance108', 'Ambulance: 108')}
                 </span>
               </div>
               <div className="text-xs font-semibold text-[#523D35]">
-                Emergency Medical Services / Ambulance (24x7 Free)
+                {t('sos.ambulanceDesc', 'Emergency Medical Services / Ambulance (24x7 Free)')}
               </div>
-              <div className="text-[11px] text-[#959D90]">
-                Government medical emergency &amp; life support ambulance
+              <div className="text-[11px] text-[#523D35]/90">
+                {t('sos.ambulanceSub', 'Government medical emergency & life support ambulance')}
               </div>
             </div>
             <button
@@ -171,14 +173,14 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
               onClick={() =>
                 handleInitiateCall(
                   '108',
-                  'Ambulance: 108',
-                  'Emergency Medical Services / Ambulance'
+                  t('sos.ambulance108', 'Ambulance: 108'),
+                  t('sos.ambulanceDesc', 'Emergency Medical Services / Ambulance')
                 )
               }
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#223030] hover:bg-[#523D35] text-white text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
             >
               <Phone className="w-3.5 h-3.5 fill-current" />
-              <span>Call 108</span>
+              <span>{t('sos.call108', 'Call 108')}</span>
             </button>
           </div>
 
@@ -188,14 +190,14 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-[#523D35]" />
                 <span className="text-sm sm:text-base font-black text-[#223030]">
-                  Patient Transport: 102
+                  {t('sos.transport102', 'Patient Transport: 102')}
                 </span>
               </div>
               <div className="text-xs font-semibold text-[#523D35]">
-                Free Transport Service for Pregnant Women &amp; Neonates (JSSK)
+                {t('sos.transportDesc', 'Free Transport Service for Pregnant Women & Neonates (JSSK)')}
               </div>
-              <div className="text-[11px] text-[#959D90]">
-                Janani Shishu Suraksha Karyakram drop-back and hospital transport
+              <div className="text-[11px] text-[#523D35]/90">
+                {t('sos.transportSub', 'Janani Shishu Suraksha Karyakram drop-back and hospital transport')}
               </div>
             </div>
             <button
@@ -204,14 +206,14 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
               onClick={() =>
                 handleInitiateCall(
                   '102',
-                  'Patient Transport: 102',
-                  'Free Transport Service for Pregnant Women & Neonates (JSSK)'
+                  t('sos.transport102', 'Patient Transport: 102'),
+                  t('sos.transportDesc', 'Free Transport Service for Pregnant Women & Neonates (JSSK)')
                 )
               }
               className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-[#523D35] hover:bg-[#223030] text-[#E8D9CD] text-xs font-black flex items-center justify-center gap-1.5 shadow-xs transition cursor-pointer shrink-0"
             >
               <Phone className="w-3.5 h-3.5 fill-current" />
-              <span>Call 102</span>
+              <span>{t('sos.call102', 'Call 102')}</span>
             </button>
           </div>
         </div>
@@ -219,18 +221,18 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
         {/* Footer */}
         <div className="bg-[#E8D9CD] px-5 py-3 border-t border-[#959D90]/30 space-y-2">
           <div className="text-[10px] text-[#523D35] bg-[#EFEFE9] p-2 rounded-xl border border-[#959D90]/40 leading-relaxed">
-            <strong>Medical Notice:</strong> This application provides nutritional guidance, not medical diagnosis. Always consult your doctor or primary healthcare center (PHC) for medical decisions. In an emergency, call 112 or 108 immediately.
+            <strong>{t('sos.noticeTitle', 'Medical Notice:')}</strong> {t('sos.noticeDesc', 'This application provides nutritional guidance, not medical diagnosis. Always consult your doctor or primary healthcare center (PHC) for medical decisions. In an emergency, call 112 or 108 immediately.')}
           </div>
           <div className="flex items-center justify-between">
             <span className="text-[11px] text-[#523D35] font-medium">
-              Calls use your phone's dialer upon confirmation.
+              {t('sos.dialerNote', 'Calls use your phone’s dialer upon confirmation.')}
             </span>
             <button
               type="button"
               onClick={onClose}
               className="px-4 py-1.5 rounded-xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold transition cursor-pointer"
             >
-              Close
+              {t('action.close', 'Close')}
             </button>
           </div>
         </div>
@@ -246,13 +248,13 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
                 <Phone className="w-6 h-6 fill-current" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-base font-black text-[#223030]">Confirm Call</h3>
+                <h3 className="text-base font-black text-[#223030]">{t('sos.confirmTitle', 'Confirm Call')}</h3>
                 <p className="text-sm font-black text-red-600">
                   {confirmCall.title} ({confirmCall.number})
                 </p>
                 <p className="text-xs text-[#523D35]">{confirmCall.subtitle}</p>
-                <p className="text-[11px] text-[#959D90] pt-1">
-                  This will launch the phone dialer on your device. Would you like to proceed?
+                <p className="text-[11px] text-[#523D35] font-medium pt-1">
+                  {t('sos.confirmDesc', 'This will launch the phone dialer on your device. Would you like to proceed?')}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2 pt-2">
@@ -262,7 +264,7 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
                   onClick={() => setConfirmCall(null)}
                   className="py-2.5 px-3 rounded-xl border border-[#959D90] text-[#223030] text-xs font-bold hover:bg-[#EFEFE9] transition cursor-pointer"
                 >
-                  Cancel
+                  {t('action.cancel', 'Cancel')}
                 </button>
                 <button
                   type="button"
@@ -270,7 +272,7 @@ export const EmergencySosModal: React.FC<EmergencySosModalProps> = ({
                   onClick={handleExecuteConfirmedCall}
                   className="py-2.5 px-3 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black shadow-xs transition cursor-pointer"
                 >
-                  Dial Now
+                  {t('sos.dialNow', 'Dial Now')}
                 </button>
               </div>
             </div>

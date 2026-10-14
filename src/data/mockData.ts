@@ -11,7 +11,7 @@ import {
 } from '../types';
 
 export const INITIAL_USER_PROFILE: UserProfile = {
-  name: 'Amrutha',
+  name: '',
   age: 27,
   weeksPregnant: 24,
   dueDate: '2026-12-18',
@@ -27,8 +27,8 @@ export const INITIAL_USER_PROFILE: UserProfile = {
   village: 'Hullahalli',
   mcpCardNumber: '',
   rchId: '',
-  allergies: ['Peanuts (Mild)'],
-  medicalConditions: ['Mild Gestational Anemia (Hb 10.4 g/dL)'],
+  allergies: [],
+  medicalConditions: [],
   emergencyContact: '',
   emergencyContactName: '',
   emergencyContactPhone: '',
@@ -405,7 +405,27 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://wcd.karnataka.gov.in',
     category: 'State Government',
+    state: 'Karnataka',
     badgeColor: 'amber'
+  },
+  {
+    id: 'thayi-bhagya',
+    title: 'THAYI BHAGYA SCHEME / KARNATAKA MATRU VANDANA',
+    shortName: 'Thayi Bhagya Institutional Delivery Scheme',
+    description: 'Karnataka state safe delivery scheme providing free institutional maternal care, emergency obstetric transport, and delivery care in accredited healthcare facilities.',
+    eligibility: 'Pregnant women residing in Karnataka holding BPL/SC/ST ration card delivering in recognized health centres or empanelled private hospitals.',
+    benefits: '100% Free delivery services (including emergency C-sections), newborn care kit, and financial transport assistance under Thayi Bhagya.',
+    cashAmountHighlight: 'Free Delivery Care & Kit',
+    documentsNeeded: [
+      'Thayi Card (Mother & Child Protection Card)',
+      'Karnataka BPL / Antyodaya Ration Card',
+      'Aadhaar Card',
+      'Hospital Admission Referral'
+    ],
+    portalUrl: 'https://hfw.karnataka.gov.in',
+    category: 'State Government',
+    state: 'Karnataka',
+    badgeColor: 'emerald'
   },
   {
     id: 'muthulakshmi-reddy',
@@ -423,6 +443,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://picme.tn.gov.in',
     category: 'State Government',
+    state: 'Tamil Nadu',
     badgeColor: 'emerald'
   },
   {
@@ -441,6 +462,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://kcrkit.telangana.gov.in',
     category: 'State Government',
+    state: 'Telangana',
     badgeColor: 'indigo'
   },
   {
@@ -458,6 +480,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://wdcw.ap.gov.in',
     category: 'State Government',
+    state: 'Andhra Pradesh',
     badgeColor: 'blue'
   },
   {
@@ -492,6 +515,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://dhs.kerala.gov.in',
     category: 'State Government',
+    state: 'Kerala',
     badgeColor: 'emerald'
   },
   {
@@ -510,6 +534,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://arogya.maharashtra.gov.in',
     category: 'State Government',
+    state: 'Maharashtra',
     badgeColor: 'amber'
   },
   {
@@ -528,6 +553,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://gujhealth.gujarat.gov.in',
     category: 'State Government',
+    state: 'Gujarat',
     badgeColor: 'indigo'
   },
   {
@@ -546,6 +572,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://mksy.up.gov.in',
     category: 'State Government',
+    state: 'Uttar Pradesh',
     badgeColor: 'blue'
   },
   {
@@ -563,6 +590,7 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     ],
     portalUrl: 'https://wbhealth.gov.in',
     category: 'State Government',
+    state: 'West Bengal',
     badgeColor: 'emerald'
   }
 ];

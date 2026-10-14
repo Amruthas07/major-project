@@ -1,5 +1,7 @@
 import { KaggleFoodItem } from '../types';
+import { RegionalRecipe } from '../types/recipe';
 import { getFoodLocalizedSubtitle } from './food_translations';
+import { LanguageService } from './language_service';
 
 // Language to BCP-47 tag mapping for SpeechSynthesis and SpeechRecognition
 export const VOICE_LANGUAGE_TAGS: Record<string, string> = {
@@ -43,7 +45,7 @@ export const VOICE_LABELS: Record<string, { listen: string; stop: string; listen
 export interface ReportVoiceSummaryData {
   userName: string;
   weeksPregnant: number;
-  periodLabel: string;
+  periodLabel?: string;
   hasActivity: boolean;
   daysCount: number;
   mealsCount: number;
@@ -59,6 +61,7 @@ class VoiceService {
   private isCurrentlySpeaking: boolean = false;
   private activeSpeakerKey: string | null = null;
   private activeListeners: Set<(speaking: boolean, activeKey?: string | null) => void> = new Set();
+  private voiceUnavailableListeners: Set<(lang: string) => void> = new Set();
   private keepAliveInterval: any = null;
 
   private constructor() {
@@ -83,6 +86,15 @@ class VoiceService {
     return () => this.activeListeners.delete(listener);
   }
 
+  public subscribeVoiceUnavailable(listener: (lang: string) => void): () => void {
+    this.voiceUnavailableListeners.add(listener);
+    return () => this.voiceUnavailableListeners.delete(listener);
+  }
+
+  public notifyVoiceUnavailable(lang: string) {
+    this.voiceUnavailableListeners.forEach((l) => l(lang));
+  }
+
   public isSpeaking(): boolean {
     return this.isCurrentlySpeaking;
   }
@@ -104,6 +116,60 @@ class VoiceService {
   public isSpeechRecognitionSupported(): boolean {
     if (typeof window === 'undefined') return false;
     return !!((window as any).SpeechRecognition || (window as any).webkitSpeechRecognition);
+  }
+
+  /**
+   * Formats numeric quantities and units for natural-sounding speech across Indian languages
+   */
+  public formatSpokenUnits(text: string, langCode: string): string {
+    if (!text) return '';
+    const lang = (langCode || 'en').toLowerCase().trim();
+    const unitsMap: Record<string, { kcal: string; mg: string; g: string; ml: string; kg: string; l: string; pct: string }> = {
+      hi: { kcal: ' कैलोरी', mg: ' मिलीग्राम', g: ' ग्राम', ml: ' मिलीलीटर', kg: ' किलोग्राम', l: ' लीटर', pct: ' प्रतिशत' },
+      kn: { kcal: ' ಕ್ಯಾಲೋರಿ', mg: ' ಮಿಲಿಗ್ರಾಂ', g: ' ಗ್ರಾಂ', ml: ' ಮಿಲಿಲೀಟರ್', kg: ' ಕಿಲೋಗ್ರಾಂ', l: ' ಲೀಟರ್', pct: ' ಪ್ರತಿಶತ' },
+      ta: { kcal: ' கலோரிகள்', mg: ' மில்லிகிராம்', g: ' கிராம்', ml: ' மில்லிலிட்டர்', kg: ' கிலோகிராம்', l: ' லிட்டர்', pct: ' சதவீதம்' },
+      te: { kcal: ' కేలరీలు', mg: ' మిల్లీగ్రాములు', g: ' గ్రాములు', ml: ' మిల్లీలీటర్లు', kg: ' కిలోగ్రాములు', l: ' లీటర్లు', pct: ' శాతం' },
+      ml: { kcal: ' കലോറി', mg: ' മില്ലിഗ്രാം', g: ' ഗ്രാം', ml: ' മില്ലിലിറ്റർ', kg: ' കിലോഗ്രാം', l: ' ലിറ്റർ', pct: ' ശതമാനം' },
+      mr: { kcal: ' कॅलरी', mg: ' मिग्रॅ', g: ' ग्रॅम', ml: ' मिलिलिटर', kg: ' किलोग्रॅम', l: ' लिटर', pct: ' टक्के' },
+      bn: { kcal: ' ক্যালোরি', mg: ' মিলিগ্রাম', g: ' গ্রাম', ml: ' মিলিলিটার', kg: ' কিলোগ্রাম', l: ' লিটার', pct: ' শতাংশ' },
+      gu: { kcal: ' કેલરી', mg: ' મિલિગ્રામ', g: ' ગ્રામ', ml: ' મિલીલીટર', kg: ' કિલોગ્રામ', l: ' લિટર', pct: ' ટકા' },
+      pa: { kcal: ' ਕੈਲੋਰੀ', mg: ' ਮਿਲੀਗ੍ਰਾਮ', g: ' ਗ੍ਰਾਮ', ml: ' ਮਿਲੀਲੀਟਰ', kg: ' ਕਿਲੋਗ੍ਰਾਮ', l: ' ਲੀਟਰ', pct: ' ਪ੍ਰਤੀਸ਼ਤ' },
+      or: { kcal: ' କ୍ୟାଲୋରୀ', mg: ' ମିଲିଗ୍ରାମ୍', g: ' ଗ୍ରାମ୍', ml: ' ମିଲିଲିଟର', kg: ' କିଲୋଗ୍ରାମ୍', l: ' ଲିଟର', pct: ' ପ୍ରତିଶତ' },
+      ur: { kcal: ' کیلوریز', mg: ' ملی گرام', g: ' گرام', ml: ' ملی لیٹر', kg: ' کلوگرام', l: ' لیٹر', pct: ' فیصد' },
+      as: { kcal: ' কেলৰি', mg: ' মিলিগ্রাম', g: ' গ্ৰাম', ml: ' মিলিলিটাৰ', kg: ' কিলোগ্ৰাম', l: ' লিটাৰ', pct: ' শতাংশ' },
+      en: { kcal: ' calories', mg: ' milligrams', g: ' grams', ml: ' millilitres', kg: ' kilograms', l: ' litres', pct: ' percent' }
+    };
+    const u = unitsMap[lang] || unitsMap.en;
+    let out = text;
+    out = out.replace(/(\d+(?:\.\d+)?)\s*kcal\b/gi, `$1${u.kcal}`);
+    out = out.replace(/(\d+(?:\.\d+)?)\s*mg\b/gi, `$1${u.mg}`);
+    out = out.replace(/(\d+(?:\.\d+)?)\s*g\b/gi, `$1${u.g}`);
+    out = out.replace(/(\d+(?:\.\d+)?)\s*ml\b/gi, `$1${u.ml}`);
+    out = out.replace(/(\d+(?:\.\d+)?)\s*kg\b/gi, `$1${u.kg}`);
+    out = out.replace(/(\d+(?:\.\d+)?)\s*l\b/gi, `$1${u.l}`);
+    out = out.replace(/(\d+(?:\.\d+)?)\s*%/g, `$1${u.pct}`);
+    return out;
+  }
+
+  /**
+   * Checks if an installed speech synthesis voice is available for a language
+   */
+  public isVoiceAvailableForLanguage(langCode: string): boolean {
+    if (!this.isSpeechSynthesisSupported()) return false;
+    const cleanLang = (langCode || 'en').toLowerCase().trim();
+    if (cleanLang === 'en') return true;
+    try {
+      const voices = window.speechSynthesis.getVoices();
+      if (!voices || voices.length === 0) return true; // Voices might load asynchronously
+      const langTag = VOICE_LANGUAGE_TAGS[cleanLang] || cleanLang;
+      return voices.some((v) =>
+        v.lang.toLowerCase() === langTag.toLowerCase() ||
+        v.lang.toLowerCase().replace('_', '-') === langTag.toLowerCase() ||
+        v.lang.toLowerCase().startsWith(cleanLang)
+      );
+    } catch (e) {
+      return true;
+    }
   }
 
   /**
@@ -146,7 +212,8 @@ class VoiceService {
     languageCode: string = 'en',
     onEnd?: () => void,
     onStart?: () => void,
-    speakerKey?: string
+    speakerKeyOrError?: string | (() => void),
+    explicitSpeakerKey?: string
   ) {
     if (!this.isSpeechSynthesisSupported() || !text || !text.trim()) {
       onEnd?.();
@@ -159,7 +226,10 @@ class VoiceService {
     const cleanLangCode = (languageCode || 'en').toLowerCase().trim();
     const langTag = VOICE_LANGUAGE_TAGS[cleanLangCode] || 'en-IN';
 
-    const utterance = new SpeechSynthesisUtterance(text.trim());
+    // Format units naturally for the spoken language
+    const spokenFormatted = this.formatSpokenUnits(text.trim(), cleanLangCode);
+
+    const utterance = new SpeechSynthesisUtterance(spokenFormatted);
     utterance.lang = langTag;
     utterance.rate = 0.92; // Clear, comfortable maternal pace
     utterance.pitch = 1.0;
@@ -168,23 +238,63 @@ class VoiceService {
     try {
       const voices = window.speechSynthesis.getVoices();
       if (voices && voices.length > 0) {
-        const exactMatch = voices.find((v) => v.lang.toLowerCase() === langTag.toLowerCase());
+        const exactMatch = voices.find(
+          (v) =>
+            v.lang.toLowerCase() === langTag.toLowerCase() ||
+            v.lang.toLowerCase().replace('_', '-') === langTag.toLowerCase()
+        );
         const langPrefixMatch = voices.find(
           (v) =>
             v.lang.toLowerCase().replace('_', '-').startsWith(cleanLangCode) ||
             v.name.toLowerCase().includes(cleanLangCode)
         );
+
+        const nameKeywords: Record<string, string[]> = {
+          kn: ['kannada', 'ಕನ್ನಡ', 'kn-in', 'kn_in'],
+          hi: ['hindi', 'हिन्दी', 'हिंदी', 'hi-in', 'hi_in'],
+          ta: ['tamil', 'தமிழ்', 'ta-in', 'ta_in'],
+          te: ['telugu', 'తెలుగు', 'te-in', 'te_in'],
+          ml: ['malayalam', 'മലയാളം', 'ml-in', 'ml_in'],
+          mr: ['marathi', 'मराठी', 'mr-in', 'mr_in'],
+          bn: ['bengali', 'বাংলা', 'bn-in', 'bn_in'],
+          gu: ['gujarati', 'ગુજરાતી', 'gu-in', 'gu_in'],
+          pa: ['punjabi', 'ਪੰਜਾਬੀ', 'pa-in', 'pa_in'],
+          or: ['odia', 'oriya', 'ଓଡ଼ିଆ', 'or-in', 'or_in'],
+          ur: ['urdu', 'اردو', 'ur-in', 'ur_in'],
+          as: ['assamese', 'অসমীয়া', 'as-in', 'as_in'],
+          en: ['india', 'english', 'en-in']
+        };
+        const keywords = nameKeywords[cleanLangCode] || [];
+        const keywordMatch = voices.find((v) =>
+          keywords.some(
+            (kw) => v.name.toLowerCase().includes(kw) || v.lang.toLowerCase().includes(kw)
+          )
+        );
+
         if (exactMatch) {
           utterance.voice = exactMatch;
         } else if (langPrefixMatch) {
           utterance.voice = langPrefixMatch;
+        } else if (keywordMatch) {
+          utterance.voice = keywordMatch;
+        } else if (cleanLangCode !== 'en') {
+          // If browser has voices loaded and NONE match the non-English language
+          // Check if any voice matches
+          const hasAnyMatchingVoice = voices.some(v => v.lang.toLowerCase().startsWith(cleanLangCode));
+          if (!hasAnyMatchingVoice && voices.length > 5) {
+            console.warn(`No native voice found for ${cleanLangCode} on this device.`);
+            this.notifyVoiceUnavailable(cleanLangCode);
+          }
         }
       }
     } catch (e) {
       console.warn('Error fetching speech synthesis voices:', e);
     }
 
-    const itemKey = speakerKey || null;
+    const itemKey = typeof speakerKeyOrError === 'string'
+      ? speakerKeyOrError
+      : (explicitSpeakerKey || null);
+    const onErrorCallback = typeof speakerKeyOrError === 'function' ? speakerKeyOrError : onEnd;
 
     utterance.onstart = () => {
       this.notifyListeners(true, itemKey);
@@ -220,7 +330,7 @@ class VoiceService {
       console.warn('Speech synthesis playback event:', e);
       this.notifyListeners(false, null);
       this.currentUtterance = null;
-      onEnd?.();
+      onErrorCallback?.();
     };
 
     this.currentUtterance = utterance;
@@ -237,8 +347,9 @@ class VoiceService {
    * Pronounces a single food name in the target language
    */
   public speakFoodName(foodName: string, languageCode: string = 'en', onEnd?: () => void) {
+    const localized = LanguageService.tFood(foodName).primary;
     const subtitle = getFoodLocalizedSubtitle(foodName, undefined, languageCode);
-    const textToSpeak = subtitle ? `${subtitle}` : foodName;
+    const textToSpeak = localized || subtitle || foodName;
     this.speak(textToSpeak, languageCode, onEnd, undefined, 'name-' + foodName);
   }
 
@@ -257,8 +368,9 @@ class VoiceService {
    */
   public buildFoodVoiceOverviewText(food: KaggleFoodItem, lang: string): string {
     const baseName = food.name.split('(')[0].trim();
+    const localizedName = LanguageService.tFood(food.name).primary;
     const subtitle = getFoodLocalizedSubtitle(food.name, food.regionalName, lang);
-    const spokenName = subtitle || baseName;
+    const spokenName = localizedName || subtitle || baseName;
 
     const calories = Math.round(food.calories || 0);
     const protein = (food.protein || 0).toFixed(1);
@@ -302,7 +414,7 @@ class VoiceService {
 
       case 'te': {
         const safetyText = isSafe
-          ? 'ఈ ఆహారం గర్భధారణ సమయంలో ఎంతో సురక్షితమైనది మరియు పోషకభరితమైనది.'
+          ? 'ఈ ఆహారం గర్భధారణ సమయంలో ఎంతో సురಕ್ಷితమైనది మరియు పోషకభరితమైనది.'
           : isModeration
           ? 'ఈ ఆహారాన్ని మితంగా మాత్రమే తీసుకోవాలి.'
           : 'గర్భధారణ సమయంలో ఈ ఆహారాన్ని నివారించండి.';
@@ -350,6 +462,46 @@ class VoiceService {
         return `${spokenName}. ${safetyText} એક સર્વિંગમાં: ${calories} કેલરી, ${protein} ગ્રામ પ્રોટીન, ${iron} મિલિગ્રામ આયર્ન, અને ${calcium} મિલિગ્રામ કેલ્શિયમ મળે છે.`;
       }
 
+      case 'pa': {
+        const safetyText = isSafe
+          ? 'ਇਹ ਭੋਜਨ ਗਰਭ ਅਵਸਥਾ ਵਿੱਚ ਪੂਰੀ ਤਰ੍ਹਾਂ ਸੁਰੱਖਿਅਤ ਅਤੇ ਪੌਸ਼ਟਿਕ ਹੈ।'
+          : isModeration
+          ? 'ਇਸ ਭੋਜਨ ਨੂੰ ਸੀਮਤ ਮਾਤਰਾ ਵਿੱਚ ਖਾਓ।'
+          : 'ਗਰਭ ਅਵਸਥਾ ਵਿੱਚ ਇਸ ਭੋਜਨ ਤੋਂ ਪਰਹੇਜ਼ ਕਰੋ।';
+
+        return `${spokenName}। ${safetyText} ਪ੍ਰਤੀ ਸਰਵਿੰਗ: ${calories} ਕੈਲੋਰੀ, ${protein} ਗ੍ਰਾਮ ਪ੍ਰੋਟੀਨ, ${iron} ਮਿਲੀਗ੍ਰਾਮ ਆਇਰਨ, ਅਤੇ ${calcium} ਮਿਲੀਗ੍ਰਾਮ ਕੈਲਸ਼ੀਅਮ ਮਿਲਦਾ ਹੈ।`;
+      }
+
+      case 'or': {
+        const safetyText = isSafe
+          ? 'ଏହି ଖାଦ୍ୟ ଗର୍ଭାବସ୍ଥାରେ ସମ୍ପୂର୍ଣ୍ଣ ସୁରକ୍ଷିତ ଏବଂ ପୌଷ୍ଟିକ।'
+          : isModeration
+          ? 'ଏହି ଖାଦ୍ୟକୁ ସୀମିତ ପରିମାଣରେ ଖାଆନ୍ତୁ।'
+          : 'ଗର୍ଭାବସ୍ଥାରେ ଏହି ଖାଦ୍ୟରୁ ଦୂରେଇ ରୁହନ୍ତୁ।';
+
+        return `${spokenName}। ${safetyText} ପ୍ରତି ପରିବେଷଣରେ: ${calories} କ୍ୟାଲୋରୀ, ${protein} ଗ୍ରାମ୍ ପ୍ରୋଟିନ୍, ${iron} ମିଲିଗ୍ରାମ୍ ଲୌହ, ଏବଂ ${calcium} ମିଲିଗ୍ରାମ୍ କ୍ୟାଲସିୟମ୍ ମିଳେ।`;
+      }
+
+      case 'ur': {
+        const safetyText = isSafe
+          ? 'یہ غذا دوران حمل مکمل طور پر محفوظ اور غذائیت سے بھرپور ہے۔'
+          : isModeration
+          ? 'یہ غذا اعتدال کے ساتھ کھائیں۔'
+          : 'دوران حمل اس غذا سے پرہیز کریں۔';
+
+        return `${spokenName}۔ ${safetyText} فی سرونگ: ${calories} کیلوریز، ${protein} گرام پروٹین، ${iron} ملی گرام آئرن، اور ${calcium} ملی گرام کیلشیم حاصل ہوتا ہے۔`;
+      }
+
+      case 'as': {
+        const safetyText = isSafe
+          ? 'এই খাদ্য গৰ্ভাৱস্থাত সম্পূৰ্ণৰূপে সুৰক্ষিত আৰু পুষ্টিকৰ।'
+          : isModeration
+          ? 'এই খাদ্য সীমিত পৰিমাণত খাব লাগে।'
+          : 'গৰ্ভাৱস্থাত এই খাদ্য পৰিহাৰ কৰক।';
+
+        return `${spokenName}। ${safetyText} প্ৰতি পৰিৱেশনত: ${calories} কেলৰি, ${protein} গ্ৰাম প্ৰটিন, ${iron} মিলিগ্রাম আইৰন, আৰু ${calcium} মিলিগ্রাম কেলচিয়াম পোৱা যায়।`;
+      }
+
       default: {
         // English
         const safetyText = isSafe
@@ -360,6 +512,51 @@ class VoiceService {
 
         return `${spokenName}. ${safetyText} Per serving: ${calories} calories, ${protein} grams of protein, ${iron} milligrams of iron, and ${calcium} milligrams of calcium. Supports healthy fetal growth and maternal wellness.`;
       }
+    }
+  }
+
+  /**
+   * Speaks authentic recipe steps and ingredients in the selected language
+   */
+  public speakRecipe(recipe: RegionalRecipe, languageCode: string = 'en', onEnd?: () => void) {
+    const lang = (languageCode || 'en').toLowerCase().trim();
+    const spokenText = this.buildRecipeVoiceText(recipe, lang);
+    const itemKey = 'recipe-' + (recipe.recipeId || recipe.foodId);
+    this.speak(spokenText, lang, onEnd, undefined, itemKey);
+  }
+
+  /**
+   * Builds spoken script for recipe instructions and ingredients
+   */
+  public buildRecipeVoiceText(recipe: RegionalRecipe, lang: string): string {
+    const dishName =
+      (lang !== 'en' ? recipe.nameLocal : null) ||
+      LanguageService.tFood(recipe.nameEnglish || recipe.traditionalName).primary ||
+      recipe.traditionalName ||
+      recipe.nameEnglish;
+
+    const ingList = (recipe.ingredients || [])
+      .map((ing) => {
+        const localizedIng = LanguageService.tIngredient(ing.name).primary || ing.name;
+        return `${ing.quantity} ${ing.unit} ${localizedIng}`;
+      })
+      .join(', ');
+
+    const steps = (recipe.preparationSteps || recipe.instructions || []).join('. ');
+
+    switch (lang) {
+      case 'hi':
+        return `${dishName} की विधि। सामग्री: ${ingList}। बनाने की विधि: ${steps}।`;
+      case 'kn':
+        return `${dishName} ಮಾಡುವ ವಿಧಾನ. ಪದಾರ್ಥಗಳು: ${ingList}. ತಯಾರಿಸುವ ವಿಧಾನ: ${steps}.`;
+      case 'ta':
+        return `${dishName} செய்முறை. தேவையான பொருட்கள்: ${ingList}. செய்முறை படிநிலைகள்: ${steps}.`;
+      case 'te':
+        return `${dishName} తయారీ విధానం. కావలసిన పదార్థాలు: ${ingList}. తయారీ విధానం: ${steps}.`;
+      case 'ml':
+        return `${dishName} തയ്യാറാക്കുന്ന വിധം. ചേരുവകൾ: ${ingList}. പാചകക്കുറിപ്പ്: ${steps}.`;
+      default:
+        return `Recipe for ${dishName}. Ingredients: ${ingList}. Preparation steps: ${steps}.`;
     }
   }
 
@@ -393,6 +590,20 @@ class VoiceService {
           return `నమస్కారం ${userName}. ఈ వ్యవధికి ప్రెగ్న్యూట్రీ ఏఐలో ఎటువంటి వివరాలు నమోదు కాలేదు. మీ పోషకాహార నివేదిక కోసం భోజనం మరియు నీటి వివరాలు నమోదు చేయడం ప్రారంభించండి.`;
         case 'ml':
           return `നമസ്കാരം ${userName}. ഈ കാലയളവിൽ രേഖപ്പെടുത്തിയ പ്രവർത്തനങ്ങളൊന്നുമില്ല. നിങ്ങളുടെ റിപ്പോർട്ട് കാണാൻ ദയവായി ഭക്ഷണവും വെള്ളവും രേഖപ്പെടുത്താൻ തുടങ്ങുക.`;
+        case 'mr':
+          return `नमस्कार ${userName}. या कालावधीत कोणतीही नोंद आढळली नाही. आपला पोषण अहवाल पाहण्यासाठी कृपया जेवण आणि पाणी नोंदवणे सुरू करा.`;
+        case 'bn':
+          return `নমস্কার ${userName}। এই সময়ের জন্য কোনো কার্যকলাপ নথিভুক্ত নেই। আপনার পুষ্টি রিপোর্ট তৈরি করতে খাবার ও জল লগ করা শুরু করুন।`;
+        case 'gu':
+          return `નમસ્તે ${userName}. આ સમયગાળા માટે કોઈ પ્રવૃત્તિ નોંધાયેલી નથી. તમારો પોષણ અહેવાલ જોવા માટે કૃપા કરીને ભોજન અને પાણી નોંધવાનું શરૂ કરો.`;
+        case 'pa':
+          return `ਨਮਸਤੇ ${userName}. ਇਸ ਸਮੇਂ ਲਈ ਕੋਈ ਗਤੀਵਿਧੀ ਦਰਜ ਨਹੀਂ ਹੈ। ਆਪਣੀ ਪੋਸ਼ਣ ਰਿਪੋਰਟ ਦੇਖਣ ਲਈ ਕਿਰਪਾ ਕਰਕੇ ਭੋਜਨ ਅਤੇ ਪਾਣੀ ਦਰਜ ਕਰਨਾ ਸ਼ੁਰੂ ਕਰੋ।`;
+        case 'or':
+          return `ନମସ୍କାର ${userName}। ଏହି ସମୟ ପାଇଁ କୌଣସି କାର୍ଯ୍ୟକଳାପ ରେକର୍ଡ ହୋଇନାହିଁ। ଆପଣଙ୍କ ପୋଷଣ ରିପୋର୍ଟ ଦେଖିବା ପାଇଁ ଦୟାକରି ଖାଦ୍ୟ ଏବଂ ପାଣି ରେକର୍ଡ କରିବା ଆରମ୍ଭ କରନ୍ତୁ।`;
+        case 'ur':
+          return `سلام ${userName}. اس مدت کے لیے کوئی سرگرمی ریکارڈ نہیں ہوئی۔ اپنی غذائی رپورٹ کے لیے کھانا اور پانی درج کرنا شروع کریں۔`;
+        case 'as':
+          return `নমস্কাৰ ${userName}। এই সময়ছোৱাত কোনো কাৰ্যকলাপ নথিভুক্ত হোৱা নাই। আপোনাৰ পুষ্টি প্ৰতিবেদন প্ৰস্তুত কৰিবলৈ অনুগ্ৰহ কৰি খাদ্য আৰু পানী যোগ কৰক।`;
         default:
           return `Hello ${userName}. No activity has been recorded yet in PregNutri AI for this period. Start logging your meals and water intake to generate your personal nutrition report.`;
       }
@@ -422,6 +633,18 @@ class VoiceService {
 
       case 'gu':
         return `નમસ્તે ${userName}. ગર્ભાવસ્થા સપ્તાહ ${weeksPregnant} માટે પ્રેગન્યૂટ્રી એઆઈ પોષણ રિપોર્ટ. તમે ${daysCount} દિવસોમાં કુલ ${mealsCount} ભોજન નોંધ્યા છે. તમારું દૈનિક સરેરાશ ${avgCalories} કેલરી અને ${avgProtein} ગ્રામ પ્રોટીન રહ્યું છે. દૈનિક પાણીનો વપરાશ સરેરાશ ${avgWaterL} લિટર નોંધાયો. મુખ્ય ખોરાક: ${foodsList}. આ તમારા પોતાના રેકોર્ડ પર આધારિત પોષણ સરખામણી છે, તબીબી નિદાન નથી.`;
+
+      case 'pa':
+        return `ਨਮਸਤੇ ${userName}. ਗਰਭ ਅਵਸਥਾ ਹਫ਼ਤਾ ${weeksPregnant} ਲਈ ਪ੍ਰੈਗਨਿਊਟ੍ਰੀ ਏਆਈ ਪੋਸ਼ਣ ਰਿਪੋਰਟ। ਤੁਸੀਂ ${daysCount} ਦਿਨਾਂ ਵਿੱਚ ਕੁੱਲ ${mealsCount} ਭੋਜਨ ਦਰਜ ਕੀਤੇ ਹਨ। ਰੋਜ਼ਾਨਾ ਔਸਤ ${avgCalories} ਕੈਲੋਰੀ ਅਤੇ ${avgProtein} ਗ੍ਰਾਮ ਪ੍ਰੋਟੀਨ ਰਹੀ। ਰੋਜ਼ਾਨਾ ਪਾਣੀ ਦੀ ਔਸਤ ${avgWaterL} ਲੀਟਰ ਰਹੀ। ਮੁੱਖ ਭੋਜਨ: ${foodsList}।`;
+
+      case 'or':
+        return `ନମସ୍କାର ${userName}। ଗର୍ଭାବସ୍ଥା ସପ୍ତାହ ${weeksPregnant} ପାଇଁ ପ୍ରେଗନିଉଟ୍ରି ଏଆଇ ପୋଷଣ ରିପୋର୍ଟ। ଆପଣ ${daysCount} ଦିନରେ ମୋଟ ${mealsCount} ଖାଦ୍ୟ ରେକର୍ଡ କରିଛନ୍ତି। ଦୈନିକ ହାରାହାରି ${avgCalories} କ୍ୟାଲୋରୀ ଏବଂ ${avgProtein} ଗ୍ରାମ୍ ପ୍ରୋଟିନ୍। ଦୈନିକ ହାରାହାରି ପାଣି ${avgWaterL} ଲିଟର।`;
+
+      case 'ur':
+        return `سلام ${userName}. ہفتہ حمل ${weeksPregnant} کی پریگنیوٹری اے آئی غذائی رپورٹ۔ آپ نے ${daysCount} دنوں میں کل ${mealsCount} کھانے ریکارڈ کیے ہیں۔ یومیہ اوسط ${avgCalories} کیلوریز اور ${avgProtein} گرام پروٹین ہے۔ یومیہ پانی کی اوسط ${avgWaterL} لیٹر رہی۔`;
+
+      case 'as':
+        return `নমস্কাৰ ${userName}। গৰ্ভাৱস্থা সপ্তাহ ${weeksPregnant} ৰ প্ৰেগনিউত্ৰি এআই পুষ্টি প্ৰতিবেদন। আপুনি ${daysCount} দিনত মুঠ ${mealsCount} বাৰ খাদ্য নথিভুক্ত কৰিছে। দৈনিক গড় ${avgCalories} কেলৰি আৰু ${avgProtein} গ্ৰাম প্ৰটিন। দৈনিক পানীৰ গড় ${avgWaterL} লিটাৰ।`;
 
       default:
         return `PregNutri Activity Report for ${userName}, pregnancy week ${weeksPregnant}. You recorded ${mealsCount} meals across ${daysCount} active days. Daily average was ${avgCalories} calories and ${avgProtein} grams of protein. Average water intake was ${avgWaterL} liters per day. Most recorded foods included ${foodsList}. Nutrition tracking comparison only, not a clinical medical diagnosis. Based on your activity recorded in PregNutri AI.`;

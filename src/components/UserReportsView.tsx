@@ -24,6 +24,8 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { useLanguage, DualText } from '../services/language_service';
 import { voiceService } from '../services/voice_service';
+import { getLocalDateString, getLocalTodayDateString, getDateForDayOfWeekInCurrentWeek } from '../utils/date_utils';
+import { LoggedMealRecord } from '../types';
 import { NavTabId } from './MainNavigation';
 
 interface UserReportsViewProps {
@@ -36,6 +38,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
   const {
     userProfile,
     loggedMeals,
+    meals,
     dailyWaterLogs,
     weightRecords,
     currentUser,
@@ -86,14 +89,14 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
       const start = new Date(end);
       start.setDate(end.getDate() - 6);
 
-      const sStr = start.toISOString().split('T')[0];
-      const eStr = end.toISOString().split('T')[0];
+      const sStr = getLocalDateString(start);
+      const eStr = getLocalDateString(end);
 
       // Build daily dates list for the 7 days
       const daysList: string[] = [];
       const curr = new Date(start);
       while (curr <= end) {
-        daysList.push(curr.toISOString().split('T')[0]);
+        daysList.push(getLocalDateString(curr));
         curr.setDate(curr.getDate() + 1);
       }
 
@@ -113,13 +116,13 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
       const start = new Date(year, month, 1);
       const end = new Date(year, month + 1, 0); // Last day of month
 
-      const sStr = start.toISOString().split('T')[0];
-      const eStr = end.toISOString().split('T')[0];
+      const sStr = getLocalDateString(start);
+      const eStr = getLocalDateString(end);
 
       const daysList: string[] = [];
       const curr = new Date(start);
       while (curr <= end) {
-        daysList.push(curr.toISOString().split('T')[0]);
+        daysList.push(getLocalDateString(curr));
         curr.setDate(curr.getDate() + 1);
       }
 
@@ -157,14 +160,62 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
 
   // Filter User's actual recorded meals in this period
   const periodMeals = useMemo(() => {
-    return loggedMeals.filter((m) => {
-      // If user is authenticated, respect user ID; otherwise respect session
+    // 1. Direct logged meals from session or current user
+    const directLogs = loggedMeals.filter((m) => {
       if (currentUser && m.userId && m.userId !== currentUser.id && m.userId !== 'guest') {
         return false;
       }
       return m.date >= startDateStr && m.date <= endDateStr;
     });
-  }, [loggedMeals, startDateStr, endDateStr, currentUser]);
+
+    // 2. Completed planned meals that have been eaten
+    const existingLogIds = new Set(directLogs.map((l) => l.id));
+    const extraCompletedMeals: LoggedMealRecord[] = [];
+
+    (meals || []).forEach((pm) => {
+      if (!pm.isCompleted) return;
+      if (currentUser && pm.userId && pm.userId !== currentUser.id && pm.userId !== 'guest') return;
+
+      const mealDate = pm.consumedDate || (pm.day ? getDateForDayOfWeekInCurrentWeek(pm.day) : null);
+      if (!mealDate || mealDate < startDateStr || mealDate > endDateStr) return;
+      if (existingLogIds.has(pm.id) || existingLogIds.has(`meal-log-${pm.id}`)) return;
+
+      existingLogIds.add(pm.id);
+      extraCompletedMeals.push({
+        id: pm.id,
+        userId: pm.userId || currentUser?.id,
+        date: mealDate,
+        time: pm.consumedTime || '12:00 PM',
+        mealType: (pm.category === 'Mid-Morning Snack' || pm.category === 'Evening Snack') ? 'Snack' : (pm.category as any),
+        foodNames: [pm.name],
+        items: [
+          {
+            foodId: pm.foodId || pm.id,
+            name: pm.name,
+            quantity: 100 * (pm.servings || 1),
+            unit: 'g',
+            portionSize: 'medium',
+            defaultServingGrams: 100
+          }
+        ],
+        nutrients: {
+          calories: pm.calories,
+          protein: pm.protein,
+          carbohydrates: (pm as any).carbohydrates || Math.round((pm.calories * 0.55) / 4),
+          fat: (pm as any).fat || Math.round((pm.calories * 0.25) / 9),
+          fiber: (pm as any).fiber || Math.round(pm.protein * 0.4),
+          iron: pm.iron,
+          calcium: pm.calcium,
+          folate: pm.folate
+        } as any,
+        nutritionScore: 88,
+        source: 'MealPlanner',
+        timestamp: pm.consumedAt || new Date().toISOString()
+      });
+    });
+
+    return [...directLogs, ...extraCompletedMeals];
+  }, [loggedMeals, meals, startDateStr, endDateStr, currentUser]);
 
   // Filter User's actual recorded water entries in this period
   const periodWaterLogs = useMemo(() => {
@@ -403,10 +454,10 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
             <DualText textKey="reports.title" fallback="Your Nutrition & Activity Report" />
           </h1>
 
-          <p className="text-xs sm:text-sm text-[#523D35] mt-1 font-medium flex items-center gap-1.5">
+          <div className="text-xs sm:text-sm text-[#523D35] mt-1 font-medium flex items-center gap-1.5">
             <span className="w-2 h-2 rounded-full bg-[#959D90]"></span>
             <DualText textKey="reports.subtitle" fallback="Based on your activity recorded in PregNutri AI" />
-          </p>
+          </div>
         </div>
 
         {/* Action Buttons: Listen & Print */}
@@ -462,27 +513,27 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
       <div className="bg-[#FFFFFF] rounded-2xl p-4 sm:p-5 border border-[#BBA58F]/30 shadow-xs">
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-xs">
           <div className="bg-[#EFEFE9]/60 p-3 rounded-xl border border-[#BBA58F]/20">
-            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">Mother</span>
-            <span className="text-sm font-black text-[#223030] block mt-0.5 truncate">{userProfile.name || 'Mother'}</span>
+            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">{t('reports.mother', 'Mother')}</span>
+            <span className="text-sm font-black text-[#223030] block mt-0.5 truncate">{userProfile.name || t('reports.mother', 'Mother')}</span>
           </div>
 
           <div className="bg-[#EFEFE9]/60 p-3 rounded-xl border border-[#BBA58F]/20">
-            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">Pregnancy Stage</span>
+            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">{t('reports.stage', 'Pregnancy Stage')}</span>
             <span className="text-sm font-black text-[#223030] block mt-0.5">
-              Week {userProfile.weeksPregnant || 24}
+              {t('common.week', 'Week')} {userProfile.weeksPregnant || 24}
               <span className="text-xs font-medium text-[#523D35] ml-1">({selectedTrimester || '2nd Trimester'})</span>
             </span>
           </div>
 
           <div className="bg-[#EFEFE9]/60 p-3 rounded-xl border border-[#BBA58F]/20">
-            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">Diet Preference</span>
+            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">{t('reports.dietPreference', 'Diet Preference')}</span>
             <span className="text-sm font-bold text-[#223030] block mt-0.5 capitalize">
-              {userProfile.dietPreference || 'Vegetarian'}
+              {userProfile.dietPreference || t('common.veg', 'Vegetarian')}
             </span>
           </div>
 
           <div className="bg-[#EFEFE9]/60 p-3 rounded-xl border border-[#BBA58F]/20">
-            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">Profile Location</span>
+            <span className="text-[11px] text-[#959D90] uppercase font-bold tracking-wider block">{t('reports.location', 'Profile Location')}</span>
             <span className="text-xs font-semibold text-[#223030] block mt-0.5 truncate" title={locationString || 'Karnataka, India'}>
               {locationString || 'Karnataka, India'}
             </span>
@@ -550,7 +601,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                     : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#E8D9CD]/60'
                 } cursor-pointer`}
               >
-                This Week
+                {t('reports.thisWeek', 'This Week')}
               </button>
               <button
                 type="button"
@@ -587,7 +638,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                     : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#E8D9CD]/60'
                 } cursor-pointer`}
               >
-                This Month
+                {t('reports.thisMonth', 'This Month')}
               </button>
               <button
                 type="button"
@@ -608,7 +659,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
           {reportType === 'custom' && (
             <div className="flex flex-wrap items-center gap-2 text-xs">
               <label className="flex items-center gap-1 text-[#523D35]">
-                From:
+                {t('reports.from', 'From:')}
                 <input
                   type="date"
                   value={customStartDate}
@@ -617,7 +668,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 />
               </label>
               <label className="flex items-center gap-1 text-[#523D35]">
-                To:
+                {t('reports.to', 'To:')}
                 <input
                   type="date"
                   value={customEndDate}
@@ -642,12 +693,12 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
             <DualText textKey="reports.noActivityTitle" fallback="No activity recorded yet" />
           </h2>
 
-          <p className="text-sm text-[#523D35] max-w-md mx-auto leading-relaxed">
+          <div className="text-sm text-[#523D35] max-w-md mx-auto leading-relaxed">
             <DualText
               textKey="reports.noActivityDesc"
               fallback="Start logging your meals and water intake to generate your personal nutrition report."
             />
-          </p>
+          </div>
 
           <p className="text-xs text-[#959D90] italic">
             Reports in PregNutri AI use strictly your actual logged activity. No generic or fake numbers are ever generated.
@@ -703,7 +754,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
             {/* Meals Logged */}
             <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#BBA58F]/30 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">Meals Logged</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">{t('reports.mealsLogged', 'Meals Logged')}</span>
               <span className="text-2xl font-black text-[#223030] block mt-1">{periodMeals.length}</span>
               <span className="text-[11px] text-[#523D35] mt-0.5 block font-medium">
                 {recordedDaysCount > 0 ? `${(periodMeals.length / recordedDaysCount).toFixed(1)} / active day` : '0 meals'}
@@ -712,7 +763,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
 
             {/* Average Calories */}
             <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#BBA58F]/30 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">Daily Calories</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">{t('reports.dailyCalories', 'Daily Calories')}</span>
               <span className="text-2xl font-black text-[#223030] block mt-1">
                 {nutritionStats ? nutritionStats.avgCalories : '—'}
               </span>
@@ -723,7 +774,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
 
             {/* Average Protein */}
             <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#BBA58F]/30 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">Daily Protein</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">{t('reports.dailyProtein', 'Daily Protein')}</span>
               <span className="text-2xl font-black text-[#223030] block mt-1">
                 {nutritionStats ? `${nutritionStats.avgProtein}g` : '—'}
               </span>
@@ -734,7 +785,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
 
             {/* Average Water */}
             <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#BBA58F]/30 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">Daily Water</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">{t('reports.dailyWater', 'Daily Water')}</span>
               <span className="text-2xl font-black text-[#223030] block mt-1">
                 {waterStats ? `${waterStats.avgL} L` : '—'}
               </span>
@@ -745,7 +796,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
 
             {/* Diet Pattern */}
             <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#BBA58F]/30 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">Diet Pattern</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">{t('reports.dietPattern', 'Diet Pattern')}</span>
               <span className="text-2xl font-black text-[#223030] block mt-1">
                 {periodMeals.length > 0 ? `${vegNonVegDistribution.vegCount}V / ${vegNonVegDistribution.nonVegCount}NV` : '—'}
               </span>
@@ -756,7 +807,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
 
             {/* Weight Status */}
             <div className="bg-[#FFFFFF] p-4 rounded-2xl border border-[#BBA58F]/30 shadow-xs">
-              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">Weight Entries</span>
+              <span className="text-[10px] uppercase tracking-wider font-bold text-[#959D90] block">{t('reports.weightEntries', 'Weight Entries')}</span>
               <span className="text-2xl font-black text-[#223030] block mt-1">
                 {periodWeightRecords.length > 0 ? `${periodWeightRecords[periodWeightRecords.length - 1].weightKg} kg` : '—'}
               </span>
@@ -773,7 +824,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 <div>
                   <h3 className="text-base font-bold text-[#223030] flex items-center gap-2">
                     <Apple className="w-5 h-5 text-[#523D35]" />
-                    Average Daily Nutrient Intake (Recorded Days Only)
+                    {t('reports.nutrientIntake', 'Average Daily Nutrient Intake')}
                   </h3>
                   <p className="text-xs text-[#959D90] mt-0.5">
                     Calculated strictly from meals logged on the {recordedDaysCount} active recording days.
@@ -891,24 +942,24 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
             <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#BBA58F]/40 shadow-xs space-y-4">
               <h3 className="text-sm font-bold text-[#223030] flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#523D35]" />
-                Meal Distribution (Total: {periodMeals.length})
+                {t('reports.mealDistribution', 'Meal Distribution')} ({t('reports.mealsLogged', 'Total')}: {periodMeals.length})
               </h3>
 
               <div className="grid grid-cols-2 gap-3 text-xs">
                 <div className="p-3 bg-[#EFEFE9]/60 rounded-xl">
-                  <span className="text-[#959D90] font-medium block">Breakfasts</span>
+                  <span className="text-[#959D90] font-medium block">{t('meal.breakfast', 'Breakfast')}</span>
                   <span className="text-lg font-black text-[#223030] mt-0.5 block">{mealTypeCounts.Breakfast}</span>
                 </div>
                 <div className="p-3 bg-[#EFEFE9]/60 rounded-xl">
-                  <span className="text-[#959D90] font-medium block">Lunches</span>
+                  <span className="text-[#959D90] font-medium block">{t('meal.lunch', 'Lunch')}</span>
                   <span className="text-lg font-black text-[#223030] mt-0.5 block">{mealTypeCounts.Lunch}</span>
                 </div>
                 <div className="p-3 bg-[#EFEFE9]/60 rounded-xl">
-                  <span className="text-[#959D90] font-medium block">Dinners</span>
+                  <span className="text-[#959D90] font-medium block">{t('meal.dinner', 'Dinner')}</span>
                   <span className="text-lg font-black text-[#223030] mt-0.5 block">{mealTypeCounts.Dinner}</span>
                 </div>
                 <div className="p-3 bg-[#EFEFE9]/60 rounded-xl">
-                  <span className="text-[#959D90] font-medium block">Snacks</span>
+                  <span className="text-[#959D90] font-medium block">{t('meal.snack', 'Snacks')}</span>
                   <span className="text-lg font-black text-[#223030] mt-0.5 block">{mealTypeCounts.Snack}</span>
                 </div>
               </div>
@@ -947,10 +998,10 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                     )}
                   </div>
                   <div className="flex items-center justify-between text-[10px] text-[#959D90] font-medium">
-                    <span>Breakfast</span>
-                    <span>Lunch</span>
-                    <span>Dinner</span>
-                    <span>Snacks</span>
+                    <span>{t('meal.breakfast', 'Breakfast')}</span>
+                    <span>{t('meal.lunch', 'Lunch')}</span>
+                    <span>{t('meal.dinner', 'Dinner')}</span>
+                    <span>{t('meal.snack', 'Snacks')}</span>
                   </div>
                 </div>
               )}
@@ -960,7 +1011,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
             <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#BBA58F]/40 shadow-xs space-y-4">
               <h3 className="text-sm font-bold text-[#223030] flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-[#523D35]" />
-                Most Frequently Consumed Foods
+                {t('reports.topFoods', 'Most Frequently Consumed Foods')}
               </h3>
 
               {topFoodsList.length === 0 ? (
@@ -997,7 +1048,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 <div>
                   <h3 className="text-base font-bold text-[#223030] flex items-center gap-2">
                     <FileBarChart2 className="w-5 h-5 text-[#523D35]" />
-                    Daily Activity Trends
+                    {t('reports.dailyTrends', 'Daily Activity Trends')}
                   </h3>
                   <p className="text-xs text-[#959D90] mt-0.5">
                     {trendMetric === 'calories'
@@ -1116,7 +1167,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#BBA58F]/40 shadow-xs space-y-3">
                   <h3 className="text-sm font-bold text-[#223030] flex items-center gap-2">
                     <span>🌾</span>
-                    Regional & Traditional Foods Recorded
+                    {t('reports.regionalDishes', 'Regional & Traditional Foods Recorded')}
                   </h3>
                   <p className="text-xs text-[#959D90]">
                     Staple dishes identified from your actual recorded meals.
@@ -1142,7 +1193,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#BBA58F]/40 shadow-xs space-y-3">
                   <h3 className="text-sm font-bold text-[#223030] flex items-center gap-2">
                     <span>🥗</span>
-                    Food Category Distribution
+                    {t('reports.categoryBreakdown', 'Food Category Distribution')}
                   </h3>
                   <p className="text-xs text-[#959D90]">
                     Breakdown of ingredient groups across your logged meal items.
@@ -1166,7 +1217,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
             <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#BBA58F]/40 shadow-xs space-y-3">
               <h3 className="text-sm font-bold text-[#223030] flex items-center gap-2">
                 <Droplets className="w-4 h-4 text-[#523D35]" />
-                Hydration Summary
+                {t('reports.hydrationSummary', 'Hydration Summary')}
               </h3>
 
               {waterStats ? (
@@ -1191,7 +1242,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
             <div className="bg-[#FFFFFF] rounded-2xl p-5 border border-[#BBA58F]/40 shadow-xs space-y-3">
               <h3 className="text-sm font-bold text-[#223030] flex items-center gap-2">
                 <Scale className="w-4 h-4 text-[#523D35]" />
-                Weight Record Activity
+                {t('reports.weightActivity', 'Weight Record Activity')}
               </h3>
 
               {periodWeightRecords.length > 0 ? (
@@ -1220,7 +1271,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
           {/* 10. Traceable Data Notice Footnote */}
           <div className="bg-[#EFEFE9]/70 rounded-xl p-4 border border-[#BBA58F]/30 text-xs text-[#523D35] space-y-1">
             <p className="font-bold text-[#223030]">
-              Traceable Data Notice:
+              {t('reports.traceableNotice', 'Traceable Data Notice:')}
             </p>
             <p>
               All metrics in this report are calculated exclusively from your logged meals, water logs, and pregnancy profile records inside PregNutri AI. Unrecorded days or missing values are never filled with simulated or artificial numbers.

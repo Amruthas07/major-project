@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
 import { useAppContext, DAYS_OF_WEEK, DayOfWeek } from '../context/AppContext';
+import { useLanguage } from '../services/language_service';
+import {
+  formatLocalizedWeekday,
+  formatLocalizedDate,
+  getDateForDayOfWeekInCurrentWeek,
+  getIndiaDate
+} from '../utils/date_utils';
 import {
   Calendar,
   CheckCircle2,
@@ -34,6 +41,8 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
     setActiveTab
   } = useAppContext();
 
+  const { t, currentLanguageCode } = useLanguage();
+
   const weeklyData = getWeeklyNutrition();
   const [activeMetricTrend, setActiveMetricTrend] = useState<'calories' | 'protein' | 'iron' | 'calcium' | 'folate'>('calories');
 
@@ -55,21 +64,21 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
     const ratio = target > 0 ? avg / target : 1;
     if (ratio >= 0.9) {
       return {
-        label: 'On Track',
+        label: t('status.onTrack', 'On Track'),
         color: 'text-emerald-800 bg-emerald-100 border-emerald-300',
         badge: 'bg-emerald-600 text-white',
         icon: CheckCircle2
       };
     } else if (ratio >= 0.75) {
       return {
-        label: 'Slightly Low',
+        label: t('status.slightlyLow', 'Slightly Low'),
         color: 'text-amber-900 bg-amber-100 border-amber-300',
         badge: 'bg-amber-600 text-white',
         icon: AlertTriangle
       };
     } else {
       return {
-        label: 'Needs Attention',
+        label: t('status.needsAttention', 'Needs Attention'),
         color: 'text-rose-900 bg-rose-100 border-rose-300',
         badge: 'bg-rose-600 text-white',
         icon: AlertCircle
@@ -126,10 +135,10 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
   // 4. Consistency Score:
   const consistencyPercent = Math.round((totalGoalMetDays / 7) * 100);
   const getConsistencyRating = (pct: number) => {
-    if (pct >= 85) return { label: 'Optimal Consistency', desc: 'Outstanding routine supporting healthy maternal and fetal tissue growth.', color: 'text-emerald-700' };
-    if (pct >= 65) return { label: 'Good Consistency', desc: 'Strong habit formation; minor adjustments needed on low-intake days.', color: 'text-amber-800' };
-    if (pct >= 40) return { label: 'Moderate Consistency', desc: 'Plan adherence fluctuates across weekdays. Try batch meal prep.', color: 'text-orange-800' };
-    return { label: 'Needs Improvement', desc: 'Several daily targets missed. Use Food Explorer to schedule nutrient-dense staple meals.', color: 'text-rose-800' };
+    if (pct >= 85) return { label: t('consistency.optimal', 'Optimal Consistency'), desc: t('consistency.optimalDesc', 'Outstanding routine supporting healthy maternal and fetal tissue growth.'), color: 'text-emerald-700' };
+    if (pct >= 65) return { label: t('consistency.good', 'Good Consistency'), desc: t('consistency.goodDesc', 'Strong habit formation; minor adjustments needed on low-intake days.'), color: 'text-amber-800' };
+    if (pct >= 40) return { label: t('consistency.moderate', 'Moderate Consistency'), desc: t('consistency.moderateDesc', 'Plan adherence fluctuates across weekdays. Try batch meal prep.'), color: 'text-orange-800' };
+    return { label: t('consistency.needsImp', 'Needs Improvement'), desc: t('consistency.needsImpDesc', 'Several daily targets missed. Use Food Explorer to schedule nutrient-dense staple meals.'), color: 'text-rose-800' };
   };
   const consistencyRating = getConsistencyRating(consistencyPercent);
 
@@ -139,39 +148,36 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
   if (metIronDays < 5) {
     const lowIronDays = 7 - metIronDays;
     smartInsights.push(
-      `Iron intake was low on ${lowIronDays} days. Consider adding ragi, drumstick leaves (moringa), spinach, or chickpea sundal to your upcoming meals to protect against maternal anemia.`
+      currentLanguageCode === 'kn'
+        ? `ಕಬ್ಬಿಣಾಂಶ ಸೇವನೆಯು ${lowIronDays} ದಿನಗಳಲ್ಲಿ ಕಡಿಮೆಯಾಗಿದೆ. ರಕ್ತಹೀನತೆ ತಡೆಗಟ್ಟಲು ರಾಗಿ, ನುಗ್ಗೆಸೊಪ್ಪು, ಪಾಲಕ್ ಅಥವಾ ಕಡಲೆ ಕಾಳುಗಳನ್ನು ಸೇರಿಸಿ.`
+        : `Iron intake was low on ${lowIronDays} days. Consider adding ragi, drumstick leaves (moringa), spinach, or chickpea sundal to your upcoming meals to protect against maternal anemia.`
     );
   } else {
     smartInsights.push(
-      `Great job on iron! You met your maternal iron targets on ${metIronDays} days, providing vital red blood cell volume for ${selectedTrimester}.`
+      currentLanguageCode === 'kn'
+        ? `ಕಬ್ಬಿಣಾಂಶ ಸೇವನೆ ಅತ್ಯುತ್ತಮವಾಗಿದೆ! ನೀವು ${metIronDays} ದಿನಗಳಲ್ಲಿ ಗುರಿಯನ್ನು ತಲುಪಿದ್ದೀರಿ.`
+        : `Great job on iron! You met your maternal iron targets on ${metIronDays} days, providing vital red blood cell volume for ${selectedTrimester}.`
     );
   }
 
   if (metCalcDays < 5) {
     const lowCalcDays = 7 - metCalcDays;
     smartInsights.push(
-      `Calcium was below target on ${lowCalcDays} days. Incorporate curd/yogurt, paneer, ragi porridge, or sesame chikki into morning or evening snack intervals.`
+      currentLanguageCode === 'kn'
+        ? `ಕ್ಯಾಲ್ಸಿಯಂ ${lowCalcDays} ದಿನಗಳಲ್ಲಿ ಗುರಿಗಿಂತ ಕಡಿಮೆಯಾಗಿದೆ. ಮೊಸರು, ಪನ್ನೀರ್, ರಾಗಿ ಗಂಜಿ ಅಥವಾ ಎಳ್ಳು ಉಂಡೆಯನ್ನು ಸೇರಿಸಿ.`
+        : `Calcium was below target on ${lowCalcDays} days. Incorporate curd/yogurt, paneer, ragi porridge, or sesame chikki into morning or evening snack intervals.`
     );
   }
 
   if (metProtDays < 5) {
     const lowProtDays = 7 - metProtDays;
     smartInsights.push(
-      `Protein was slightly low on ${lowProtDays} days. Try pairing dal with quinoa or millets, or adding a boiled egg or sprouted moong bowl at lunch.`
-    );
-  } else {
-    smartInsights.push(
-      `Protein intake is well-stabilized (${avgProt}g daily average), efficiently supporting steady fetal organ synthesis.`
+      currentLanguageCode === 'kn'
+        ? `ಪ್ರೋಟೀನ್ ಸೇವನೆ ${lowProtDays} ದಿನಗಳಲ್ಲಿ ಸ್ವಲ್ಪ ಕಡಿಮೆಯಾಗಿದೆ. ಬೇಳೆ, ಮೊಳಕೆ ಕಾಳು ಅಥವಾ ಬೇಯಿಸಿದ ಮೊಟ್ಟೆಯನ್ನು ಮಧ್ಯಾಹ್ನದ ಊಟಕ್ಕೆ ಸೇರಿಸಿ.`
+        : `Protein was slightly low on ${lowProtDays} days. Try pairing dal with quinoa or millets, or adding a boiled egg or sprouted moong bowl at lunch.`
     );
   }
 
-  if (smartInsights.length < 3) {
-    smartInsights.push(
-      `Folate (B9) intake averaged ${avgFol}µg/day against your ${targetFol}µg ICMR goal, essential for nervous system support.`
-    );
-  }
-
-  // Active Metric Data for Trend Visualization
   const getMetricValueForDay = (day: DayOfWeek, metric: typeof activeMetricTrend) => {
     const d = weeklyData.days[day];
     if (!d) return 0;
@@ -198,8 +204,19 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
     }
   };
 
+  const getMetricLabel = (metric: typeof activeMetricTrend) => {
+    switch (metric) {
+      case 'calories': return t('nutrient.calories', 'Calories');
+      case 'protein': return t('nutrient.protein', 'Protein');
+      case 'iron': return t('nutrient.iron', 'Iron');
+      case 'calcium': return t('nutrient.calcium', 'Calcium');
+      case 'folate': return t('nutrient.folate', 'Folate');
+    }
+  };
+
   const activeTarget = getMetricTarget(activeMetricTrend);
   const activeUnit = getMetricUnit(activeMetricTrend);
+  const todayIndiaDay = getIndiaDate().dayOfWeek;
 
   return (
     <div className="space-y-6 sm:space-y-8 animate-in fade-in duration-300">
@@ -208,7 +225,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#523D35] text-[#E8D9CD] border border-[#BBA58F]/30 text-xs font-bold uppercase tracking-wider">
             <Calendar className="w-3.5 h-3.5 text-[#BBA58F]" />
-            <span>7-Day Nutrition Overview</span>
+            <span>{t('planner.sevenDayTrends', '7-Day Nutrition Overview')}</span>
           </div>
 
           {onBack && (
@@ -218,17 +235,17 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
               className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#EFEFE9] hover:bg-[#BBA58F]/30 text-[#223030] text-xs font-bold border border-[#959D90]/50 transition cursor-pointer self-start sm:self-auto"
             >
               <ArrowLeft className="w-4 h-4 text-[#523D35]" />
-              <span>Back to Daily Planner</span>
+              <span>{t('planner.viewDaily', 'Back to Daily Planner')}</span>
             </button>
           )}
         </div>
 
         <div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-[#223030] tracking-tight">
-            📊 7-Day Maternal Nutrition Summary
+            📊 {t('planner.weeklyTitle', '7-Day Maternal Nutrition Summary')}
           </h2>
           <p className="text-xs sm:text-sm text-[#523D35] mt-1 max-w-2xl leading-relaxed">
-            Consolidated weekly review measuring your daily dietary intake and hydration against ICMR-NIN recommendations for the <strong>{selectedTrimester}</strong>.
+            {t('planner.calculatedStrictly', 'Consolidated weekly review measuring your daily dietary intake and hydration against ICMR-NIN recommendations for the')} <strong>{selectedTrimester}</strong>.
           </p>
         </div>
       </div>
@@ -238,12 +255,12 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
         <div className="bg-[#223030] rounded-3xl p-6 text-[#EFEFE9] border border-[#959D90]/40 flex flex-col justify-between space-y-4">
           <div>
             <span className="text-[11px] font-bold text-[#959D90] uppercase tracking-wider block">
-              Consistency Score
+              {t('consistency.score', 'Consistency Score')}
             </span>
             <div className="flex items-baseline gap-3 mt-2">
               <span className="text-5xl font-black text-[#E8D9CD]">{consistencyPercent}%</span>
               <span className="text-xs font-semibold text-[#BBA58F]">
-                {totalGoalMetDays} of 7 Days Met Targets
+                {totalGoalMetDays} {t('planner.of', 'of')} 7 {t('common.days', 'Days Met Targets')}
               </span>
             </div>
           </div>
@@ -259,7 +276,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
           </div>
 
           <div className="pt-2 border-t border-[#959D90]/30 flex items-center justify-between text-xs text-[#959D90]">
-            <span>Meals Consumed</span>
+            <span>{t('planner.mealsPlanned', 'Meals Consumed')}</span>
             <span className="font-extrabold text-[#EFEFE9]">
               {weeklyData.totalCompletedMeals} / {weeklyData.totalPlannedMeals}
             </span>
@@ -270,7 +287,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
         <div className="lg:col-span-2 bg-[#EFEFE9] rounded-3xl p-6 border border-[#959D90] space-y-4">
           <div className="flex items-center gap-2 text-xs font-black text-[#223030] uppercase tracking-wider">
             <Sparkles className="w-4 h-4 text-[#523D35]" />
-            <span>Smart Nutrition Insights &amp; Clinical Guidance</span>
+            <span>{t('insights.title', 'Smart Nutrition Insights & Clinical Guidance')}</span>
           </div>
 
           <div className="space-y-3">
@@ -294,10 +311,10 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#959D90]/30 pb-4">
           <div>
             <h3 className="text-lg font-black text-[#223030] tracking-tight">
-              1 &amp; 2. Daily Averages vs. {selectedTrimester} ICMR Targets
+              {t('weekly.dailyAvgTitle', 'Daily Averages vs. ICMR Targets')} ({selectedTrimester})
             </h3>
             <p className="text-xs text-[#523D35]">
-              Real-time comparison of average daily nutrients consumed over the past 7 days.
+              {t('weekly.dailyAvgSubtitle', 'Real-time comparison of average daily nutrients consumed over the past 7 days.')}
             </p>
           </div>
           <span className="text-xs font-bold text-[#523D35] bg-[#E8D9CD] px-3 py-1 rounded-full border border-[#959D90]/40 self-start sm:self-auto">
@@ -310,7 +327,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
           <div className="bg-[#E8D9CD] p-4.5 rounded-2xl border border-[#959D90]/50 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#523D35]">
-                Calories
+                {t('nutrient.calories', 'Calories')}
               </span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${calStatus.color}`}>
                 {calStatus.label}
@@ -337,7 +354,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
           <div className="bg-[#E8D9CD] p-4.5 rounded-2xl border border-[#959D90]/50 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#523D35]">
-                Protein
+                {t('nutrient.protein', 'Protein')}
               </span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${protStatus.color}`}>
                 {protStatus.label}
@@ -349,7 +366,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
                 <span className="text-xs font-semibold text-[#523D35] ml-1">g/day</span>
               </div>
               <span className="text-xs font-bold text-[#523D35]">
-                Target: {targetProt} g
+                Target: {targetProt}g
               </span>
             </div>
             <div className="w-full bg-[#EFEFE9] h-2.5 rounded-full overflow-hidden border border-[#959D90]/30">
@@ -364,7 +381,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
           <div className="bg-[#E8D9CD] p-4.5 rounded-2xl border border-[#959D90]/50 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#523D35]">
-                Iron (Fe)
+                {t('nutrient.iron', 'Iron')}
               </span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${ironStatus.color}`}>
                 {ironStatus.label}
@@ -376,7 +393,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
                 <span className="text-xs font-semibold text-[#523D35] ml-1">mg/day</span>
               </div>
               <span className="text-xs font-bold text-[#523D35]">
-                Target: {targetIron} mg
+                Target: {targetIron}mg
               </span>
             </div>
             <div className="w-full bg-[#EFEFE9] h-2.5 rounded-full overflow-hidden border border-[#959D90]/30">
@@ -391,7 +408,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
           <div className="bg-[#E8D9CD] p-4.5 rounded-2xl border border-[#959D90]/50 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#523D35]">
-                Calcium (Ca)
+                {t('nutrient.calcium', 'Calcium')}
               </span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${calcStatus.color}`}>
                 {calcStatus.label}
@@ -403,7 +420,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
                 <span className="text-xs font-semibold text-[#523D35] ml-1">mg/day</span>
               </div>
               <span className="text-xs font-bold text-[#523D35]">
-                Target: {targetCalc} mg
+                Target: {targetCalc}mg
               </span>
             </div>
             <div className="w-full bg-[#EFEFE9] h-2.5 rounded-full overflow-hidden border border-[#959D90]/30">
@@ -418,7 +435,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
           <div className="bg-[#E8D9CD] p-4.5 rounded-2xl border border-[#959D90]/50 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#523D35]">
-                Folate (B9)
+                {t('nutrient.folate', 'Folate (B9)')}
               </span>
               <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-black border ${folStatus.color}`}>
                 {folStatus.label}
@@ -430,7 +447,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
                 <span className="text-xs font-semibold text-[#523D35] ml-1">µg/day</span>
               </div>
               <span className="text-xs font-bold text-[#523D35]">
-                Target: {targetFol} µg
+                Target: {targetFol}µg
               </span>
             </div>
             <div className="w-full bg-[#EFEFE9] h-2.5 rounded-full overflow-hidden border border-[#959D90]/30">
@@ -441,20 +458,20 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
             </div>
           </div>
 
-          {/* Hydration / Water */}
+          {/* Hydration */}
           <div className="bg-[#E8D9CD] p-4.5 rounded-2xl border border-[#959D90]/50 space-y-3">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold uppercase tracking-wider text-[#523D35]">
-                Hydration
+                {t('nutrient.water', 'Hydration')}
               </span>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black border text-emerald-800 bg-emerald-100 border-emerald-300">
-                Daily Logged
+                {t('status.dailyLogged', 'Daily Logged')}
               </span>
             </div>
             <div className="flex items-baseline justify-between">
               <div>
                 <span className="text-2xl font-black text-[#223030]">{waterIntakeMl}</span>
-                <span className="text-xs font-semibold text-[#523D35] ml-1">ml today</span>
+                <span className="text-xs font-semibold text-[#523D35] ml-1">ml</span>
               </div>
               <span className="text-xs font-bold text-[#523D35]">
                 Target: {trimesterRdaTargets.waterMl} ml
@@ -475,10 +492,10 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#959D90]/30 pb-4">
           <div>
             <h3 className="text-lg font-black text-[#223030] tracking-tight">
-              3. Weekly Trends Across 7 Days
+              {t('weekly.trendsTitle', '3. Weekly Trends Across 7 Days')}
             </h3>
             <p className="text-xs text-[#523D35]">
-              Visual breakdown highlighting which days met the recommended targets.
+              {t('weekly.trendsSubtitle', 'Visual breakdown highlighting which days met the recommended targets.')}
             </p>
           </div>
 
@@ -495,7 +512,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
                     : 'bg-[#E8D9CD] text-[#523D35] hover:bg-[#BBA58F]/40 border border-[#959D90]/40'
                 }`}
               >
-                {m}
+                {getMetricLabel(m)}
               </button>
             ))}
           </div>
@@ -508,6 +525,10 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
             const pct = activeTarget > 0 ? Math.min(130, Math.round((val / activeTarget) * 100)) : 0;
             const metGoal = val >= activeTarget * 0.85;
             const barHeightPct = Math.max(8, Math.min(100, pct));
+            const formattedWeekday = formatLocalizedWeekday(day, currentLanguageCode, true);
+            const dateStr = getDateForDayOfWeekInCurrentWeek(day);
+            const formattedDate = formatLocalizedDate(dateStr, currentLanguageCode, { short: true });
+            const isToday = todayIndiaDay === day;
 
             return (
               <div key={day} className="flex flex-col items-center space-y-2">
@@ -539,10 +560,14 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
                   />
                 </div>
 
-                {/* Day Label + Value */}
+                {/* Day Label + Value + Date */}
                 <div className="text-center">
                   <span className="text-xs font-black text-[#223030] block">
-                    {day.slice(0, 3)}
+                    {formattedWeekday}
+                    {isToday && <span className="block text-[8px] text-emerald-700 font-extrabold">• {t('common.today', 'Today')}</span>}
+                  </span>
+                  <span className="text-[9px] text-[#959D90] block">
+                    {formattedDate}
                   </span>
                   <span className="text-[10px] font-bold text-[#523D35] block mt-0.5">
                     {val} {activeUnit}
@@ -558,15 +583,15 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded bg-[#523D35] inline-block" />
-              <span>Target Met (≥85%)</span>
+              <span>{t('weekly.targetMet', 'Target Met (≥85%)')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-3 h-3 rounded bg-[#BBA58F] inline-block" />
-              <span>Below Target (&lt;85%)</span>
+              <span>{t('weekly.belowTarget', 'Below Target (<85%)')}</span>
             </div>
           </div>
           <span className="text-[11px] font-bold text-[#223030]">
-            Target Line: {activeTarget} {activeUnit} / day
+            {t('weekly.targetLine', 'Target Line')}: {activeTarget} {activeUnit} / {t('common.day', 'day')}
           </span>
         </div>
       </div>

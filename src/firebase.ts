@@ -14,7 +14,12 @@ import {
   onAuthStateChanged as fbOnAuthStateChanged,
   User as FirebaseUser,
   RecaptchaVerifier,
-  signInWithPhoneNumber
+  signInWithPhoneNumber,
+  signInWithEmailAndPassword as fbSignInWithEmailAndPassword,
+  createUserWithEmailAndPassword as fbCreateUserWithEmailAndPassword,
+  sendPasswordResetEmail as fbSendPasswordResetEmail,
+  updateProfile as fbUpdateProfile,
+  Auth as FirebaseAuth
 } from 'firebase/auth';
 import { 
   getFirestore, 
@@ -195,51 +200,54 @@ export const auth = {
       throw err;
     }
   },
-  // Re-captcha verifier creation
-  createRecaptchaVerifier(containerId: string) {
-    console.log(`[Firebase Auth] createRecaptchaVerifier requested for container ID: "${containerId}"`);
+  // Re-captcha verifier creation with clean widget lifecycle and reset capability
+  clearRecaptchaVerifier() {
+    if ((window as any).recaptchaVerifier) {
+      try {
+        (window as any).recaptchaVerifier.clear();
+      } catch (e) {
+        console.warn("[Firebase Auth] Notice clearing recaptchaVerifier instance:", e);
+      }
+      (window as any).recaptchaVerifier = null;
+    }
+  },
+  createRecaptchaVerifier(containerId: string = 'recaptcha-container') {
+    console.log(`[Firebase Auth] createRecaptchaVerifier requested for container: "${containerId}"`);
     if (!hasRealFirebase || !realAuth) {
-      throw new Error("Firebase setup is incomplete. Phone verification requires real Firebase credentials.");
+      throw new Error("Firebase setup is incomplete. Phone verification requires active Firebase credentials.");
     }
     try {
-      // Reuse existing recaptcha verifier if present on window to prevent duplicate container errors
-      if ((window as any).recaptchaVerifier) {
-        console.log("[Firebase Auth] Reusing active RecaptchaVerifier instance from window.");
-        return (window as any).recaptchaVerifier;
-      }
+      // 1. Clean up any existing verifier instance to prevent duplicate widget errors
+      this.clearRecaptchaVerifier();
 
-      // Recreate or secure the target container in DOM to maintain a clean reCAPTCHA rendering area
-      const oldContainer = document.getElementById(containerId);
-      if (oldContainer) {
-        console.log("[Firebase Auth] Cleaning up previous recaptcha container in DOM...");
-        const parent = oldContainer.parentNode;
-        if (parent) {
-          const newContainer = document.createElement('div');
-          newContainer.id = containerId;
-          parent.replaceChild(newContainer, oldContainer);
-        }
+      // 2. Ensure container exists in DOM and has clean innerHTML
+      let container = document.getElementById(containerId);
+      if (!container) {
+        container = document.createElement('div');
+        container.id = containerId;
+        document.body.appendChild(container);
       } else {
-        const newContainer = document.createElement('div');
-        newContainer.id = containerId;
-        document.body.appendChild(newContainer);
+        container.innerHTML = '';
       }
 
-      console.log("[Firebase Auth] Constructing new RecaptchaVerifier instance...");
-      const verifier = new RecaptchaVerifier(realAuth, containerId, {
+      console.log("[Firebase Auth] Initializing new RecaptchaVerifier instance...");
+      const verifier = new RecaptchaVerifier(realAuth, container, {
         size: 'invisible',
         callback: (response: any) => {
-          console.log("[Firebase Auth] reCAPTCHA challenge resolved successfully. Response token length:", response?.length);
+          console.log("[Firebase Auth] reCAPTCHA challenge resolved successfully.");
         },
         'expired-callback': () => {
-          console.warn("[Firebase Auth] reCAPTCHA challenge expired. Please retry.");
+          console.warn("[Firebase Auth] reCAPTCHA challenge expired. Resetting widget.");
+          this.clearRecaptchaVerifier();
         }
       });
 
       (window as any).recaptchaVerifier = verifier;
-      console.log("[Firebase Auth] RecaptchaVerifier initialized successfully.");
+      console.log("[Firebase Auth] RecaptchaVerifier ready.");
       return verifier;
     } catch (err) {
       console.error("[Firebase Auth] Failed to initialize RecaptchaVerifier:", err);
+      this.clearRecaptchaVerifier();
       throw err;
     }
   },
@@ -272,8 +280,97 @@ export const auth = {
       console.error("[Firebase Auth] Failed to execute signInWithPhoneNumber:", err);
       throw err;
     }
+  },
+  async createUserWithEmail(email: string, password: string) {
+    if (!hasRealFirebase || !realAuth) {
+      throw new Error("Firebase setup is incomplete. Valid Firebase credentials are required.");
+    }
+    return await fbCreateUserWithEmailAndPassword(realAuth, email.trim(), password);
+  },
+  async signInWithEmail(email: string, password: string) {
+    if (!hasRealFirebase || !realAuth) {
+      throw new Error("Firebase setup is incomplete. Valid Firebase credentials are required.");
+    }
+    return await fbSignInWithEmailAndPassword(realAuth, email.trim(), password);
+  },
+  async sendPasswordReset(email: string) {
+    if (!hasRealFirebase || !realAuth) {
+      throw new Error("Firebase setup is incomplete. Valid Firebase credentials are required.");
+    }
+    return await fbSendPasswordResetEmail(realAuth, email.trim());
+  },
+  async updateUserProfile(displayName: string, photoURL?: string) {
+    if (!realAuth?.currentUser) return;
+    return await fbUpdateProfile(realAuth.currentUser, { displayName, photoURL });
+  },
+  clearRecaptchaVerifier() {
+    if ((window as any).recaptchaVerifier) {
+      try {
+        (window as any).recaptchaVerifier.clear();
+      } catch (e) {}
+      (window as any).recaptchaVerifier = null;
+    }
   }
 };
+
+export const rawAuth = realAuth as FirebaseAuth | null;
+
+export function getFirebaseErrorMessage(err: any): string {
+  if (!err) return 'An unexpected error occurred. Please try again.';
+  const code = err.code || (typeof err === 'string' ? err : '');
+  const message = err.message || String(err);
+
+  switch (code) {
+    case 'auth/email-already-in-use':
+      return 'An account with this email address already exists. Please sign in or use a different email.';
+    case 'auth/invalid-email':
+      return 'Please enter a valid email address.';
+    case 'auth/weak-password':
+      return 'Password is too weak. Please use at least 6 characters.';
+    case 'auth/user-not-found':
+      return 'No registered account found with this email. Please check your email or create an account.';
+    case 'auth/wrong-password':
+      return 'Incorrect password. Please verify and try again, or use "Forgot Password".';
+    case 'auth/invalid-credential':
+      return 'Invalid email/phone or password. Please check your credentials and try again.';
+    case 'auth/user-disabled':
+      return 'This account has been disabled. Please contact maternal care support.';
+    case 'auth/too-many-requests':
+      return 'Too many failed login attempts. Access has been temporarily blocked for security. Please try again later or reset your password.';
+    case 'auth/network-request-failed':
+      return 'Network connection failed. Please check your internet connection.';
+    case 'auth/invalid-phone-number':
+      return 'Invalid Indian mobile number format. Please enter a valid 10-digit number (+91).';
+    case 'auth/invalid-verification-code':
+      return 'Incorrect OTP code entered. Please check the 6-digit code received via SMS and re-enter.';
+    case 'auth/code-expired':
+      return 'This OTP verification code has expired. Please request a new OTP.';
+    case 'auth/missing-verification-code':
+      return 'Please enter the 6-digit OTP code sent to your phone.';
+    case 'auth/captcha-check-failed':
+      return 'reCAPTCHA verification could not be completed. Please refresh and try again.';
+    case 'auth/quota-exceeded':
+      return 'SMS quota limit reached on this project. Please sign in with Email & Password or Google Sign-In.';
+    case 'auth/billing-not-enabled':
+      return 'SMS Phone Authentication requires Firebase Blaze billing to dispatch SMS. Please use Email & Password or Google Sign-In.';
+    case 'auth/unauthorized-domain':
+      return 'This domain is not authorized in Firebase Auth settings. Please use Email & Password registration or authorize this domain in Firebase Console.';
+    case 'auth/popup-closed-by-user':
+      return 'Sign-in popup was closed before completion. Please try again.';
+    case 'auth/popup-blocked':
+      return 'Pop-up window was blocked by your browser. Please allow popups for PregNutri AI.';
+    case 'auth/operation-not-allowed':
+      return 'This sign-in method is not enabled in Firebase Console. Please enable it under Firebase Authentication > Sign-in method.';
+    default:
+      if (message.includes('auth/invalid-credential')) {
+        return 'Invalid email or password. Please check your details and try again.';
+      }
+      if (message.includes('billing') || message.includes('quota')) {
+        return 'SMS service limit reached or billing not enabled. Please sign in using Email & Password or Google.';
+      }
+      return message || 'Authentication failed. Please check your details and try again.';
+  }
+}
 
 export const firestoreService = {
   async getDoc(collectionPath: string, docId: string): Promise<{ exists: () => boolean, data: () => any, id: string }> {

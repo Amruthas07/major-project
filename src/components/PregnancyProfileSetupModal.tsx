@@ -31,6 +31,7 @@ interface PregnancyProfileSetupModalProps {
   initialEmailOrPhone?: string;
   initialProfile?: UserProfile;
   onSaveProfile: (profile: UserProfile, location: GlobalLocationState) => void;
+  onClose?: () => void;
 }
 
 const COMMON_ALLERGIES = [
@@ -49,16 +50,17 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
   initialName = '',
   initialEmailOrPhone = '',
   initialProfile,
-  onSaveProfile
+  onSaveProfile,
+  onClose
 }) => {
   // Step indicator: 1 = Personal & Pregnancy, 2 = Location & Health
   const [currentStep, setCurrentStep] = useState<1 | 2>(1);
 
   // 1. Personal Details
   const { t } = useLanguage();
-  const [fullName, setFullName] = useState(initialName || 'Amrutha');
-  const [age, setAge] = useState<number>(27);
-  const [mobileOrEmail, setMobileOrEmail] = useState(initialEmailOrPhone || '');
+  const [fullName, setFullName] = useState(initialName || initialProfile?.name || '');
+  const [age, setAge] = useState<number>(initialProfile?.age || 27);
+  const [mobileOrEmail, setMobileOrEmail] = useState(initialProfile?.mobileNumber || initialProfile?.email || initialEmailOrPhone || '');
   const [dietPreference, setDietPreference] = useState<'Vegetarian' | 'Non-Vegetarian'>(() => {
     if (initialProfile?.dietPreference) {
       return normalizeDietPreference(initialProfile.dietPreference) === 'non-vegetarian' ? 'Non-Vegetarian' : 'Vegetarian';
@@ -66,12 +68,40 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
     return 'Vegetarian';
   });
 
+  // Sync state whenever modal opens or props change
+  useEffect(() => {
+    if (isOpen) {
+      const candidateName = initialName || initialProfile?.name || '';
+      if (candidateName) {
+        setFullName(candidateName);
+      }
+      const candidateContact = initialEmailOrPhone || initialProfile?.mobileNumber || initialProfile?.email || '';
+      if (candidateContact) {
+        setMobileOrEmail(candidateContact);
+      }
+      if (initialProfile?.age) setAge(initialProfile.age);
+      if (initialProfile?.pregnancyMonth) setPregnancyMonth(initialProfile.pregnancyMonth);
+      if (initialProfile?.heightCm) setHeightCm(initialProfile.heightCm);
+      if (initialProfile?.currentWeightKg) setCurrentWeightKg(initialProfile.currentWeightKg);
+      if (initialProfile?.prePregnancyWeightKg) setPrePregnancyWeightKg(initialProfile.prePregnancyWeightKg);
+      if (initialProfile?.dietPreference) {
+        setDietPreference(normalizeDietPreference(initialProfile.dietPreference) === 'non-vegetarian' ? 'Non-Vegetarian' : 'Vegetarian');
+      }
+      if (initialProfile?.state) setSelectedState(initialProfile.state);
+      if (initialProfile?.district) setSelectedDistrict(initialProfile.district);
+      if (initialProfile?.taluk) setSelectedTaluk(initialProfile.taluk);
+      if (initialProfile?.village) setSelectedVillageOrTown(initialProfile.village);
+      if (initialProfile?.pincode) setPincode(initialProfile.pincode);
+    }
+  }, [isOpen, initialName, initialEmailOrPhone, initialProfile]);
+
   // 2. Pregnancy Details
-  const [pregnancyMonth, setPregnancyMonth] = useState<number>(6);
-  const [heightCm, setHeightCm] = useState<number>(162);
-  const [currentWeightKg, setCurrentWeightKg] = useState<number>(60.0);
-  const [prePregnancyWeightKg, setPrePregnancyWeightKg] = useState<number>(54.0);
+  const [pregnancyMonth, setPregnancyMonth] = useState<number>(initialProfile?.pregnancyMonth || 6);
+  const [heightCm, setHeightCm] = useState<number>(initialProfile?.heightCm || 162);
+  const [currentWeightKg, setCurrentWeightKg] = useState<number>(initialProfile?.currentWeightKg || 60.0);
+  const [prePregnancyWeightKg, setPrePregnancyWeightKg] = useState<number>(initialProfile?.prePregnancyWeightKg || 54.0);
   const [dueDate, setDueDate] = useState<string>(() => {
+    if (initialProfile?.dueDate) return initialProfile.dueDate;
     // Default calculated due date (~(9 - month) * 30 days from now)
     const d = new Date();
     d.setDate(d.getDate() + 90);
@@ -256,7 +286,7 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
 
     // Build central User Profile
     const finalProfile: UserProfile = {
-      name: fullName.trim() || 'Expectant Mother',
+      name: fullName.trim() || initialName || 'Mother',
       age: Number(age) || 27,
       weeksPregnant,
       pregnancyMonth,
@@ -362,7 +392,7 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                     required
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    placeholder="e.g. Amrutha Sharma"
+                    placeholder="Enter your full name"
                     className="w-full px-3.5 py-2.5 bg-white rounded-xl border border-[#959D90]/50 text-xs text-[#223030] font-semibold focus:border-[#523D35] focus:outline-none shadow-xs"
                   />
                 </div>
@@ -390,7 +420,7 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                     type="text"
                     value={mobileOrEmail}
                     onChange={(e) => setMobileOrEmail(e.target.value)}
-                    placeholder="e.g. 9876543210 or yourname@gmail.com"
+                    placeholder="Enter mobile number or email address"
                     className="w-full px-3.5 py-2.5 bg-white rounded-xl border border-[#959D90]/50 text-xs text-[#223030] font-semibold focus:border-[#523D35] focus:outline-none shadow-xs"
                   />
                 </div>
@@ -627,8 +657,8 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                       onChange={(e) => setSelectedState(e.target.value)}
                       className="w-full px-3 py-2 bg-white rounded-xl border border-[#959D90]/50 text-xs text-[#223030] font-semibold"
                     >
-                      {allStates.map((s) => (
-                        <option key={s.state} value={s.state}>
+                      {allStates.map((s, idx) => (
+                        <option key={`state-${s.state}-${idx}`} value={s.state}>
                           {s.state} ({s.region})
                         </option>
                       ))}
@@ -643,8 +673,8 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                       onChange={(e) => setSelectedDistrict(e.target.value)}
                       className="w-full px-3 py-2 bg-white rounded-xl border border-[#959D90]/50 text-xs text-[#223030] font-semibold"
                     >
-                      {districtsList.map((d) => (
-                        <option key={d.name} value={d.name}>
+                      {districtsList.map((d, idx) => (
+                        <option key={`district-${d.name}-${idx}`} value={d.name}>
                           {d.name}
                         </option>
                       ))}
@@ -659,8 +689,8 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                       onChange={(e) => setSelectedTaluk(e.target.value)}
                       className="w-full px-3 py-2 bg-white rounded-xl border border-[#959D90]/50 text-xs text-[#223030] font-semibold"
                     >
-                      {taluksList.map((t) => (
-                        <option key={t.id} value={t.name}>
+                      {taluksList.map((t, idx) => (
+                        <option key={`taluk-${t.name}-${idx}`} value={t.name}>
                           {t.name}
                         </option>
                       ))}
@@ -696,8 +726,8 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                         onChange={(e) => setSelectedVillageOrTown(e.target.value)}
                         className="w-full px-3 py-2 bg-white rounded-xl border border-[#959D90]/50 text-xs text-[#223030] font-semibold"
                       >
-                        {villagesList.map((v) => (
-                          <option key={v.id} value={v.name}>
+                        {villagesList.map((v, idx) => (
+                          <option key={`village-${v.name}-${v.pincode || ''}-${idx}`} value={v.name}>
                             {v.name} {v.type ? `(${v.type})` : ''}
                           </option>
                         ))}
@@ -778,9 +808,9 @@ export const PregnancyProfileSetupModal: React.FC<PregnancyProfileSetupModalProp
                       Active Allergy Safety Filter:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
-                      {selectedAllergies.map((a) => (
+                      {selectedAllergies.map((a, idx) => (
                         <span
-                          key={a}
+                          key={`selected-allergy-${a}-${idx}`}
                           className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#223030] text-[#EFEFE9] text-[11px] font-semibold"
                         >
                           <span>{a}</span>

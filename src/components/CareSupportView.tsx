@@ -523,9 +523,9 @@ export const CareSupportView: React.FC<CareSupportViewProps> = ({ userProfile })
 
           {/* Hospitals List */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {facilities.map((fac) => (
+            {facilities.map((fac, facIdx) => (
               <div
-                key={fac.id}
+                key={`${fac.id}-${facIdx}`}
                 className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between space-y-4"
               >
                 <div>

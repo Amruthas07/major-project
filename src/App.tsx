@@ -50,6 +50,7 @@ export default function App() {
     toggleMedicationTaken,
     resetAllData,
     currentUser,
+    isAuthChecking,
     isAuthModalOpen,
     setIsAuthModalOpen,
     isProfileSetupModalOpen,
@@ -69,6 +70,24 @@ export default function App() {
   useEffect(() => {
     voiceService.stopSpeaking();
   }, [activeTab, isProfileModalOpen, isAuthModalOpen, isProfileSetupModalOpen, isSmartReminderModalOpen, isSosModalOpen]);
+
+  // Initial Auth Verification Loading Screen (Requirement 5: Show a loading screen while checking authentication status)
+  if (isAuthChecking) {
+    return (
+      <div className="min-h-screen bg-[#223030] flex flex-col items-center justify-center p-4 text-[#EFEFE9]">
+        <div className="w-16 h-16 rounded-3xl bg-[#523D35] border-2 border-[#BBA58F]/40 flex items-center justify-center font-black text-2xl text-[#EFEFE9] mb-4 shadow-xl animate-pulse">
+          P
+        </div>
+        <h2 className="text-xl font-bold tracking-tight text-[#EFEFE9]">
+          PregNutri <span className="text-[#BBA58F]">AI</span>
+        </h2>
+        <p className="text-xs text-[#E8D9CD] mt-2 flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>Verifying secure maternal session...</span>
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-[#EFEFE9] text-[#223030] antialiased font-sans">
@@ -198,9 +217,10 @@ export default function App() {
 
       {/* 7. Authentication Modal (Login / Sign Up / Forgot Password) */}
       <AuthModal
-        isOpen={isAuthModalOpen}
-        onClose={() => setIsAuthModalOpen(false)}
+        isOpen={isAuthModalOpen || !currentUser}
+        onClose={() => currentUser && setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
+        canDismiss={!!currentUser}
       />
 
       {/* 8. Initial Pregnancy Profile Setup Modal */}
@@ -208,7 +228,9 @@ export default function App() {
         isOpen={isProfileSetupModalOpen}
         onClose={() => setIsProfileSetupModalOpen(false)}
         onSaveProfile={saveInitialProfileSetup}
-        currentProfile={userProfile}
+        initialName={currentUser?.name || userProfile.name}
+        initialEmailOrPhone={currentUser?.emailOrPhone || userProfile.mobileNumber || userProfile.email}
+        initialProfile={userProfile}
       />
 
       {/* 9. Smart Maternal Reminders Modal (Water, Meals, Doctor Visits) */}

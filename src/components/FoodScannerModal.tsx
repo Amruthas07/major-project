@@ -14,6 +14,7 @@ import {
 } from '../nutrition_engine';
 import { FOOD_DATABASE_ITEMS } from '../foods_db';
 import { FoodItem } from '../data';
+import { useLanguage } from '../services/language_service';
 
 interface FoodScannerModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export const FoodScannerModal: React.FC<FoodScannerModalProps> = ({
   onSaveMeal,
   onOpenAssistantWithPrompt
 }) => {
+  const { t, currentLanguageCode } = useLanguage();
   const [step, setStep] = useState<'capture' | 'analyzing' | 'confirm' | 'portions' | 'results' | 'manual'>('capture');
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [dishOverview, setDishOverview] = useState<string>('');
@@ -180,7 +182,8 @@ export const FoodScannerModal: React.FC<FoodScannerModalProps> = ({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           image: selectedImage,
-          profile: profile
+          profile: profile,
+          language: currentLanguageCode
         })
       });
 

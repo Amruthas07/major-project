@@ -16,7 +16,14 @@ import { GlobalLocationService } from '../services/global_location_service';
 import { AdministrativeLocationService } from '../services/administrative_location_service';
 import { LocationNutritionEngine } from '../services/location_nutrition_engine';
 import { authService } from '../services/auth_service';
+import { firestoreService, auth, hasRealFirebase } from '../firebase';
 import { waterSoundService } from '../services/water_sound_service';
+import {
+  getLocalTodayDateString,
+  getLocalDayOfWeek,
+  getLocalTimeString,
+  calculatePregnancyProgression
+} from '../utils/date_utils';
 import {
   INITIAL_USER_PROFILE,
   INITIAL_MEAL_PLAN,
@@ -62,6 +69,16 @@ export interface DayNutritionSummary {
   iron: number;
   calcium: number;
   folate: number;
+  consumedCalories?: number;
+  consumedProtein?: number;
+  consumedIron?: number;
+  consumedCalcium?: number;
+  consumedFolate?: number;
+  plannedCalories?: number;
+  plannedProtein?: number;
+  plannedIron?: number;
+  plannedCalcium?: number;
+  plannedFolate?: number;
   carbs: number;
   fat: number;
   fiber: number;
@@ -210,6 +227,7 @@ interface AppContextType {
   // Auth & Session
   currentUser: AuthUser | null;
   isAuthenticated: boolean;
+  isAuthChecking: boolean;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
   isProfileSetupModalOpen: boolean;
@@ -260,11 +278,119 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return null;
   });
 
+  const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
   const isAuthenticated = !!currentUser;
   const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(!currentUser);
   const [isProfileSetupModalOpen, setIsProfileSetupModalOpen] = useState<boolean>(
     !!currentUser && !currentUser.hasCompletedProfile
   );
+
+  // Synchronize Firebase Authentication State via onAuthStateChanged
+  useEffect(() => {
+    let isMounted = true;
+    const unsubscribe = auth.onAuthStateChanged(async (fbUser) => {
+      if (!isMounted) return;
+      if (fbUser) {
+        const uid = fbUser.uid;
+        let loadedProfile: UserProfile | null = null;
+        let hasProfile = false;
+
+        // 1. Check user-specific localStorage cache
+        try {
+          const cached = localStorage.getItem(`profile_${uid}`);
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed && parsed.name) {
+              loadedProfile = sanitizeUserProfile(parsed);
+              hasProfile = true;
+            }
+          }
+        } catch (e) {}
+
+        // 2. Check Firestore
+        try {
+          const snap = await firestoreService.getDoc('users', uid);
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data && data.name) {
+              loadedProfile = sanitizeUserProfile({
+                ...INITIAL_USER_PROFILE,
+                ...data
+              });
+              hasProfile = true;
+              try {
+                localStorage.setItem(`profile_${uid}`, JSON.stringify(loadedProfile));
+                localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(loadedProfile));
+              } catch (e) {}
+            }
+          }
+        } catch (e) {
+          console.warn('[Firebase Auth] Firestore user fetch notice:', e);
+        }
+
+        const userObj: AuthUser = {
+          id: uid,
+          name: loadedProfile?.name || fbUser.displayName || 'Mother',
+          emailOrPhone: fbUser.email || fbUser.phoneNumber || '',
+          hasCompletedProfile: hasProfile,
+          createdAt: new Date().toISOString()
+        };
+
+        setCurrentUser(userObj);
+        if (loadedProfile) {
+          setUserProfile(loadedProfile);
+          if (loadedProfile.state) {
+            const resolvedLoc = AdministrativeLocationService.resolveHierarchy({ state: loadedProfile.state });
+            if (resolvedLoc) {
+              const updatedLoc: GlobalLocationState = {
+                ...GlobalLocationService.getLocation(),
+                state: loadedProfile.state,
+                cuisineRegion: loadedProfile.state,
+                district: loadedProfile.district || resolvedLoc.district,
+                taluk: loadedProfile.taluk || resolvedLoc.taluk,
+                village: loadedProfile.village || resolvedLoc.village || '',
+                pincode: loadedProfile.pincode || resolvedLoc.pincode || ''
+              };
+              GlobalLocationService.setLocation(updatedLoc);
+              setGlobalLocation(updatedLoc);
+            }
+          }
+        }
+        setIsAuthModalOpen(false);
+        setIsProfileSetupModalOpen(!hasProfile);
+      } else {
+        // Firebase user signed out or null; check active session fallback
+        const active = authService.getActiveUser();
+        if (active) {
+          setCurrentUser({
+            id: active.id,
+            name: active.name,
+            emailOrPhone: active.emailOrPhone,
+            hasCompletedProfile: active.hasCompletedProfile,
+            createdAt: active.createdAt
+          });
+          if (active.profile) {
+            setUserProfile(sanitizeUserProfile(active.profile));
+          }
+          if (active.location) {
+            GlobalLocationService.setLocation(active.location);
+            setGlobalLocation(active.location);
+          }
+          setIsAuthModalOpen(false);
+          setIsProfileSetupModalOpen(!active.hasCompletedProfile);
+        } else {
+          setCurrentUser(null);
+          setIsAuthModalOpen(true);
+        }
+      }
+      setIsAuthChecking(false);
+    });
+
+    return () => {
+      isMounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   // 1. Navigation Tab
   const [activeTab, setActiveTab] = useState<NavTabId>('dashboard');
@@ -290,6 +416,9 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const sanitizeUserProfile = (profile: any): UserProfile => {
     if (!profile || typeof profile !== 'object') return INITIAL_USER_PROFILE;
     const sanitized = { ...INITIAL_USER_PROFILE, ...profile };
+    if (sanitized.name === 'Amrutha' || sanitized.name === 'Amrutha Sharma') {
+      sanitized.name = '';
+    }
     if (
       sanitized.emergencyContact &&
       (sanitized.emergencyContact.includes('98765') ||
@@ -332,8 +461,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return sanitized;
   };
 
-  // 3. User Profile
+  // 3. User Profile (Single Source of Truth per Authenticated User)
   const [userProfile, setUserProfile] = useState<UserProfile>(() => {
+    const active = authService.getActiveUser();
+    if (active) {
+      try {
+        const userSpecific = localStorage.getItem(`profile_${active.id}`);
+        if (userSpecific) {
+          const parsed = JSON.parse(userSpecific);
+          if (parsed) return sanitizeUserProfile(parsed);
+        }
+      } catch (e) {}
+
+      if (active.profile && active.profile.name) {
+        return sanitizeUserProfile(active.profile);
+      }
+      if (active.name) {
+        return {
+          ...INITIAL_USER_PROFILE,
+          name: active.name,
+          email: active.emailOrPhone.includes('@') ? active.emailOrPhone : undefined,
+          mobileNumber: !active.emailOrPhone.includes('@') ? active.emailOrPhone : undefined
+        };
+      }
+    }
     try {
       const saved = localStorage.getItem(STORAGE_KEY_PROFILE);
       if (saved) return sanitizeUserProfile(JSON.parse(saved));
@@ -353,6 +504,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           : { ...prev, ...profileUpdate };
       try {
         localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`profile_${currentUser.id}`, JSON.stringify(updated));
+          authService.updateUserProfile(currentUser.id, updated);
+          firestoreService.setDoc('users', currentUser.id, {
+            ...updated,
+            uid: currentUser.id,
+            updatedAt: new Date().toISOString()
+          }).catch(() => {});
+        }
       } catch (e) {}
       return updated;
     });
@@ -417,26 +577,15 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     } catch (e) {}
   };
 
-  // 5. Selected Day of the Week (defaults to today's day or Wednesday)
+  // 5. Selected Day of the Week (defaults to today's day in local timezone)
   const getInitialDayOfWeek = (): DayOfWeek => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY_DAY);
       if (saved && DAYS_OF_WEEK.includes(saved as DayOfWeek)) {
         return saved as DayOfWeek;
       }
-      const dayIndex = new Date().getDay(); // 0 = Sunday, 1 = Monday, ...
-      const dayMap: Record<number, DayOfWeek> = {
-        0: 'Sunday',
-        1: 'Monday',
-        2: 'Tuesday',
-        3: 'Wednesday',
-        4: 'Thursday',
-        5: 'Friday',
-        6: 'Saturday'
-      };
-      return dayMap[dayIndex] || 'Monday';
     } catch (e) {}
-    return 'Monday';
+    return getLocalDayOfWeek();
   };
 
   const [selectedDay, setSelectedDayState] = useState<DayOfWeek>(getInitialDayOfWeek);
@@ -492,7 +641,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     persistMeals(newPlan);
   };
 
-  // 8. Add food to plan (Centralized handler)
+  // 8. Add food to plan (Centralized handler - keeps planned meals and logged meals synchronized)
   const addFoodToPlan = ({
     food,
     day,
@@ -502,16 +651,22 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }: AddFoodToPlanPayload) => {
     const foodId = (food as any).id || `custom-${Date.now()}`;
     const foodName = (food as any).name;
-    const foodRegionalName = (food as any).regionalName || '';
     const unitCal = (food as any).calories || 0;
     const unitProt = (food as any).protein || 0;
     const unitIr = (food as any).iron || 0;
     const unitCalc = (food as any).calcium || 0;
     const unitFol = (food as any).folate || 0;
+    const unitCarbs = (food as any).carbohydrates || (food as any).carbs || Math.round((unitCal * 0.55) / 4);
+    const unitFat = (food as any).fat || Math.round((unitCal * 0.25) / 9);
+    const unitFiber = (food as any).fiber || Math.round(unitProt * 0.4);
     const portionStr = customPortion || (food as any).servingSize || `${servings} ${servings === 1 ? 'Serving' : 'Servings'}`;
 
+    const todayDateStr = getLocalTodayDateString();
+    const todayDayName = getLocalDayOfWeek();
+    let assignedId = `meal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`;
+
+    // 1. Update planned meals
     setMeals((prev) => {
-      // Check if food already exists on the EXACT same day and meal category
       const existingIndex = prev.findIndex(
         (m) =>
           m.day === day &&
@@ -521,8 +676,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       );
 
       if (existingIndex >= 0) {
-        // Increment servings of existing item
         const existing = prev[existingIndex];
+        assignedId = existing.id;
         const newServings = (existing.servings || 1) + servings;
         const baseCal = existing.unitCalories || (existing.calories / (existing.servings || 1));
         const baseProt = existing.unitProtein || (existing.protein / (existing.servings || 1));
@@ -538,12 +693,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           protein: Number((baseProt * newServings).toFixed(1)),
           iron: Number((baseIr * newServings).toFixed(1)),
           calcium: Math.round(baseCalc * newServings),
-          folate: Math.round(baseFol * newServings),
-          unitCalories: baseCal,
-          unitProtein: baseProt,
-          unitIron: baseIr,
-          unitCalcium: baseCalc,
-          unitFolate: baseFol
+          folate: Math.round(baseFol * newServings)
         };
 
         const updated = [...prev];
@@ -554,9 +704,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         return updated;
       }
 
-      // Add new meal item
       const newMeal: PlannedMeal = {
-        id: `meal-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        id: assignedId,
         day,
         category,
         name: foodName,
@@ -579,17 +728,33 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       const updated = [...prev, newMeal];
       try {
         localStorage.setItem(STORAGE_KEY_MEALS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`meals_${currentUser.id}`, JSON.stringify(updated));
+        }
       } catch (e) {}
       return updated;
     });
   };
 
-  // 9. Remove meal
+  // 9. Remove meal (removes from planned and logged meals)
   const removeMeal = (mealId: string) => {
     setMeals((prev) => {
       const updated = prev.filter((m) => m.id !== mealId);
       try {
         localStorage.setItem(STORAGE_KEY_MEALS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`meals_${currentUser.id}`, JSON.stringify(updated));
+        }
+      } catch (e) {}
+      return updated;
+    });
+    setLoggedMeals((prev) => {
+      const updated = prev.filter((m) => m.id !== mealId && m.id !== `meal-log-${mealId}`);
+      try {
+        localStorage.setItem(STORAGE_KEY_LOGGED_MEALS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`logged_meals_${currentUser.id}`, JSON.stringify(updated));
+        }
       } catch (e) {}
       return updated;
     });
@@ -601,6 +766,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       removeMeal(mealId);
       return;
     }
+
     setMeals((prev) => {
       const updated = prev.map((m) => {
         if (m.id !== mealId) return m;
@@ -619,29 +785,111 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           protein: Number((baseProt * servings).toFixed(1)),
           iron: Number((baseIr * servings).toFixed(1)),
           calcium: Math.round(baseCalc * servings),
-          folate: Math.round(baseFol * servings),
-          unitCalories: baseCal,
-          unitProtein: baseProt,
-          unitIron: baseIr,
-          unitCalcium: baseCalc,
-          unitFolate: baseFol
+          folate: Math.round(baseFol * servings)
         };
       });
       try {
         localStorage.setItem(STORAGE_KEY_MEALS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`meals_${currentUser.id}`, JSON.stringify(updated));
+        }
       } catch (e) {}
       return updated;
     });
   };
 
-  // 11. Toggle meal completed
+  // 11. Toggle meal completed / consumed
   const toggleMealCompleted = (mealId: string) => {
+    const todayDateStr = getLocalTodayDateString();
+    const todayTimeStr = getLocalTimeString();
+    const currentUid = currentUser?.id || 'guest';
+
+    let targetUpdatedMeal: PlannedMeal | null = null;
+    let nextCompletedState = false;
+
     setMeals((prev) => {
-      const updated = prev.map((m) =>
-        m.id === mealId ? { ...m, isCompleted: !m.isCompleted } : m
-      );
+      const updated = prev.map((m) => {
+        if (m.id === mealId) {
+          nextCompletedState = !m.isCompleted;
+          const updatedMeal: PlannedMeal = {
+            ...m,
+            isCompleted: nextCompletedState,
+            consumedDate: nextCompletedState ? (m.consumedDate || todayDateStr) : m.consumedDate,
+            consumedTime: nextCompletedState ? (m.consumedTime || todayTimeStr) : m.consumedTime,
+            consumedAt: nextCompletedState ? (m.consumedAt || new Date().toISOString()) : m.consumedAt,
+            userId: currentUid
+          };
+          targetUpdatedMeal = updatedMeal;
+          return updatedMeal;
+        }
+        return m;
+      });
       try {
         localStorage.setItem(STORAGE_KEY_MEALS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`meals_${currentUser.id}`, JSON.stringify(updated));
+        }
+      } catch (e) {}
+      return updated;
+    });
+
+    // Synchronize consumed meal with loggedMeals for reports and daily intake
+    setLoggedMeals((prev) => {
+      let updated: LoggedMealRecord[];
+      if (nextCompletedState && targetUpdatedMeal) {
+        const meal: PlannedMeal = targetUpdatedMeal;
+        const cDate = meal.consumedDate || todayDateStr;
+        const cTime = meal.consumedTime || todayTimeStr;
+
+        const existingIdx = prev.findIndex((lm) => lm.id === meal.id || lm.id === `meal-log-${meal.id}`);
+        const logRecord: LoggedMealRecord = {
+          id: meal.id,
+          userId: currentUid,
+          date: cDate,
+          time: cTime,
+          mealType: (meal.category === 'Mid-Morning Snack' || meal.category === 'Evening Snack') ? 'Snack' : (meal.category as any),
+          foodNames: [meal.name],
+          items: [
+            {
+              foodId: meal.foodId || meal.id,
+              name: meal.name,
+              quantity: 100 * (meal.servings || 1),
+              unit: 'g',
+              portionSize: 'medium',
+              defaultServingGrams: 100
+            }
+          ],
+          nutrients: {
+            calories: meal.calories,
+            protein: meal.protein,
+            carbohydrates: (meal as any).carbohydrates || Math.round((meal.calories * 0.55) / 4),
+            fat: (meal as any).fat || Math.round((meal.calories * 0.25) / 9),
+            fiber: (meal as any).fiber || Math.round(meal.protein * 0.4),
+            iron: meal.iron,
+            calcium: meal.calcium,
+            folate: meal.folate
+          } as any,
+          nutritionScore: 88,
+          source: 'MealPlanner',
+          timestamp: meal.consumedAt || new Date().toISOString()
+        };
+
+        if (existingIdx >= 0) {
+          updated = [...prev];
+          updated[existingIdx] = logRecord;
+        } else {
+          updated = [logRecord, ...prev];
+        }
+      } else {
+        // Unmarked as consumed
+        updated = prev.filter((lm) => lm.id !== mealId && lm.id !== `meal-log-${mealId}`);
+      }
+
+      try {
+        localStorage.setItem(STORAGE_KEY_LOGGED_MEALS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`logged_meals_${currentUser.id}`, JSON.stringify(updated));
+        }
       } catch (e) {}
       return updated;
     });
@@ -658,59 +906,55 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
 
-  // 13. Water intake & Reminder settings
-  const [waterIntakeMl, setWaterIntakeMl] = useState<number>(() => {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY_WATER);
-      if (saved !== null) return Number(saved);
-    } catch (e) {}
-    return 1750;
-  });
-
+  // 13. Water intake & Daily logs (Real local date-aware, starts at 0 for new days, preserves history)
   const [dailyWaterLogs, setDailyWaterLogs] = useState<Record<string, number>>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_DAILY_WATER_LOGS);
+      const active = authService.getActiveUser();
+      const userKey = active ? `daily_water_${active.id}` : STORAGE_KEY_DAILY_WATER_LOGS;
+      const saved = localStorage.getItem(userKey);
       if (saved) return JSON.parse(saved);
+      const globalSaved = localStorage.getItem(STORAGE_KEY_DAILY_WATER_LOGS);
+      if (globalSaved) return JSON.parse(globalSaved);
     } catch (e) {}
-    const todayKey = new Date().toISOString().split('T')[0];
-    const initialSaved = localStorage.getItem(STORAGE_KEY_WATER);
-    const initialAmount = initialSaved !== null ? Number(initialSaved) : 1750;
-    return { [todayKey]: initialAmount };
+    return {};
   });
 
+  const todayDateStr = getLocalTodayDateString();
+  const waterIntakeMl = dailyWaterLogs[todayDateStr] || 0;
+
   const updateWaterIntake = (amountMl: number) => {
-    setWaterIntakeMl(amountMl);
-    const todayKey = new Date().toISOString().split('T')[0];
+    const validAmount = Math.max(0, amountMl);
+    const today = getLocalTodayDateString();
     setDailyWaterLogs((prev) => {
-      const updated = { ...prev, [todayKey]: amountMl };
+      const updated = { ...prev, [today]: validAmount };
       try {
         localStorage.setItem(STORAGE_KEY_DAILY_WATER_LOGS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`daily_water_${currentUser.id}`, JSON.stringify(updated));
+        }
       } catch (e) {}
       return updated;
     });
     try {
-      localStorage.setItem(STORAGE_KEY_WATER, String(amountMl));
+      localStorage.setItem(STORAGE_KEY_WATER, String(validAmount));
     } catch (e) {}
     if (currentUser) {
-      authService.saveUserWaterData(currentUser.id, amountMl);
+      authService.saveUserWaterData(currentUser.id, validAmount);
     }
   };
 
   const logWaterForDate = (dateStr: string, amountMl: number) => {
+    const validAmount = Math.max(0, amountMl);
     setDailyWaterLogs((prev) => {
-      const updated = { ...prev, [dateStr]: amountMl };
+      const updated = { ...prev, [dateStr]: validAmount };
       try {
         localStorage.setItem(STORAGE_KEY_DAILY_WATER_LOGS, JSON.stringify(updated));
+        if (currentUser?.id) {
+          localStorage.setItem(`daily_water_${currentUser.id}`, JSON.stringify(updated));
+        }
       } catch (e) {}
       return updated;
     });
-    const todayKey = new Date().toISOString().split('T')[0];
-    if (dateStr === todayKey) {
-      setWaterIntakeMl(amountMl);
-      try {
-        localStorage.setItem(STORAGE_KEY_WATER, String(amountMl));
-      } catch (e) {}
-    }
   };
 
   const [waterReminderSettings, setWaterReminderSettings] = useState<{
@@ -836,49 +1080,176 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   }, [waterReminderSettings.enabled, waterReminderSettings.intervalMinutes, waterReminderSettings.soundEnabled]);
 
   // Auth Action Handlers
-  const handleAuthSuccess = (user: AuthUser, needsProfileSetup: boolean) => {
+  const handleAuthSuccess = async (user: AuthUser, needsProfileSetup: boolean) => {
     setCurrentUser(user);
     setIsAuthModalOpen(false);
     if (needsProfileSetup) {
+      const initialProfileForUser: UserProfile = {
+        ...INITIAL_USER_PROFILE,
+        name: user.name,
+        email: user.emailOrPhone.includes('@') ? user.emailOrPhone : undefined,
+        mobileNumber: !user.emailOrPhone.includes('@') ? user.emailOrPhone : undefined
+      };
+      setUserProfile(initialProfileForUser);
+      try {
+        localStorage.setItem(`profile_${user.id}`, JSON.stringify(initialProfileForUser));
+        localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(initialProfileForUser));
+      } catch (e) {}
       setIsProfileSetupModalOpen(true);
     } else {
       setIsProfileSetupModalOpen(false);
-      // Load user profile & location from account
-      const activeAccount = authService.getActiveUser();
-      if (activeAccount?.profile) {
-        setUserProfile(activeAccount.profile);
-        if (activeAccount.location) {
-          updateLocation(activeAccount.location);
+      let loadedProfile: UserProfile | null = null;
+      let loadedLocation: GlobalLocationState | null = null;
+
+      // 1. Check user-specific localStorage cache
+      try {
+        const cached = localStorage.getItem(`profile_${user.id}`);
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (parsed && parsed.name) {
+            loadedProfile = sanitizeUserProfile(parsed);
+          }
         }
-        if (activeAccount.waterIntakeMl !== undefined) {
-          setWaterIntakeMl(activeAccount.waterIntakeMl);
-        }
-        if (activeAccount.waterReminderSettings) {
-          setWaterReminderSettings({
-            enabled: activeAccount.waterReminderSettings.enabled ?? true,
-            intervalMinutes: activeAccount.waterReminderSettings.intervalMinutes ?? 60,
-            scheduleType: activeAccount.waterReminderSettings.scheduleType ?? '1hour',
-            customMinutes: activeAccount.waterReminderSettings.customMinutes ?? 45,
-            soundEnabled: activeAccount.waterReminderSettings.soundEnabled ?? true
-          });
-        }
+      } catch (e) {}
+
+      // 2. Check Firestore
+      if (!loadedProfile) {
+        try {
+          const snap = await firestoreService.getDoc('users', user.id);
+          if (snap.exists()) {
+            const data = snap.data();
+            if (data && data.name) {
+              loadedProfile = sanitizeUserProfile({
+                ...INITIAL_USER_PROFILE,
+                ...data
+              });
+            }
+          }
+        } catch (e) {}
       }
+
+      // 3. Check authService account
+      const activeAccount = authService.getActiveUser();
+      if (!loadedProfile && activeAccount?.profile) {
+        loadedProfile = sanitizeUserProfile(activeAccount.profile);
+      }
+      if (activeAccount?.location) {
+        loadedLocation = activeAccount.location;
+      }
+
+      if (loadedProfile) {
+        setUserProfile(loadedProfile);
+        try {
+          localStorage.setItem(`profile_${user.id}`, JSON.stringify(loadedProfile));
+          localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(loadedProfile));
+        } catch (e) {}
+      } else {
+        const fallbackProf: UserProfile = {
+          ...INITIAL_USER_PROFILE,
+          name: user.name,
+          email: user.emailOrPhone.includes('@') ? user.emailOrPhone : undefined,
+          mobileNumber: !user.emailOrPhone.includes('@') ? user.emailOrPhone : undefined
+        };
+        setUserProfile(fallbackProf);
+      }
+
+      if (loadedLocation) {
+        updateLocation(loadedLocation);
+      }
+      if (activeAccount?.waterIntakeMl !== undefined) {
+        updateWaterIntake(activeAccount.waterIntakeMl);
+      }
+      if (activeAccount?.waterReminderSettings) {
+        setWaterReminderSettings({
+          enabled: activeAccount.waterReminderSettings.enabled ?? true,
+          intervalMinutes: activeAccount.waterReminderSettings.intervalMinutes ?? 60,
+          scheduleType: activeAccount.waterReminderSettings.scheduleType ?? '1hour',
+          customMinutes: activeAccount.waterReminderSettings.customMinutes ?? 45,
+          soundEnabled: activeAccount.waterReminderSettings.soundEnabled ?? true
+        });
+      }
+
+      // Load user-specific meals and consumed meal logs
+      try {
+        const userMealsStr = localStorage.getItem(`meals_${user.id}`);
+        if (userMealsStr) {
+          const parsedMeals = JSON.parse(userMealsStr);
+          if (Array.isArray(parsedMeals) && parsedMeals.length > 0) {
+            setMeals(parsedMeals);
+          }
+        }
+        const userLogsStr = localStorage.getItem(`logged_meals_${user.id}`);
+        if (userLogsStr) {
+          const parsedLogs = JSON.parse(userLogsStr);
+          if (Array.isArray(parsedLogs)) {
+            setLoggedMeals(parsedLogs);
+          }
+        }
+      } catch (e) {}
     }
   };
 
-  const saveInitialProfileSetup = (profile: UserProfile, location: GlobalLocationState) => {
+  const saveInitialProfileSetup = async (profile: UserProfile, location: GlobalLocationState) => {
     if (currentUser) {
       authService.saveCompleteUserProfile(currentUser.id, profile, location);
-      setCurrentUser({ ...currentUser, hasCompletedProfile: true });
+      setCurrentUser({ ...currentUser, hasCompletedProfile: true, name: profile.name });
+      try {
+        localStorage.setItem(`profile_${currentUser.id}`, JSON.stringify(profile));
+        await firestoreService.setDoc('users', currentUser.id, {
+          uid: currentUser.id,
+          name: profile.name,
+          email: profile.email || (currentUser.emailOrPhone.includes('@') ? currentUser.emailOrPhone : ''),
+          phone: profile.mobileNumber || (!currentUser.emailOrPhone.includes('@') ? currentUser.emailOrPhone : ''),
+          age: profile.age,
+          weeksPregnant: profile.weeksPregnant,
+          pregnancyMonth: profile.pregnancyMonth,
+          dueDate: profile.dueDate,
+          heightCm: profile.heightCm,
+          currentWeightKg: profile.currentWeightKg,
+          prePregnancyWeightKg: profile.prePregnancyWeightKg,
+          dietPreference: profile.dietPreference,
+          state: profile.state,
+          district: profile.district,
+          taluk: profile.taluk,
+          village: profile.village,
+          pincode: profile.pincode,
+          allergies: profile.allergies,
+          updatedAt: new Date().toISOString()
+        });
+      } catch (err) {
+        console.warn('Firestore sync failed', err);
+      }
     }
     setUserProfile(profile);
     updateLocation(location);
     setIsProfileSetupModalOpen(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
+    if (currentUser?.id) {
+      try {
+        localStorage.removeItem(`profile_${currentUser.id}`);
+      } catch (e) {}
+    }
+    try {
+      await auth.signOut();
+    } catch (e) {
+      console.warn('Error during Firebase signOut', e);
+    }
     authService.logout();
     setCurrentUser(null);
+    setUserProfile(INITIAL_USER_PROFILE);
+    try {
+      localStorage.removeItem(STORAGE_KEY_PROFILE);
+      localStorage.removeItem(STORAGE_KEY_MEALS);
+      localStorage.removeItem(STORAGE_KEY_WATER);
+      localStorage.removeItem(STORAGE_KEY_DAILY_WATER_LOGS);
+      localStorage.removeItem(STORAGE_KEY_LOGGED_MEALS);
+      localStorage.removeItem(STORAGE_KEY_WEIGHT);
+      localStorage.removeItem(STORAGE_KEY_REPORTS);
+      localStorage.removeItem(STORAGE_KEY_MEDS);
+      localStorage.removeItem('pregnutri_ai_chat_history_v2');
+    } catch (e) {}
     setIsAuthModalOpen(true);
   };
 
@@ -926,14 +1297,91 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
 
-  // 14. Scanned Logged Meals
+  // 14. Scanned & Consumed Logged Meals
   const [loggedMeals, setLoggedMeals] = useState<LoggedMealRecord[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY_LOGGED_MEALS);
+      const active = authService.getActiveUser();
+      const userKey = active ? `logged_meals_${active.id}` : STORAGE_KEY_LOGGED_MEALS;
+      const saved = localStorage.getItem(userKey);
       if (saved) return JSON.parse(saved);
+      const globalSaved = localStorage.getItem(STORAGE_KEY_LOGGED_MEALS);
+      if (globalSaved) return JSON.parse(globalSaved);
     } catch (e) {}
     return [];
   });
+
+  // Self-healing synchronization: Ensure all planned meals marked isCompleted have a corresponding LoggedMealRecord
+  useEffect(() => {
+    const today = getLocalTodayDateString();
+    const todayTime = getLocalTimeString();
+    const currentUid = currentUser?.id || 'guest';
+    const completedPlanned = meals.filter((m) => m.isCompleted);
+    if (completedPlanned.length === 0) return;
+
+    setLoggedMeals((prev) => {
+      let changed = false;
+      const updated = [...prev];
+
+      completedPlanned.forEach((meal) => {
+        const exists = updated.some((lm) => lm.id === meal.id || lm.id === `meal-log-${meal.id}`);
+        if (!exists) {
+          changed = true;
+          const cDate = meal.consumedDate || today;
+          const cTime = meal.consumedTime || todayTime;
+          updated.push({
+            id: meal.id,
+            userId: currentUid,
+            date: cDate,
+            time: cTime,
+            mealType: (meal.category === 'Mid-Morning Snack' || meal.category === 'Evening Snack') ? 'Snack' : (meal.category as any),
+            foodNames: [meal.name],
+            items: [
+              {
+                foodId: meal.foodId || meal.id,
+                foodName: meal.name,
+                servings: meal.servings || 1,
+                portion: meal.portion || `${meal.servings || 1} Serving`,
+                nutrients: {
+                  calories: meal.calories,
+                  protein: meal.protein,
+                  carbohydrates: (meal as any).carbohydrates || Math.round((meal.calories * 0.55) / 4),
+                  fat: (meal as any).fat || Math.round((meal.calories * 0.25) / 9),
+                  fiber: (meal as any).fiber || Math.round(meal.protein * 0.4),
+                  iron: meal.iron,
+                  calcium: meal.calcium,
+                  folate: meal.folate
+                }
+              }
+            ],
+            nutrients: {
+              calories: meal.calories,
+              protein: meal.protein,
+              carbohydrates: (meal as any).carbohydrates || Math.round((meal.calories * 0.55) / 4),
+              fat: (meal as any).fat || Math.round((meal.calories * 0.25) / 9),
+              fiber: (meal as any).fiber || Math.round(meal.protein * 0.4),
+              iron: meal.iron,
+              calcium: meal.calcium,
+              folate: meal.folate
+            } as any,
+            nutritionScore: 88,
+            source: 'MealPlanner',
+            timestamp: meal.consumedAt || new Date().toISOString()
+          });
+        }
+      });
+
+      if (changed) {
+        try {
+          localStorage.setItem(STORAGE_KEY_LOGGED_MEALS, JSON.stringify(updated));
+          if (currentUser?.id) {
+            localStorage.setItem(`logged_meals_${currentUser.id}`, JSON.stringify(updated));
+          }
+        } catch (e) {}
+        return updated;
+      }
+      return prev;
+    });
+  }, [meals, currentUser?.id]);
 
   const addLoggedMeal = (meal: LoggedMealRecord) => {
     setLoggedMeals((prev) => {
@@ -1106,11 +1554,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const getDayNutrition = (day: DayOfWeek): DayNutritionSummary => {
     const dayMeals = meals.filter((m) => m.day === day);
 
-    let calories = 0;
-    let protein = 0;
-    let iron = 0;
-    let calcium = 0;
-    let folate = 0;
+    let plannedCal = 0, plannedProt = 0, plannedIr = 0, plannedCalc = 0, plannedFol = 0;
+    let consumedCal = 0, consumedProt = 0, consumedIr = 0, consumedCalc = 0, consumedFol = 0;
     let completedCount = 0;
 
     const mealsByCategory: Record<MealCategory, PlannedMeal[]> = {
@@ -1122,12 +1567,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     };
 
     dayMeals.forEach((m) => {
-      calories += Number(m.calories) || 0;
-      protein += Number(m.protein) || 0;
-      iron += Number(m.iron) || 0;
-      calcium += Number(m.calcium) || 0;
-      folate += Number(m.folate) || 0;
-      if (m.isCompleted) completedCount++;
+      const cal = Number(m.calories) || 0;
+      const prot = Number(m.protein) || 0;
+      const ir = Number(m.iron) || 0;
+      const calc = Number(m.calcium) || 0;
+      const fol = Number(m.folate) || 0;
+
+      plannedCal += cal;
+      plannedProt += prot;
+      plannedIr += ir;
+      plannedCalc += calc;
+      plannedFol += fol;
+
+      if (m.isCompleted) {
+        completedCount++;
+        consumedCal += cal;
+        consumedProt += prot;
+        consumedIr += ir;
+        consumedCalc += calc;
+        consumedFol += fol;
+      }
 
       if (mealsByCategory[m.category]) {
         mealsByCategory[m.category].push(m);
@@ -1136,20 +1595,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       }
     });
 
-    const carbs = Number((protein * 2.8 + dayMeals.length * 20).toFixed(1));
-    const fat = Number((protein * 0.6 + dayMeals.length * 4).toFixed(1));
-    const fiber = Number((dayMeals.length * 4.5).toFixed(1));
-    const vitC = Math.round(dayMeals.length * 12);
-    const vitA = Math.round(dayMeals.length * 80);
-    const vitB12 = Number((dayMeals.length * 0.4).toFixed(1));
+    const carbs = Number((consumedProt * 2.8 + completedCount * 15).toFixed(1));
+    const fat = Number((consumedProt * 0.6 + completedCount * 3).toFixed(1));
+    const fiber = Number((completedCount * 4.5).toFixed(1));
+    const vitC = Math.round(completedCount * 12);
+    const vitA = Math.round(completedCount * 80);
+    const vitB12 = Number((completedCount * 0.4).toFixed(1));
 
     return {
       day,
-      calories: Math.round(calories),
-      protein: Number(protein.toFixed(1)),
-      iron: Number(iron.toFixed(1)),
-      calcium: Math.round(calcium),
-      folate: Math.round(folate),
+      calories: Math.round(consumedCal),
+      protein: Number(consumedProt.toFixed(1)),
+      iron: Number(consumedIr.toFixed(1)),
+      calcium: Math.round(consumedCalc),
+      folate: Math.round(consumedFol),
+      consumedCalories: Math.round(consumedCal),
+      consumedProtein: Number(consumedProt.toFixed(1)),
+      consumedIron: Number(consumedIr.toFixed(1)),
+      consumedCalcium: Math.round(consumedCalc),
+      consumedFolate: Math.round(consumedFol),
+      plannedCalories: Math.round(plannedCal),
+      plannedProtein: Number(plannedProt.toFixed(1)),
+      plannedIron: Number(plannedIr.toFixed(1)),
+      plannedCalcium: Math.round(plannedCalc),
+      plannedFolate: Math.round(plannedFol),
       carbs,
       fat,
       fiber,
@@ -1206,7 +1675,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     localStorage.clear();
     setUserProfile(INITIAL_USER_PROFILE);
     setMeals(INITIAL_MEAL_PLAN);
-    setWaterIntakeMl(1750);
+    updateWaterIntake(1750);
     setWaterReminderSettings({
       enabled: true,
       intervalMinutes: 60,
@@ -1282,6 +1751,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setIsSosModalOpen,
         currentUser,
         isAuthenticated,
+        isAuthChecking,
         isAuthModalOpen,
         setIsAuthModalOpen,
         isProfileSetupModalOpen,

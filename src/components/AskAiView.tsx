@@ -23,7 +23,7 @@ interface AskAiViewProps {
 }
 
 export const AskAiView: React.FC<AskAiViewProps> = ({ profile, globalLocation }) => {
-  const { currentLanguageCode } = useLanguage();
+  const { currentLanguageCode, t } = useLanguage();
   const activeState = globalLocation?.state || profile.state || 'Karnataka';
   const activeCity = globalLocation?.city || profile.city || 'Bengaluru';
   const activeRegion = globalLocation?.region || 'South India';
@@ -86,6 +86,27 @@ export const AskAiView: React.FC<AskAiViewProps> = ({ profile, globalLocation })
     `${activeState}ದ ಪೌಷ್ಟಿಕ ಬೆಳಗಿನ ಉಪಾಹಾರ`,
     'ವಾಂತಿ ಮತ್ತು ಆಯಾಸಕ್ಕೆ ಪರಿಹಾರ',
     'ಕ್ಯಾಲ್ಸಿಯಂ ಭರಿತ ರಾಗಿ ಮತ್ತು ಸಿರಿಧಾನ್ಯಗಳು'
+  ] : currentLanguageCode === 'ta' ? [
+    `${activeState} இரும்புச்சத்து நிறைந்த உணவுகள்`,
+    'பழுத்த பப்பாளி பாதுகாப்பானதா?',
+    'குங்குமப்பூ பயன்பாடு பாதுகாப்பானதா?',
+    `${activeState} பாரம்பரிய காலை உணவு`,
+    'காலை சோர்வுக்கு வீட்டு வைத்தியம்',
+    'கால்சியம் நிறைந்த கேழ்வரகு & சிறுதானியங்கள்'
+  ] : currentLanguageCode === 'te' ? [
+    `${activeState} ఇనుము సమృద్ధిగా ఉండే ఆహారాలు`,
+    'పండిన బొప్పాయి సురక్షితమేనా?',
+    'కుంకుమపువ్వు ఎంతవరకు సురక్షితం?',
+    `${activeState} సాంప్రదాయ అల్పాహారం`,
+    'మార్నింగ్ సిక్‌నెస్ నివారణలు',
+    'కాల్షియం సమృద్ధిగా ఉండే రాగులు & చిరుధాన్యాలు'
+  ] : currentLanguageCode === 'ml' ? [
+    `${activeState} ഇരുമ്പ് അടങ്ങിയ ഭക്ഷണങ്ങൾ`,
+    'പഴുത്ത പപ്പായ സുരക്ഷിതമാണോ?',
+    'കുങ്കുമപ്പൂവ് സുരക്ഷിതമാണോ?',
+    `${activeState} പരമ്പരാഗത പ്രഭാതഭക്ഷണം`,
+    'മോണിംഗ് സിക്ക്നസ് പരിഹാരങ്ങൾ',
+    'കാൽസ്യം അടങ്ങിയ റാഗിയും ധാന്യങ്ങളും'
   ] : [
     `Local iron foods in ${activeState}`,
     'Is ripe papaya safe?',
@@ -302,14 +323,14 @@ Would you like specific recipe ideas or food safety checks for any particular di
             className="px-3.5 py-1.5 rounded-xl bg-[#EFEFE9] hover:bg-[#BBA58F]/30 text-[#223030] border border-[#959D90]/40 text-xs font-semibold flex items-center gap-1.5 transition self-start cursor-pointer"
           >
             <RotateCcw className="w-3.5 h-3.5 text-[#523D35]" />
-            <span>Clear Chat</span>
+            <span>{t('ai.clearChat', 'Clear Chat')}</span>
           </button>
         </div>
 
         {/* Quick Question Chips */}
         <div className="space-y-1.5 pt-2 border-t border-[#959D90]/30">
           <span className="text-[11px] font-bold text-[#523D35] uppercase tracking-wider block">
-            Suggested Queries for {activeState}:
+            {t('ai.suggestedFor', 'Suggested Queries for')} {activeState}:
           </span>
           <div className="flex items-center space-x-2 overflow-x-auto no-scrollbar py-1">
             {quickQuestions.map((q) => (
@@ -376,9 +397,9 @@ Would you like specific recipe ideas or food safety checks for any particular di
                             voiceService.speak(
                               msg.text,
                               currentLanguageCode,
-                              () => setSpeakingMessageId(msg.id),
                               () => setSpeakingMessageId(null),
-                              () => setSpeakingMessageId(null)
+                              () => setSpeakingMessageId(msg.id),
+                              msg.id
                             );
                           }
                         }}
@@ -391,12 +412,12 @@ Would you like specific recipe ideas or food safety checks for any particular di
                         {speakingMessageId === msg.id ? (
                           <>
                             <VolumeX className="w-3 h-3" />
-                            <span>Stop</span>
+                            <span>{t('ai.stop', 'Stop')}</span>
                           </>
                         ) : (
                           <>
                             <Volume2 className="w-3 h-3" />
-                            <span>Listen</span>
+                            <span>{t('ai.listen', 'Listen')}</span>
                           </>
                         )}
                       </button>
@@ -414,7 +435,7 @@ Would you like specific recipe ideas or food safety checks for any particular di
               </div>
               <div className="rounded-2xl rounded-tl-xs px-4 py-3 bg-[#E8D9CD] border border-[#959D90]/40 text-[#523D35] text-xs shadow-2xs flex items-center space-x-2">
                 <Sparkles className="w-3.5 h-3.5 text-[#523D35] animate-spin" />
-                <span>PregNutri AI is analyzing clinical database &amp; {activeState} food sources...</span>
+                <span>{t('ai.analyzing', 'PregNutri AI is analyzing clinical database & local food sources...')}</span>
               </div>
             </div>
           )}
@@ -435,7 +456,7 @@ Would you like specific recipe ideas or food safety checks for any particular di
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
-              placeholder={`Ask any maternal nutrition or local food question in ${activeState}...`}
+              placeholder={t('ai.placeholder', `Ask any maternal nutrition or local food question in ${activeState}...`)}
               className="flex-1 px-4 py-3 rounded-2xl bg-[#EFEFE9] focus:bg-white border border-[#959D90] focus:border-[#523D35] focus:ring-4 focus:ring-[#523D35]/10 outline-none text-xs sm:text-sm text-[#223030] transition font-medium placeholder:text-[#959D90]"
             />
             <button
@@ -443,13 +464,13 @@ Would you like specific recipe ideas or food safety checks for any particular di
               disabled={!inputText.trim() || isLoading}
               className="px-5 py-3 rounded-2xl bg-[#223030] hover:bg-[#523D35] disabled:opacity-50 text-[#EFEFE9] font-bold text-xs flex items-center space-x-1.5 shadow-xs transition shrink-0 cursor-pointer"
             >
-              <span>Send</span>
+              <span>{t('common.send', 'Send')}</span>
               <Send className="w-3.5 h-3.5" />
             </button>
           </form>
           {/* Mandatory Medical Safety Disclaimer */}
           <div className="mt-2.5 text-[10px] text-[#523D35] text-center leading-normal">
-            🛡️ <strong className="text-[#223030]">Clinical Safety Notice:</strong> PregNutri AI provides general educational guidance and does not replace professional medical advice. Consult a qualified healthcare professional for medical concerns or emergencies.
+            🛡️ {t('ai.disclaimer', 'Clinical Safety Notice: PregNutri AI provides general educational guidance and does not replace professional medical advice.')}
           </div>
         </div>
       </div>

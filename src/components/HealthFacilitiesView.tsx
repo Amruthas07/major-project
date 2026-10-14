@@ -31,6 +31,7 @@ interface HealthFacilitiesViewProps {
 export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
   globalLocation
 }) => {
+  const { t } = useLanguage();
   // Coordinates taken strictly from the application's main location selector
   const userCoords = {
     latitude: globalLocation?.latitude || 12.0621,
@@ -241,7 +242,7 @@ export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
 
                 return (
                   <div
-                    key={fac.id}
+                    key={`${fac.id}-${index}`}
                     onClick={() => setActiveFacility(fac)}
                     className={`bg-[#E8D9CD] rounded-3xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer shadow-xs ${
                       isSelected
@@ -303,13 +304,13 @@ export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
                     {/* Doctor / CMO & Timing Grid */}
                     <div className="grid grid-cols-2 gap-2 my-3 p-2.5 bg-[#EFEFE9] rounded-2xl border border-[#959D90]/40 text-[11px] text-[#223030]">
                       <div>
-                        <span className="text-[10px] text-[#959D90] block font-semibold">Doctor / MOIC:</span>
+                        <span className="text-[10px] text-[#523D35] block font-semibold">{t('facility.doctorLabel', 'Doctor / MOIC:')}</span>
                         <span className="font-bold text-[#223030] truncate block">
                           {fac.doctorInCharge || (isGovt ? 'Medical Officer In-Charge' : 'Chief Medical Officer')}
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] text-[#959D90] block font-semibold">Emergency / Timings:</span>
+                        <span className="text-[10px] text-[#523D35] block font-semibold">{t('facility.emergencyTimings', 'Emergency / Timings:')}</span>
                         <span className="font-medium text-[#523D35] truncate block">
                           {fac.timing || '24/7 Obstetric Emergency'}
                         </span>
@@ -319,8 +320,8 @@ export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
                     {/* Maternal Services / Features Preview */}
                     {fac.maternalServices && fac.maternalServices.length > 0 && (
                       <div className="mb-3 space-y-1">
-                        <span className="text-[10px] font-bold text-[#959D90] uppercase tracking-wider block">
-                          Available Services:
+                        <span className="text-[10px] font-bold text-[#523D35] uppercase tracking-wider block">
+                          {t('facility.availableServices', 'Available Services:')}
                         </span>
                         <div className="flex flex-wrap gap-1">
                           {fac.maternalServices.slice(0, 2).map((srv, idx) => (
@@ -580,15 +581,15 @@ export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
           {/* Contact Details & In-Charge Footer */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#959D90]/30 text-xs">
             <div>
-              <span className="text-[11px] text-[#959D90] font-semibold block">Doctor / Superintendent:</span>
+              <span className="text-[11px] text-[#523D35] font-bold block">{t('facility.superintendent', 'Doctor / Superintendent:')}</span>
               <span className="font-bold text-[#223030]">{activeFacility.doctorInCharge || 'Medical Superintendent'}</span>
             </div>
             <div>
-              <span className="text-[11px] text-[#959D90] font-semibold block">Official Telephone:</span>
+              <span className="text-[11px] text-[#523D35] font-bold block">{t('facility.officialPhone', 'Official Telephone:')}</span>
               <span className="font-bold text-[#223030]">{activeFacility.phone}</span>
             </div>
             <div>
-              <span className="text-[11px] text-[#959D90] font-semibold block">Emergency Hotline:</span>
+              <span className="text-[11px] text-[#523D35] font-bold block">{t('facility.emergencyHotline', 'Emergency Hotline:')}</span>
               <span className="font-bold text-[#523D35]">{activeFacility.emergencyPhone || '108 / 102'}</span>
             </div>
           </div>

@@ -74,7 +74,16 @@ export function getHealthFacilities(
     (f.city && f.city.toLowerCase() === finalCity.toLowerCase())
   );
 
-  const facilitiesToDisplay = districtMatched.length > 0 ? districtMatched : matched;
+  const rawFacilitiesToDisplay = districtMatched.length > 0 ? districtMatched : matched;
+
+  // Deduplicate by facility id to guarantee key uniqueness
+  const uniqueFacilitiesMap = new Map<string, (typeof rawFacilitiesToDisplay)[0]>();
+  for (const f of rawFacilitiesToDisplay) {
+    if (!uniqueFacilitiesMap.has(f.id)) {
+      uniqueFacilitiesMap.set(f.id, f);
+    }
+  }
+  const facilitiesToDisplay = Array.from(uniqueFacilitiesMap.values());
 
   // Map to HealthFacility structure
   const result: HealthFacility[] = facilitiesToDisplay.map((fac, idx) => {

@@ -332,21 +332,26 @@ export class HealthFacilityService {
       }
     }
 
-    // 3. Merge verified catalog with live OSM facilities (avoiding duplicate names)
+    // 3. Merge verified catalog with live OSM facilities (avoiding duplicate names & IDs)
     const seenNames = new Set<string>();
+    const seenIds = new Set<string>();
     const allCombined: HealthFacility[] = [];
 
     // Prioritize verified high-detail facilities first
     for (const fac of verifiedWithDistances) {
       const normName = fac.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      seenNames.add(normName);
-      allCombined.push(fac);
+      if (!seenNames.has(normName) && !seenIds.has(fac.id)) {
+        seenNames.add(normName);
+        seenIds.add(fac.id);
+        allCombined.push(fac);
+      }
     }
 
     for (const fac of liveOsmFacilities) {
       const normName = fac.name.toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (!seenNames.has(normName)) {
+      if (!seenNames.has(normName) && !seenIds.has(fac.id)) {
         seenNames.add(normName);
+        seenIds.add(fac.id);
         allCombined.push(fac);
       }
     }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext';
 import { MealReminderSettings, DoctorReminderSettings } from '../types';
 import { waterSoundService } from '../services/water_sound_service';
+import { useLanguage } from '../services/language_service';
 import {
   Bell,
   Droplets,
@@ -22,6 +23,7 @@ interface SmartReminderModalProps {
 }
 
 export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useLanguage();
   const {
     userProfile,
     updateUserProfile,
@@ -156,13 +158,13 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#523D35] text-[#E8D9CD] text-xs font-bold uppercase tracking-wider mb-2">
               <Bell className="w-3.5 h-3.5 text-[#BBA58F]" />
-              <span>Smart Maternal Reminders</span>
+              <span>{t('reminder.title', 'Smart Maternal Reminders')}</span>
             </div>
             <h2 className="text-xl sm:text-2xl font-black text-[#223030] tracking-tight">
-              Reminder Preferences
+              {t('reminder.title', 'Reminder Preferences')}
             </h2>
             <p className="text-xs text-[#523D35] mt-1">
-              Configure water, 5-interval meal alerts, and prenatal doctor visit notifications. Preferences are saved to your profile.
+              {t('reminder.preferencesSubtitle', 'Configure water, 5-interval meal alerts, and prenatal doctor visit notifications. Preferences are saved to your profile.')}
             </p>
           </div>
 
@@ -183,8 +185,8 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                 <Droplets className="w-4 h-4 text-[#BBA58F]" />
               </div>
               <div>
-                <h3 className="text-sm font-black text-[#223030]">💧 Hydration Reminders</h3>
-                <p className="text-[11px] text-[#523D35]">Keeps amniotic fluid levels safe and prevents dehydration headaches.</p>
+                <h3 className="text-sm font-black text-[#223030]">{t('reminder.waterTitle', '💧 Hydration Reminders')}</h3>
+                <p className="text-[11px] text-[#523D35]">{t('reminder.hydrationBenefit', 'Keeps amniotic fluid levels safe and prevents dehydration headaches.')}</p>
               </div>
             </div>
 
@@ -201,7 +203,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
 
           {waterEnabled && (
             <div className="space-y-3 pt-2 border-t border-[#959D90]/30">
-              <span className="text-xs font-bold text-[#223030] block">Schedule Frequency:</span>
+              <span className="text-xs font-bold text-[#223030] block">{t('reminder.frequency', 'Schedule Frequency:')}</span>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <button
                   type="button"
@@ -212,7 +214,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                       : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
                   }`}
                 >
-                  Every 1 Hour
+                  {t('reminder.every1h', 'Every 1 Hour')}
                 </button>
                 <button
                   type="button"
@@ -223,7 +225,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                       : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
                   }`}
                 >
-                  Every 2 Hours
+                  {t('reminder.every2h', 'Every 2 Hours')}
                 </button>
                 <button
                   type="button"
@@ -234,7 +236,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                       : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
                   }`}
                 >
-                  Every 3 Hours
+                  {t('reminder.every3h', 'Every 3 Hours')}
                 </button>
                 <button
                   type="button"
@@ -245,13 +247,13 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                       : 'bg-[#EFEFE9] text-[#523D35] hover:bg-[#BBA58F]/30'
                   }`}
                 >
-                  Custom
+                  {t('reminder.custom', 'Custom')}
                 </button>
               </div>
 
               {waterSchedule === 'custom' && (
                 <div className="pt-1 flex items-center gap-2 text-xs">
-                  <span className="text-[#523D35] font-semibold">Notify every:</span>
+                  <span className="text-[#523D35] font-semibold">{t('reminder.notifyEvery', 'Notify every:')}</span>
                   <input
                     type="number"
                     min="15"
@@ -261,7 +263,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                     onChange={(e) => setWaterCustomMinutes(Number(e.target.value))}
                     className="w-20 px-2.5 py-1.5 rounded-lg border border-[#959D90] bg-[#EFEFE9] text-[#223030] font-bold text-center"
                   />
-                  <span className="text-[#523D35]">minutes</span>
+                  <span className="text-[#523D35]">{t('reminder.minutes', 'minutes')}</span>
                 </div>
               )}
 
@@ -274,10 +276,10 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                     ) : (
                       <VolumeX className="w-4 h-4 text-[#523D35]" />
                     )}
-                    <span className="text-xs font-bold text-[#223030]">Sound Alert</span>
+                    <span className="text-xs font-bold text-[#223030]">{t('reminder.soundAlert', 'Sound Alert')}</span>
                   </div>
                   <p className="text-[11px] text-[#523D35]">
-                    Plays a gentle notification sound when reminder triggers
+                    {t('reminder.soundDesc', 'Plays a gentle notification sound when reminder triggers')}
                   </p>
                 </div>
 
@@ -301,12 +303,12 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                     {soundEnabled ? (
                       <>
                         <Volume2 className="w-3.5 h-3.5 text-[#BBA58F]" />
-                        <span>🔊 Sound ON</span>
+                        <span>{t('reminder.soundOn', '🔊 Sound ON')}</span>
                       </>
                     ) : (
                       <>
                         <VolumeX className="w-3.5 h-3.5" />
-                        <span>🔇 Sound OFF</span>
+                        <span>{t('reminder.soundOff', '🔇 Sound OFF')}</span>
                       </>
                     )}
                   </button>
@@ -324,7 +326,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                       title="Test reminder sound"
                     >
                       <Sparkles className="w-3 h-3 text-[#523D35]" />
-                      <span>{isPlayingTestSound ? 'Playing...' : 'Test Sound'}</span>
+                      <span>{isPlayingTestSound ? t('reminder.playing', 'Playing...') : t('reminder.testSound', 'Test Sound')}</span>
                     </button>
                   )}
                 </div>
@@ -341,8 +343,8 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                 <Utensils className="w-4 h-4 text-[#BBA58F]" />
               </div>
               <div>
-                <h3 className="text-sm font-black text-[#223030]">🍽️ 5 Maternal Meal Reminders</h3>
-                <p className="text-[11px] text-[#523D35]">Alerts for all 5 intervals to prevent blood sugar drops.</p>
+                <h3 className="text-sm font-black text-[#223030]">{t('reminder.mealsTitle', '🍽️ 5 Maternal Meal Reminders')}</h3>
+                <p className="text-[11px] text-[#523D35]">{t('reminder.mealsDesc', 'Alerts for all 5 intervals to prevent blood sugar drops.')}</p>
               </div>
             </div>
 
@@ -363,13 +365,13 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
             <div className="space-y-2 pt-2 border-t border-[#959D90]/30 text-xs">
               {(
                 [
-                  { key: 'breakfast', label: '🌅 Breakfast' },
-                  { key: 'morningSnack', label: '🍎 Morning Snack' },
-                  { key: 'lunch', label: '🍛 Lunch' },
-                  { key: 'eveningSnack', label: '☕ Evening Snack' },
-                  { key: 'dinner', label: '🌙 Dinner' }
+                  { key: 'breakfast', icon: '🌅', label: t('meal.breakfastSimple', 'Breakfast') },
+                  { key: 'morningSnack', icon: '🍎', label: t('meal.midMorningSimple', 'Morning Snack') },
+                  { key: 'lunch', icon: '🍛', label: t('meal.lunchSimple', 'Lunch') },
+                  { key: 'eveningSnack', icon: '☕', label: t('meal.eveningSnackSimple', 'Evening Snack') },
+                  { key: 'dinner', icon: '🌙', label: t('meal.dinnerSimple', 'Dinner') }
                 ] as const
-              ).map(({ key, label }) => {
+              ).map(({ key, icon, label }) => {
                 const item = mealSettings[key];
                 return (
                   <div
@@ -388,7 +390,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                         }
                         className="rounded border-[#959D90] text-[#223030] focus:ring-0"
                       />
-                      <span className="font-bold text-[#223030]">{label}</span>
+                      <span className="font-bold text-[#223030]">{icon} {label}</span>
                     </div>
 
                     <input
@@ -418,8 +420,8 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                 <Calendar className="w-4 h-4 text-[#BBA58F]" />
               </div>
               <div>
-                <h3 className="text-sm font-black text-[#223030]">📅 Doctor Visit Reminders</h3>
-                <p className="text-[11px] text-[#523D35]">Advance notification before your scheduled antenatal appointment.</p>
+                <h3 className="text-sm font-black text-[#223030]">{t('reminder.doctorTitle', '📅 Doctor Visit Reminders')}</h3>
+                <p className="text-[11px] text-[#523D35]">{t('reminder.doctorDesc', 'Advance notification before your scheduled antenatal appointment.')}</p>
               </div>
             </div>
 
@@ -440,7 +442,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
             <div className="space-y-3 pt-2 border-t border-[#959D90]/30 text-xs">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-[#223030] block mb-1">Appointment Date</label>
+                  <label className="text-[11px] font-bold text-[#223030] block mb-1">{t('reminder.appDate', 'Appointment Date')}</label>
                   <input
                     type="date"
                     value={doctorVisitDate}
@@ -449,7 +451,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-[#223030] block mb-1">Appointment Time</label>
+                  <label className="text-[11px] font-bold text-[#223030] block mb-1">{t('reminder.appTime', 'Appointment Time')}</label>
                   <input
                     type="time"
                     value={doctorVisitTime}
@@ -461,20 +463,20 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[11px] font-bold text-[#223030] block mb-1">Doctor Name</label>
+                  <label className="text-[11px] font-bold text-[#223030] block mb-1">{t('reminder.docName', 'Doctor Name')}</label>
                   <input
                     type="text"
-                    placeholder="Enter doctor or clinic name"
+                    placeholder={t('reminder.docPlaceholder', 'Enter doctor or clinic name')}
                     value={doctorName}
                     onChange={(e) => setDoctorName(e.target.value)}
                     className="w-full px-3 py-1.5 rounded-xl border border-[#959D90] bg-[#EFEFE9] text-[#223030] font-bold text-xs"
                   />
                 </div>
                 <div>
-                  <label className="text-[11px] font-bold text-[#223030] block mb-1">Hospital / Clinic Name</label>
+                  <label className="text-[11px] font-bold text-[#223030] block mb-1">{t('reminder.hospName', 'Hospital / Clinic Name')}</label>
                   <input
                     type="text"
-                    placeholder="e.g. District Maternity Hospital"
+                    placeholder={t('reminder.hospPlaceholder', 'e.g. District Maternity Hospital')}
                     value={hospitalName}
                     onChange={(e) => setHospitalName(e.target.value)}
                     className="w-full px-3 py-1.5 rounded-xl border border-[#959D90] bg-[#EFEFE9] text-[#223030] font-bold text-xs"
@@ -483,10 +485,10 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-[#223030] block mb-1">Appointment Notes / Reminders</label>
+                <label className="text-[11px] font-bold text-[#223030] block mb-1">{t('reminder.appNotes', 'Appointment Notes / Reminders')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Bring anomaly scan report & fasting blood sugar test"
+                  placeholder={t('reminder.notesPlaceholder', 'e.g. Bring anomaly scan report & fasting blood sugar test')}
                   value={doctorNotes}
                   onChange={(e) => setDoctorNotes(e.target.value)}
                   className="w-full px-3 py-1.5 rounded-xl border border-[#959D90] bg-[#EFEFE9] text-[#223030] font-medium text-xs"
@@ -494,13 +496,13 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
               </div>
 
               <div className="pt-1">
-                <span className="text-[11px] font-bold text-[#223030] block mb-1">Alert Notice Before Visit:</span>
+                <span className="text-[11px] font-bold text-[#223030] block mb-1">{t('reminder.noticeBefore', 'Alert Notice Before Visit:')}</span>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
-                    { id: '2hours', label: '2 Hours Before' },
-                    { id: '24hours', label: '1 Day (24h) Before' },
-                    { id: '48hours', label: '2 Days (48h) Before' },
-                    { id: '1week', label: '1 Week Before' }
+                    { id: '2hours', label: t('reminder.notice2h', '2 Hours Before') },
+                    { id: '24hours', label: t('reminder.notice24h', '1 Day (24h) Before') },
+                    { id: '48hours', label: t('reminder.notice48h', '2 Days (48h) Before') },
+                    { id: '1week', label: t('reminder.notice1w', '1 Week Before') }
                   ].map((opt) => (
                     <button
                       key={opt.id}
@@ -529,7 +531,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
         {/* Footer Actions */}
         <div className="flex items-center justify-between pt-4 border-t border-[#959D90]/30">
           <span className="text-xs text-[#523D35]">
-            {isSavedNotice && <span className="font-bold text-[#223030]">✓ Preferences saved!</span>}
+            {isSavedNotice && <span className="font-bold text-[#223030]">{t('reminder.saved', '✓ Preferences saved!')}</span>}
           </span>
 
           <div className="flex items-center gap-3">
@@ -538,7 +540,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-xs font-bold text-[#523D35] hover:bg-[#E8D9CD] transition cursor-pointer"
             >
-              Cancel
+              {t('action.cancel', 'Cancel')}
             </button>
             <button
               type="button"
@@ -546,7 +548,7 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
               className="px-5 py-2.5 rounded-xl text-xs font-black bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] shadow-md flex items-center gap-1.5 transition cursor-pointer"
             >
               <Check className="w-4 h-4 text-[#BBA58F]" />
-              <span>Save Reminder Preferences</span>
+              <span>{t('reminder.saveAll', 'Save Reminder Preferences')}</span>
             </button>
           </div>
         </div>
@@ -554,3 +556,4 @@ export const SmartReminderModal: React.FC<SmartReminderModalProps> = ({ isOpen, 
     </div>
   );
 };
+

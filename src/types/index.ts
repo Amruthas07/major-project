@@ -21,12 +21,18 @@ export interface GlobalLocationState {
   locationType?: 'village' | 'gram_panchayat' | 'town' | 'city' | 'taluk' | 'district';
 }
 
+export type OnboardingStatus = 'active' | 'phone_verification_pending' | 'profile_pending';
+
 export interface AuthUser {
   id: string;
   name: string;
   emailOrPhone: string;
   hasCompletedProfile: boolean;
   createdAt: string;
+  onboardingStatus?: OnboardingStatus;
+  phoneVerified?: boolean;
+  phoneNumber?: string;
+  email?: string;
 }
 
 export interface UserProfile {
@@ -45,11 +51,14 @@ export interface UserProfile {
   district?: string;
   taluk?: string;
   village?: string;
+  pincode?: string;
   latitude?: number;
   longitude?: number;
   region?: IndianRegion;
   email?: string;
   mobileNumber?: string;
+  phoneVerified?: boolean;
+  onboardingStatus?: OnboardingStatus;
   mcpCardNumber?: string;
   rchId?: string;
   allergies: string[];
@@ -106,6 +115,7 @@ export interface UserProfile {
     text: string;
     completed: boolean;
   }[];
+  preferredLanguage?: string;
 }
 
 export interface MealReminderSettings {
@@ -246,7 +256,13 @@ export interface PlannedMeal {
   unitIron?: number;
   unitCalcium?: number;
   unitFolate?: number;
+  userId?: string;
+  consumedDate?: string;
+  consumedTime?: string;
+  consumedAt?: string;
 }
+
+export type { LoggedMealRecord, ConfirmedMealItem } from '../nutrition_engine';
 
 export interface WelfareScheme {
   id: string;
@@ -259,6 +275,7 @@ export interface WelfareScheme {
   documentsNeeded: string[];
   portalUrl: string;
   category: 'Central Government' | 'State Government' | 'Nutrition Program';
+  state?: string;
   badgeColor?: string;
 }
 

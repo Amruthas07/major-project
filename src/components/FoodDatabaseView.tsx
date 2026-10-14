@@ -48,7 +48,8 @@ import { FoodOrderingSection } from './FoodOrderingSection';
 import { FoodImageViewerModal } from './FoodImageViewerModal';
 import { VerifiedFoodImage } from './VerifiedFoodImage';
 import { normalizeDietPreference, isFoodEligibleForDiet, getFoodDietType } from '../utils/diet_preference';
-import { VoiceListenButton, VoiceNameSpeakerButton, VoiceSearchButton } from './VoiceButton';
+import { VoiceListenButton, VoiceSearchButton } from './VoiceButton';
+import { voiceService } from '../services/voice_service';
 
 export const FoodDatabaseView: React.FC = () => {
   const {
@@ -63,7 +64,7 @@ export const FoodDatabaseView: React.FC = () => {
     selectedTrimester
   } = useAppContext();
 
-  const { t, isEnglish, currentLanguageCode, tCategory } = useLanguage();
+  const { t, isEnglish, currentLanguageCode, tCategory, tIngredient } = useLanguage();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedSafety, setSelectedSafety] = useState<string>('All');
@@ -527,24 +528,15 @@ export const FoodDatabaseView: React.FC = () => {
     return {
       regionalRecipe: null,
       ingredients: food.ingredients.map((ing) => ({
-        name: ing,
-        quantity: 50,
-        unit: 'g'
+        name: typeof ing === 'string' ? ing : (ing as any).name,
+        quantity: undefined,
+        unit: undefined
       })),
-      cookingMethod: 'Slow simmered or steamed under hygienic conditions',
-      preparationTime: 20,
+      cookingMethod: undefined,
+      preparationTime: undefined,
       servings: 1,
-      steps: [
-        `Select fresh, grade-A ingredients (${food.ingredients.slice(0, 3).join(', ')}) and wash thoroughly under clean drinking water.`,
-        `Preheat cooking vessel on medium heat with a minimal amount of cold-pressed oil or pure ghee.`,
-        `Gently cook base ingredients to unlock bioavailable nutrients.`,
-        `Simmer with filtered water until tender.`,
-        `Season with mild digestive herbs (cumin, curry leaves, ginger) and serve fresh.`
-      ],
-      notes: [
-        `Rich in ${food.tags.slice(0, 2).join(' & ')} to support maternal and fetal development.`,
-        `Hygienically prepare and consume warm.`
-      ]
+      steps: [],
+      notes: []
     };
   };
 
@@ -867,7 +859,6 @@ export const FoodDatabaseView: React.FC = () => {
                             miniClassName="text-xs font-semibold text-[#523D35] mt-0.5"
                           />
                         </div>
-                        <VoiceNameSpeakerButton foodName={food.name} />
                       </div>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
@@ -1046,7 +1037,6 @@ export const FoodDatabaseView: React.FC = () => {
                       className="text-xl sm:text-2xl font-black text-[#223030]"
                       miniClassName="text-sm font-semibold text-[#523D35] mt-0.5"
                     />
-                    <VoiceNameSpeakerButton foodName={activeModalFood.name} />
                   </div>
                   <div className="flex items-center gap-3 pt-1 flex-wrap">
                     <VoiceListenButton food={activeModalFood} variant="modal" />
@@ -1076,29 +1066,29 @@ export const FoodDatabaseView: React.FC = () => {
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-center">
                   <div className="bg-[#E8D9CD] border border-[#959D90]/40 rounded-2xl p-2.5">
-                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">Energy</span>
+                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">{t('nutrient.calories', 'Energy')}</span>
                     <span className="text-base font-black text-[#223030]">{activeModalFood.calories}</span>
                     <span className="text-[10px] text-[#523D35] block">kcal</span>
                   </div>
                   <div className="bg-[#E8D9CD] border border-[#959D90]/40 rounded-2xl p-2.5">
-                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">Protein</span>
+                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">{t('nutrient.protein', 'Protein')}</span>
                     <span className="text-base font-black text-[#223030]">{activeModalFood.protein}g</span>
-                    <span className="text-[10px] text-[#523D35] block">Pure Protein</span>
+                    <span className="text-[10px] text-[#523D35] block">{t('nutrient.protein', 'Protein')}</span>
                   </div>
                   <div className="bg-[#E8D9CD] border border-[#959D90]/40 rounded-2xl p-2.5">
-                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">Iron</span>
+                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">{t('nutrient.iron', 'Iron')}</span>
                     <span className="text-base font-black text-[#223030]">{activeModalFood.iron}mg</span>
-                    <span className="text-[10px] text-[#523D35] block">Bioavailable</span>
+                    <span className="text-[10px] text-[#523D35] block">Fe</span>
                   </div>
                   <div className="bg-[#E8D9CD] border border-[#959D90]/40 rounded-2xl p-2.5">
-                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">Calcium</span>
+                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">{t('nutrient.calcium', 'Calcium')}</span>
                     <span className="text-base font-black text-[#223030]">{activeModalFood.calcium}mg</span>
-                    <span className="text-[10px] text-[#523D35] block">Bone Matrix</span>
+                    <span className="text-[10px] text-[#523D35] block">Ca</span>
                   </div>
                   <div className="bg-[#E8D9CD] border border-[#959D90]/40 rounded-2xl p-2.5 col-span-2 sm:col-span-1">
-                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">Folate (B9)</span>
+                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">{t('nutrient.folate', 'Folate (B9)')}</span>
                     <span className="text-base font-black text-[#223030]">{activeModalFood.folate}µg</span>
-                    <span className="text-[10px] text-[#523D35] block">Neural Support</span>
+                    <span className="text-[10px] text-[#523D35] block">B9</span>
                   </div>
                 </div>
               </div>
@@ -1126,131 +1116,84 @@ export const FoodDatabaseView: React.FC = () => {
                 )}
               </div>
 
-              {/* Recipe Section inside Food Details */}
-              <div className="bg-[#E8D9CD]/40 rounded-2xl p-4 sm:p-5 border border-[#959D90]/50 space-y-4">
-                {/* Recipe Header */}
-                <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-[#959D90]/30">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-xl bg-[#223030] text-[#BBA58F] flex items-center justify-center">
-                      <ChefHat className="w-4 h-4" />
-                    </div>
-                    <div>
-                      <h3 className="text-sm sm:text-base font-extrabold text-[#223030] flex items-center gap-1.5">
-                        <DualText textKey="recipe.recipe" fallback="Recipe" className="font-extrabold text-[#223030]" />
-                        <span className="text-xs font-semibold text-[#523D35]">({activeModalFood.name})</span>
-                      </h3>
-                      <p className="text-[11px] text-[#523D35] font-medium">
-                        Traditional Indian Culinary Preparation &amp; Maternal Hygiene Guidance
-                      </p>
-                    </div>
-                  </div>
-
-                  {recipe.regionalRecipe && (
-                    <button
-                      type="button"
-                      onClick={() => setSelectedRecipeDetail(recipe.regionalRecipe)}
-                      className="px-3 py-1.5 bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold rounded-xl shadow-2xs flex items-center gap-1.5 transition cursor-pointer"
-                      title="Open full interactive recipe card with portion scaling"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-[#BBA58F]" />
-                      <DualText textKey="recipe.viewFullRecipe" fallback="Open Full Recipe Card" className="text-xs font-bold text-[#EFEFE9]" />
-                    </button>
-                  )}
-                </div>
-
-                {/* Recipe Metadata: Serving size, Cooking method, Prep time */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 text-xs">
+              {/* Food Category, Region & Ingredients Section (Focused strictly on understanding the food) */}
+              <div className="bg-[#E8D9CD]/50 rounded-2xl p-4 sm:p-5 border border-[#959D90]/50 space-y-3">
+                <div className="grid grid-cols-2 gap-2 text-xs">
                   <div className="bg-[#EFEFE9] p-2.5 rounded-xl border border-[#959D90]/30">
                     <span className="text-[10px] text-[#523D35] font-bold block uppercase">
-                      <DualText textKey="recipe.servingSize" fallback="Serving Size" className="text-[10px] text-[#523D35] font-bold uppercase" />
+                      {t('common.category', 'Category')}
                     </span>
-                    <span className="font-black text-[#223030] text-xs">
-                      {recipe.regionalRecipe?.servingSize
-                        ? `${recipe.regionalRecipe.servingSize.servings} Servings (~${recipe.regionalRecipe.servingSize.servingGrams}g)`
-                        : activeModalFood.servingSize || '1 Serving (~150g)'}
+                    <span className="font-bold text-[#223030] text-xs">
+                      {tCategory(activeModalFood.category)}
                     </span>
                   </div>
-
                   <div className="bg-[#EFEFE9] p-2.5 rounded-xl border border-[#959D90]/30">
                     <span className="text-[10px] text-[#523D35] font-bold block uppercase">
-                      <DualText textKey="recipe.cookingMethod" fallback="Cooking Method" className="text-[10px] text-[#523D35] font-bold uppercase" />
+                      {t('common.region', 'Region & State')}
                     </span>
-                    <span className="font-bold text-[#223030] text-xs line-clamp-1" title={recipe.cookingMethod}>
-                      {recipe.cookingMethod}
-                    </span>
-                  </div>
-
-                  <div className="bg-[#EFEFE9] p-2.5 rounded-xl border border-[#959D90]/30 col-span-2 sm:col-span-1">
-                    <span className="text-[10px] text-[#523D35] font-bold block uppercase">
-                      Preparation Time
-                    </span>
-                    <span className="font-black text-[#223030] text-xs">
-                      ⏱️ ~{recipe.preparationTime} mins
+                    <span className="font-bold text-[#223030] text-xs">
+                      {activeModalFood.state || activeModalFood.cuisine || 'Pan-India'}
                     </span>
                   </div>
                 </div>
 
-                {/* Ingredients & Quantities */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#223030] flex items-center gap-1.5">
-                    <DualText textKey="recipe.ingredients" fallback="Ingredients" className="text-xs font-extrabold uppercase tracking-wider text-[#223030]" />
-                    <span className="text-[11px] font-normal text-[#523D35]">({recipe.ingredients.length} items)</span>
-                  </h4>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-[#EFEFE9] p-3 rounded-xl border border-[#959D90]/30 max-h-56 overflow-y-auto">
-                    {recipe.ingredients.map((ing, idx) => (
-                      <DualIngredient
-                        key={`${ing.name}-${idx}`}
-                        name={ing.name}
-                        quantity={ing.quantity}
-                        unit={ing.unit}
-                      />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Preparation Steps */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#223030] flex items-center gap-1.5">
-                    <DualText textKey="recipe.preparation" fallback="Preparation Steps" className="text-xs font-extrabold uppercase tracking-wider text-[#223030]" />
-                  </h4>
-                  <ol className="space-y-2 text-xs text-[#523D35] bg-[#EFEFE9] p-4 rounded-xl border border-[#959D90]/30 max-h-64 overflow-y-auto">
-                    {recipe.steps.map((step, idx) => (
-                      <li key={idx} className="flex items-start gap-2.5 leading-relaxed">
-                        <span className="w-5 h-5 rounded-full bg-[#223030] text-[#EFEFE9] text-[10px] font-black flex items-center justify-center shrink-0 mt-0.5">
-                          {idx + 1}
-                        </span>
-                        <span className="flex-1 text-[#223030] font-medium">{step}</span>
-                      </li>
-                    ))}
-                  </ol>
-                </div>
-
-                {/* Pregnancy Nutrition & Safety Notes */}
-                {recipe.notes && recipe.notes.length > 0 && (
-                  <div className="bg-[#EFEFE9] p-3 rounded-xl border border-[#959D90]/30 space-y-1">
-                    <span className="text-[11px] font-bold text-[#223030] flex items-center gap-1">
-                      <ShieldCheck className="w-3.5 h-3.5 text-[#523D35]" />
-                      <span>Maternal Culinary Safety &amp; Digestion Notes:</span>
-                    </span>
-                    <ul className="list-disc list-inside text-xs text-[#523D35] space-y-0.5 pl-1">
-                      {recipe.notes.map((note, idx) => (
-                        <li key={idx}>{note}</li>
-                      ))}
-                    </ul>
+                {/* Ingredients of Food */}
+                {activeModalFood.ingredients && activeModalFood.ingredients.length > 0 && (
+                  <div className="space-y-2 pt-1">
+                    <h4 className="text-xs font-extrabold uppercase tracking-wider text-[#223030] flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Utensils className="w-3.5 h-3.5 text-[#523D35]" />
+                        <span>{t('recipe.ingredients', 'Ingredients')}</span>
+                      </span>
+                      <span className="text-[11px] font-normal text-[#523D35]">
+                        ({activeModalFood.ingredients.length} items)
+                      </span>
+                    </h4>
+                    <div className="flex flex-wrap gap-1.5 bg-[#EFEFE9] p-3 rounded-xl border border-[#959D90]/30">
+                      {activeModalFood.ingredients.map((ing, idx) => {
+                        const ingName = typeof ing === 'string' ? ing : (ing as any).name;
+                        return (
+                          <span
+                            key={idx}
+                            className="px-2.5 py-1 bg-[#E8D9CD] border border-[#959D90]/40 rounded-lg text-xs font-semibold text-[#223030]"
+                          >
+                            {tIngredient(ingName).primary}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
+
+                {/* Recipe Link / Availability Status */}
+                <div className="pt-2 flex items-center justify-between flex-wrap gap-2 border-t border-[#959D90]/30">
+                  <span className="text-xs font-semibold text-[#523D35] flex items-center gap-1.5">
+                    <ChefHat className="w-4 h-4 text-[#523D35]" />
+                    <span>{t('recipe.recipe', 'Recipe Status')}:</span>
+                  </span>
+
+                  {recipe.regionalRecipe ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetRecipe = recipe.regionalRecipe;
+                        setActiveModalFood(null);
+                        setSelectedRecipeDetail(targetRecipe);
+                      }}
+                      className="px-3.5 py-1.5 rounded-xl bg-[#523D35] hover:bg-[#223030] text-[#EFEFE9] text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-[#BBA58F]" />
+                      <span>{t('recipe.viewFullRecipe', 'Open Recipe Page ↗')}</span>
+                    </button>
+                  ) : (
+                    <span className="text-xs font-medium text-[#523D35] bg-[#EFEFE9] px-2.5 py-1 rounded-lg border border-[#959D90]/30">
+                      {t('recipe.notAvailable', 'Recipe not available')}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* 5. Food Ordering & Ingredients Purchase Section */}
-              <FoodOrderingSection
-                foodName={activeModalFood.name}
-                category={activeModalFood.category}
-                ingredients={activeModalFood.ingredients}
-                tags={activeModalFood.tags}
-                location={globalLocation}
-              />
-
-              {/* Footer Actions */}
+              {/* Footer Actions (Focused strictly on food understanding and adding to plan; NO food-ordering or recipe actions) */}
               <div className="flex items-center justify-between flex-wrap gap-3 pt-4 border-t border-[#959D90]/30">
                 <button
                   type="button"
@@ -1262,7 +1205,7 @@ export const FoodDatabaseView: React.FC = () => {
                   className="px-4 py-2 rounded-xl text-xs font-bold text-[#523D35] bg-[#E8D9CD] hover:bg-[#BBA58F]/30 border border-[#959D90]/40 flex items-center gap-1.5 transition cursor-pointer"
                 >
                   <Sparkles className="w-3.5 h-3.5 text-[#523D35]" />
-                  <span>Find Alternative Food</span>
+                  <span>{t('food.findAlternative', 'Find Alternative Food')}</span>
                 </button>
 
                 <div className="flex items-center gap-2">
@@ -1271,21 +1214,7 @@ export const FoodDatabaseView: React.FC = () => {
                     onClick={() => setActiveModalFood(null)}
                     className="px-4 py-2 rounded-xl text-xs font-bold text-[#523D35] hover:bg-[#E8D9CD] transition cursor-pointer"
                   >
-                    Close
-                  </button>
-
-                  {/* Order Food from Details Modal */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const target = activeModalFood;
-                      setOrderingFood(target);
-                    }}
-                    className="px-4 py-2.5 rounded-xl text-xs font-black shadow-xs flex items-center gap-1.5 transition bg-[#BBA58F] hover:bg-[#A8927C] text-[#223030] cursor-pointer"
-                    title="Open Food Ordering for this dish"
-                  >
-                    <ShoppingBag className="w-3.5 h-3.5 text-[#223030]" />
-                    <span>Order Food</span>
+                    {t('common.close', 'Close')}
                   </button>
 
                   {activeModalFood.safetyLevel !== 'Avoid' && (
@@ -1299,7 +1228,7 @@ export const FoodDatabaseView: React.FC = () => {
                       className="px-5 py-2.5 rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] cursor-pointer"
                     >
                       <Plus className="w-4 h-4 text-[#BBA58F]" />
-                      <DualText textKey="recipe.addToMealPlan" fallback="+ Add to Maternal Meal Plan" className="text-xs font-black text-[#EFEFE9]" />
+                      <span>{t('recipe.addToMealPlan', '+ Add to Maternal Meal Plan')}</span>
                     </button>
                   )}
                 </div>

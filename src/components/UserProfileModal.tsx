@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { UserProfile } from '../types';
 import { User, Heart, X, Check, Save, Shield, MapPin, AlertTriangle, Plus, Calendar, Scale, Ruler, Utensils, Search, CheckCircle2 } from 'lucide-react';
 import { useLanguage } from '../services/language_service';
@@ -36,6 +36,18 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
     pregnancyMonth: profile.pregnancyMonth || Math.min(9, Math.max(1, Math.floor((profile.weeksPregnant - 1) / 4) + 1)),
     allergies: profile.allergies || []
   });
+
+  // Sync formData whenever modal opens or profile prop changes
+  useEffect(() => {
+    if (isOpen) {
+      setFormData({
+        ...profile,
+        dietPreference: profile.dietPreference || 'Vegetarian',
+        pregnancyMonth: profile.pregnancyMonth || Math.min(9, Math.max(1, Math.floor((profile.weeksPregnant - 1) / 4) + 1)),
+        allergies: profile.allergies || []
+      });
+    }
+  }, [isOpen, profile]);
 
   const [customAllergy, setCustomAllergy] = useState('');
   const [locationSearchQuery, setLocationSearchQuery] = useState('');
@@ -133,8 +145,8 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               <User className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-extrabold text-[#EFEFE9]">Pregnancy &amp; Clinical Profile</h3>
-              <p className="text-xs text-[#E8D9CD]">Update pregnancy month, weight, location, allergies, and doctor visit</p>
+              <h3 className="text-base font-extrabold text-[#EFEFE9]">{t('profile.modalTitle', 'Pregnancy & Clinical Profile')}</h3>
+              <p className="text-xs text-[#E8D9CD]">{t('profile.modalSubtitle', 'Update pregnancy month, weight, location, allergies, and doctor visit')}</p>
             </div>
           </div>
           <button
@@ -151,11 +163,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           <div>
             <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider mb-2.5 pb-1 border-b border-[#959D90]/30 flex items-center gap-1.5">
               <User className="w-3.5 h-3.5 text-[#523D35]" />
-              <span>Personal Information</span>
+              <span>{t('profile.personalInfo', 'Personal Information')}</span>
             </h4>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Full Name</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.name', 'Full Name')}</label>
                 <input
                   type="text"
                   required
@@ -165,7 +177,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Age (Years)</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.age', 'Age (Years)')}</label>
                 <input
                   type="number"
                   required
@@ -184,10 +196,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <div className="flex items-center justify-between mb-2.5 pb-1 border-b border-[#959D90]/30">
               <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider flex items-center gap-1.5">
                 <Heart className="w-3.5 h-3.5 text-[#523D35]" />
-                <span>Pregnancy Month &amp; Gestation</span>
+                <span>{t('profile.gestation', 'Pregnancy Month & Gestation')}</span>
               </h4>
               <span className="font-bold text-[#223030] bg-[#E8D9CD] px-2.5 py-0.5 rounded-full text-[11px]">
-                Month {formData.pregnancyMonth || 6} • Week {formData.weeksPregnant}
+                {t('timeline.month', 'Month')} {formData.pregnancyMonth || 6} • {t('timeline.week', 'Week')} {formData.weeksPregnant}
               </span>
             </div>
 
@@ -217,7 +229,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Weeks Pregnant</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.pregnancyWeek', 'Weeks Pregnant')}</label>
                 <input
                   type="number"
                   min="1"
@@ -234,7 +246,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               </div>
 
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Blood Group</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.bloodGroup', 'Blood Group')}</label>
                 <input
                   type="text"
                   value={formData.bloodGroup}
@@ -244,7 +256,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               </div>
 
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Estimated Due Date</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.dueDate', 'Estimated Due Date')}</label>
                 <input
                   type="date"
                   value={formData.dueDate}
@@ -259,11 +271,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           <div>
             <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider mb-2.5 pb-1 border-b border-[#959D90]/30 flex items-center gap-1.5">
               <Scale className="w-3.5 h-3.5 text-[#523D35]" />
-              <span>Weight &amp; Physical Vitals</span>
+              <span>{t('profile.vitals', 'Weight & Physical Vitals')}</span>
             </h4>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Height (cm)</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.height', 'Height (cm)')}</label>
                 <input
                   type="number"
                   value={formData.heightCm}
@@ -272,7 +284,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Current Weight (kg)</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.currentWeight', 'Current Weight (kg)')}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -282,7 +294,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Pre-Pregnancy Wt (kg)</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.prePregnancyWeight', 'Pre-Pregnancy Wt (kg)')}</label>
                 <input
                   type="number"
                   step="0.1"
@@ -299,15 +311,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <div className="flex items-center justify-between">
               <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-[#523D35]" />
-                <span>Location (Single Source of Truth)</span>
+                <span>{t('profile.locationTitle', 'Location (Single Source of Truth)')}</span>
               </h4>
               <span className="text-[10px] text-emerald-800 bg-emerald-100 font-bold px-2 py-0.5 rounded-md border border-emerald-300">
-                Single Source of Truth
+                {t('common.verified', 'Single Source of Truth')}
               </span>
             </div>
             
             <p className="text-[11px] text-[#523D35] leading-relaxed">
-              Select your Village or Taluk once. The app automatically determines your Taluk, District, State, and broader region for local foods, recipes, and healthcare schemes.
+              {t('profile.locationDesc', 'Select your Village or Taluk once. The app automatically determines your Taluk, District, State, and broader region for local foods, recipes, and healthcare schemes.')}
             </p>
 
             {/* Smart Search Bar */}
@@ -318,7 +330,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                   type="text"
                   value={locationSearchQuery}
                   onChange={(e) => setLocationSearchQuery(e.target.value)}
-                  placeholder="Type your Village or Taluk (e.g. Hullahalli, Debur, Nanjangud)..."
+                  placeholder={t('profile.locationSearchPlaceholder', 'Search your Village, Town or Taluk...')}
                   className="w-full pl-9 pr-3 py-2 rounded-xl bg-white border border-[#959D90]/60 text-xs text-[#223030] font-semibold outline-none focus:border-[#223030]"
                 />
               </div>
@@ -342,7 +354,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                         </span>
                       </div>
                       <span className="text-[10px] font-bold text-[#523D35] bg-[#E8D9CD] px-2 py-0.5 rounded-full">
-                        Select
+                        {t('action.select', 'Select')}
                       </span>
                     </button>
                   ))}
@@ -353,7 +365,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             {/* Quick Suggestions for Rural Users */}
             <div>
               <span className="text-[10px] font-bold text-[#523D35] block mb-1.5 uppercase tracking-wide">
-                Quick Selection (Tap your area):
+                {t('profile.quickLocation', 'Quick Selection (Tap your area):')}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {POPULAR_LOCATION_SUGGESTIONS.map((item) => (
@@ -376,29 +388,29 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <div className="bg-white rounded-xl p-3 border border-[#959D90]/40 space-y-1.5">
               <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800">
                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                <span>Verified Administrative Location</span>
+                <span>{t('profile.verifiedLocation', 'Verified Administrative Location')}</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs pt-1">
                 <div className="bg-[#EFEFE9] p-2 rounded-lg">
-                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">Village</span>
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">{t('profile.village', 'Village')}</span>
                   <span className="font-bold text-[#223030] truncate block">
                     {formData.village || '—'}
                   </span>
                 </div>
                 <div className="bg-[#EFEFE9] p-2 rounded-lg">
-                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">Taluk</span>
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">{t('profile.taluk', 'Taluk')}</span>
                   <span className="font-bold text-[#223030] truncate block">
                     {formData.taluk || formData.city || 'Nanjangud'}
                   </span>
                 </div>
                 <div className="bg-[#EFEFE9] p-2 rounded-lg">
-                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">District</span>
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">{t('profile.district', 'District')}</span>
                   <span className="font-bold text-[#223030] truncate block">
                     {formData.district || formData.city || 'Mysuru'}
                   </span>
                 </div>
                 <div className="bg-[#EFEFE9] p-2 rounded-lg">
-                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">State</span>
+                  <span className="text-[10px] font-bold text-[#523D35] block uppercase">{t('profile.state', 'State')}</span>
                   <span className="font-bold text-[#223030] truncate block">
                     {formData.state || 'Karnataka'}
                   </span>
@@ -413,13 +425,15 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 onClick={() => setShowManualLocation(!showManualLocation)}
                 className="text-xs text-[#523D35] underline font-bold cursor-pointer hover:text-[#223030]"
               >
-                {showManualLocation ? 'Hide detailed manual location inputs' : '+ Enter or adjust location details manually'}
+                {showManualLocation
+                  ? t('profile.hideManualLocation', 'Hide detailed manual location inputs')
+                  : t('profile.showManualLocation', '+ Enter or adjust location details manually')}
               </button>
 
               {showManualLocation && (
                 <div className="grid grid-cols-2 gap-3 pt-3 mt-2 border-t border-[#959D90]/30">
                   <div>
-                    <label className="font-bold text-[#523D35] text-xs block mb-1">State</label>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">{t('profile.state', 'State')}</label>
                     <input
                       type="text"
                       value={formData.state}
@@ -432,7 +446,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-[#523D35] text-xs block mb-1">District / City</label>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">{t('profile.district', 'District')} / {t('profile.city', 'City')}</label>
                     <input
                       type="text"
                       value={formData.district || formData.city}
@@ -445,11 +459,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-[#523D35] text-xs block mb-1">Taluk / Tehsil</label>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">{t('profile.taluk', 'Taluk')} / {t('profile.tehsil', 'Tehsil')}</label>
                     <input
                       type="text"
                       value={formData.taluk || ''}
-                      placeholder="e.g. Nanjangud"
+                      placeholder={t('profile.enterTalukPlaceholder', 'Enter Taluk / Tehsil')}
                       onChange={(e) => {
                         const tlk = e.target.value;
                         const res = AdministrativeLocationService.resolveHierarchy({ taluk: tlk });
@@ -465,11 +479,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                     />
                   </div>
                   <div>
-                    <label className="font-bold text-[#523D35] text-xs block mb-1">Village / Town</label>
+                    <label className="font-bold text-[#523D35] text-xs block mb-1">{t('profile.village', 'Village')} / {t('profile.town', 'Town')}</label>
                     <input
                       type="text"
                       value={formData.village || ''}
-                      placeholder="e.g. Hullahalli"
+                      placeholder={t('profile.enterVillagePlaceholder', 'Enter Village or Town')}
                       onChange={(e) => {
                         const vlg = e.target.value;
                         const res = AdministrativeLocationService.resolveHierarchy({ village: vlg, taluk: formData.taluk });
@@ -568,7 +582,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           <div>
             <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider mb-2.5 pb-1 border-b border-[#959D90]/30 flex items-center gap-1.5">
               <AlertTriangle className="w-3.5 h-3.5 text-[#523D35]" />
-              <span>Food Allergies &amp; Intolerances</span>
+              <span>{t('profile.allergiesTitle', 'Food Allergies & Intolerances')}</span>
             </h4>
 
             <div className="flex flex-wrap gap-1.5 mb-2.5">
@@ -595,7 +609,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
             <div className="flex items-center gap-2">
               <input
                 type="text"
-                placeholder="Add custom allergy..."
+                placeholder={t('profile.addAllergyPlaceholder', 'Add custom allergy...')}
                 value={customAllergy}
                 onChange={(e) => setCustomAllergy(e.target.value)}
                 onKeyDown={(e) => {
@@ -611,7 +625,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 onClick={addCustomAllergy}
                 className="px-3 py-1.5 bg-[#523D35] hover:bg-[#523D35]/80 text-[#EFEFE9] font-bold text-xs rounded-xl transition cursor-pointer"
               >
-                Add
+                {t('action.add', 'Add')}
               </button>
             </div>
 
@@ -640,14 +654,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
           <div>
             <h4 className="font-extrabold text-[#223030] text-xs uppercase tracking-wider mb-2.5 pb-1 border-b border-[#959D90]/30 flex items-center gap-1.5">
               <Calendar className="w-3.5 h-3.5 text-[#523D35]" />
-              <span>Doctor Visit &amp; Emergency Contacts</span>
+              <span>{t('profile.emergencyTitle', 'Doctor Visit & Emergency Contacts')}</span>
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Emergency Contact Name (Spouse / Family)</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.emergencyName', 'Emergency Contact Name (Spouse / Family)')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Ramesh"
+                  placeholder={t('profile.enterContactNamePlaceholder', 'Enter contact name')}
                   value={formData.emergencyContactName || ''}
                   onChange={(e) =>
                     setFormData({
@@ -659,10 +673,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Emergency Contact Phone</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.emergencyPhone', 'Emergency Contact Phone')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. 9876543210"
+                  placeholder={t('profile.enterContactPhonePlaceholder', 'Enter emergency contact phone')}
                   value={formData.emergencyContactPhone || formData.emergencyContact || ''}
                   onChange={(e) =>
                     setFormData({
@@ -675,10 +689,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Attending Doctor Name</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.doctorName', 'Attending Doctor Name')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Dr. Kavitha"
+                  placeholder={t('profile.enterDoctorNamePlaceholder', "Enter doctor's full name")}
                   value={formData.doctorDetails?.name || ''}
                   onChange={(e) =>
                     setFormData({
@@ -690,10 +704,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Doctor Direct Phone Number</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.doctorPhone', 'Doctor Direct Phone Number')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. 9880011223"
+                  placeholder={t('profile.enterDoctorPhonePlaceholder', "Enter doctor's phone number")}
                   value={formData.doctorDetails?.phone || ''}
                   onChange={(e) =>
                     setFormData({
@@ -705,10 +719,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Hospital / Clinic</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.hospitalName', 'Hospital / Clinic')}</label>
                 <input
                   type="text"
-                  placeholder="e.g. Community Health Center"
+                  placeholder={t('profile.enterHospitalPlaceholder', 'Enter hospital or clinic name')}
                   value={formData.doctorDetails?.hospital || ''}
                   onChange={(e) =>
                     setFormData({
@@ -720,7 +734,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
                 />
               </div>
               <div>
-                <label className="font-bold text-[#523D35] block mb-1">Next Doctor Visit Date</label>
+                <label className="font-bold text-[#523D35] block mb-1">{t('profile.nextVisitDate', 'Next Doctor Visit Date')}</label>
                 <input
                   type="date"
                   value={formData.nextDoctorVisit?.date || formData.doctorDetails?.nextAppointmentDate || ''}
@@ -750,14 +764,14 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               onClick={onClose}
               className="px-4 py-2 rounded-xl text-[#523D35] hover:bg-[#E8D9CD] font-bold cursor-pointer"
             >
-              Cancel
+              {t('action.cancel', 'Cancel')}
             </button>
             <button
               type="submit"
               className="px-6 py-2.5 rounded-xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] font-bold shadow-md transition flex items-center gap-1.5 cursor-pointer"
             >
               <Save className="w-4 h-4 text-[#BBA58F]" />
-              <span>Save &amp; Update Central Profile</span>
+              <span>{t('profile.saveCentral', 'Save & Update Central Profile')}</span>
             </button>
           </div>
         </form>

@@ -67,9 +67,9 @@ export const WaterReminderAlertNotification: React.FC = () => {
             </button>
           </div>
 
-          <p className="text-xs text-[#E8D9CD] mt-1 font-medium italic">
-            “<DualText textKey="water.reminderMessage" fallback="Time to drink some water." className="text-xs" />”
-          </p>
+          <div className="text-xs text-[#E8D9CD] mt-1 font-medium italic">
+            “<DualText textKey="water.reminderMessage" fallback="Time to drink some water." className="text-xs" inline />”
+          </div>
 
           <div className="flex items-center gap-2 mt-1 text-[11px] text-[#BBA58F]">
             {waterReminderSettings?.soundEnabled ? (

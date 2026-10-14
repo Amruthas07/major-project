@@ -30,8 +30,8 @@ interface ChatMessage {
 }
 
 export const AiAssistantChatbot: React.FC = () => {
-  const { userProfile, globalLocation, setIsSosModalOpen } = useAppContext();
-  const { currentLanguageCode, isEnglish } = useLanguage();
+  const { userProfile, globalLocation, currentUser, setIsSosModalOpen } = useAppContext();
+  const { currentLanguageCode, isEnglish, t } = useLanguage();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -44,42 +44,114 @@ export const AiAssistantChatbot: React.FC = () => {
 
   const weeks = userProfile?.weeksPregnant || 24;
   const month = userProfile?.pregnancyMonth || Math.min(9, Math.max(1, Math.floor((weeks - 1) / 4) + 1));
-  const trimester = weeks <= 12 ? '1st Trimester' : weeks <= 28 ? '2nd Trimester' : '3rd Trimester';
+  const rawTrimester = weeks <= 12 ? '1st Trimester' : weeks <= 28 ? '2nd Trimester' : '3rd Trimester';
   const state = userProfile?.state || globalLocation?.state || 'Karnataka';
   const diet = userProfile?.dietPreference || 'Vegetarian';
 
+  const getLocalizedTrimester = (w: number, lang: string) => {
+    const num = w <= 12 ? '1' : w <= 28 ? '2' : '3';
+    switch (lang) {
+      case 'kn': return `${num}ನೇ ತ್ರೈಮಾಸಿಕ`;
+      case 'hi': return `${num}री तिमाही`;
+      case 'ta': return `${num}-ஆம் முப்பருவம்`;
+      case 'te': return `${num}వ త్రైమాసికం`;
+      case 'ml': return `${num}-ാം ത്രൈമാസികം`;
+      default: return w <= 12 ? '1st Trimester' : w <= 28 ? '2nd Trimester' : '3rd Trimester';
+    }
+  };
+
+  const getLocalizedState = (s: string, lang: string) => {
+    if (s.toLowerCase() === 'karnataka') {
+      switch (lang) {
+        case 'kn': return 'ಕರ್ನಾಟಕ';
+        case 'hi': return 'कर्नाटक';
+        case 'ta': return 'கர்நாடகா';
+        case 'te': return 'కర్ణాటక';
+        case 'ml': return 'കർണാടക';
+      }
+    }
+    return s;
+  };
+
+  const getLocalizedMonth = (m: number, lang: string) => {
+    switch (lang) {
+      case 'kn': return `${m}ನೇ ತಿಂಗಳು`;
+      case 'hi': return `${m}वाँ महीना`;
+      case 'ta': return `${m}-ஆம் மாதம்`;
+      case 'te': return `${m}వ నెల`;
+      case 'ml': return `${m}-ാം മാസം`;
+      default: return `Month ${m}`;
+    }
+  };
+
+  const trimester = getLocalizedTrimester(weeks, currentLanguageCode);
+  const localizedState = getLocalizedState(state, currentLanguageCode);
+  const localizedMonth = getLocalizedMonth(month, currentLanguageCode);
+
+  const chatStorageKey = currentUser?.id
+    ? `pregnutri_ai_chat_history_${currentUser.id}`
+    : 'pregnutri_ai_chat_history_guest';
+
+  const effectiveName = userProfile?.name || currentUser?.name || '';
+
   // Initial greeting tailored to language
-  const getInitialGreeting = (lang: string) => {
+  const getInitialGreeting = (lang: string, name?: string) => {
+    const rawName = name || effectiveName;
+    const displayName = rawName ? ` ${rawName.split(' ')[0]}` : '';
     switch (lang) {
       case 'hi':
-        return `नमस्ते ${userProfile.name || 'माँ'}! मैं आपकी प्रेगन्यूट्री एआई मातृत्व पोषण सहायक हूँ। आप वर्तमान में ${month}वें महीने (${weeks}वें सप्ताह, ${trimester}) में हैं। आप पोषण, सुरक्षित खाद्य पदार्थ, स्थानीय व्यंजनों या सरकारी योजनाओं के बारे में मुझसे कुछ भी पूछ सकती हैं।`;
+        return `नमस्ते${displayName || ' माँ'}! मैं आपकी प्रेगन्यूट्री एआई मातृत्व पोषण सहायक हूँ। आप वर्तमान में ${month}वें महीने (${weeks}वें सप्ताह, ${trimester}) में हैं। आप पोषण, सुरक्षित खाद्य पदार्थ, स्थानीय व्यंजनों या सरकारी योजनाओं के बारे में मुझसे कुछ भी पूछ सकती हैं।`;
       case 'kn':
-        return `ನಮಸ್ಕಾರ ${userProfile.name || 'ಅಮ್ಮಾ'}! ನಾನು ನಿಮ್ಮ ಪ್ರೆಗ್ನ್ಯೂಟ್ರಿ ಎಐ ಪೌಷ್ಟಿಕಾಂಶ ಸಹಾಯಕ. ನೀವು ಈಗ ${month}ನೇ ತಿಂಗಳು (${weeks}ನೇ ವಾರ, ${trimester}) ಗರ್ಭಾವಸ್ಥೆಯಲ್ಲಿದ್ದೀರಿ. ಸ್ಥಳೀಯ ಆಹಾರ, ಪೋಷಕಾಂಶಗಳು ಅಥವಾ ಸರ್ಕಾರದ ಯೋಜನೆಗಳ ಕುರಿತು ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಿ.`;
+        return `ನಮಸ್ಕಾರ${displayName || ' ಅಮ್ಮಾ'}! ನಾನು ನಿಮ್ಮ ಪ್ರೆಗ್ನ್ಯೂಟ್ರಿ ಎಐ ಪೌಷ್ಟಿಕಾಂಶ ಸಹಾಯಕ. ನೀವು ಈಗ ${month}ನೇ ತಿಂಗಳು (${weeks}ನೇ ವಾರ, ${trimester}) ಗರ್ಭಾವಸ್ಥೆಯಲ್ಲಿದ್ದೀರಿ. ಸ್ಥಳೀಯ ಆಹಾರ, ಪೋಷಕಾಂಶಗಳು ಅಥವಾ ಸರ್ಕಾರದ ಯೋಜನೆಗಳ ಕುರಿತು ಯಾವುದೇ ಪ್ರಶ್ನೆ ಕೇಳಿ.`;
       case 'ta':
-        return `வணக்கம் ${userProfile.name || 'அம்மா'}! நான் உங்கள் பிரக்நியூட்ரி ஏஐ தாய்மை ஊட்டச்சத்து உதவியாளர். நீங்கள் இப்போது ${month}வது மாதம் (${weeks}வது வாரம், ${trimester}) கர்ப்பத்தில் உள்ளீர்கள். ஊட்டச்சத்து, பாரம்பரிய உணவுகள் பற்றி என்னிடம் கேட்கலாம்.`;
+        return `வணக்கம்${displayName || ' அம்மா'}! நான் உங்கள் பிரக்நியூட்ரி ஏஐ தாய்மை ஊட்டச்சத்து உதவியாளர். நீங்கள் இப்போது ${month}வது மாதம் (${weeks}வது வாரம், ${trimester}) கர்ப்பத்தில் உள்ளீர்கள். ஊட்டச்சத்து, பாரம்பரிய உணவுகள் பற்றி என்னிடம் கேட்கலாம்.`;
       case 'te':
-        return `నమస్కారం ${userProfile.name || 'అమ్మా'}! నేను మీ ప్రెగ్‌న్యూట్రి AI ప్రసూతి పోషకాహార సహాయకురాలిని. మీరు ప్రస్తుతం ${month}వ నెల (${weeks}వ వారం, ${trimester})లో ఉన్నారు. స్థానిక ఆహారాలు, పోషకాల గురించి నన్ను అడగండి.`;
+        return `నమస్కారం${displayName || ' అమ్మా'}! నేను మీ ప్రెగ్‌న్యూట్రి AI ప్రసూతి పోషకాహార సహాయకురాలిని. మీరు ప్రస్తుతం ${month}వ నెల (${weeks}వ వారం, ${trimester})లో ఉన్నారు. స్థానిక ఆహారాలు, పోషకాల గురించి నన్ను అడగండి.`;
       case 'ml':
-        return `നമസ്കാരം ${userProfile.name || 'അമ്മേ'}! ഞാൻ നിങ്ങളുടെ പ്രെഗ്ന്യൂട്രി എഐ പോഷകാഹാര സഹായിയാണ്. നിങ്ങൾ ഇപ്പോൾ ${month}-ാം മാസം (${weeks}-ാം ആഴ്ച, ${trimester}) ഗർഭാവസ്ഥയിലാണ്. ഭക്ഷണത്തെക്കുറിച്ചും ആരോഗ്യത്തെക്കുറിച്ചും സംശയങ്ങൾ ചോദിക്കാം.`;
+        return `നമസ്കാരം${displayName || ' അമ്മേ'}! ഞാൻ നിങ്ങളുടെ പ്രെഗ്ന്യൂട്രി എഐ പോഷകാഹാര സഹായിയാണ്. നിങ്ങൾ ഇപ്പോൾ ${month}-ാം മാസം (${weeks}-ാം ആഴ്ച, ${trimester}) ഗർഭാവസ്ഥയിലാണ്. ഭക്ഷണത്തെക്കുറിച്ചും ആരോഗ്യത്തെക്കുറിച്ചും സംശയങ്ങൾ ചോദിക്കാം.`;
       default:
-        return `Hello ${userProfile.name || 'Mother'}! I am PregNutri AI, your clinical maternal nutrition companion. You are currently in Month ${month} (Week ${weeks}, ${trimester}). How can I support your nutritional health and traditional meal choices today?`;
+        return displayName
+          ? `Hello${displayName}! I am PregNutri AI, your clinical maternal nutrition companion. You are currently in Month ${month} (Week ${weeks}, ${trimester}). How can I support your nutritional health and traditional meal choices today?`
+          : `Welcome! I am PregNutri AI, your clinical maternal nutrition companion. You are currently in Month ${month} (Week ${weeks}, ${trimester}). How can I support your nutritional health and traditional meal choices today?`;
     }
   };
 
   const [messages, setMessages] = useState<ChatMessage[]>(() => {
     try {
-      const saved = localStorage.getItem('pregnutri_ai_chat_history_v2');
+      const activeKey = currentUser?.id
+        ? `pregnutri_ai_chat_history_${currentUser.id}`
+        : 'pregnutri_ai_chat_history_guest';
+      const saved = localStorage.getItem(activeKey);
       if (saved) return JSON.parse(saved);
     } catch (e) {}
     return [
       {
         id: 'msg-welcome',
         sender: 'assistant',
-        text: getInitialGreeting(currentLanguageCode),
+        text: getInitialGreeting(currentLanguageCode, effectiveName),
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
       }
     ];
   });
+
+  // Reload chat messages if user changes
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(chatStorageKey);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+        return;
+      }
+    } catch (e) {}
+    setMessages([
+      {
+        id: 'msg-welcome',
+        sender: 'assistant',
+        text: getInitialGreeting(currentLanguageCode, effectiveName),
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      }
+    ]);
+  }, [currentUser?.id]);
 
   // Update greeting when language changes if only 1 message exists
   useEffect(() => {
@@ -88,19 +160,19 @@ export const AiAssistantChatbot: React.FC = () => {
         {
           id: 'msg-welcome',
           sender: 'assistant',
-          text: getInitialGreeting(currentLanguageCode),
+          text: getInitialGreeting(currentLanguageCode, effectiveName),
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         }
       ]);
     }
-  }, [currentLanguageCode]);
+  }, [currentLanguageCode, effectiveName]);
 
   useEffect(() => {
     try {
-      localStorage.setItem('pregnutri_ai_chat_history_v2', JSON.stringify(messages));
+      localStorage.setItem(chatStorageKey, JSON.stringify(messages));
     } catch (e) {}
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isOpen]);
+  }, [messages, isOpen, chatStorageKey]);
 
   // Suggested quick queries based on language & trimester
   const getQuickPrompts = (lang: string) => {
@@ -237,9 +309,9 @@ export const AiAssistantChatbot: React.FC = () => {
     voiceService.speak(
       text,
       currentLanguageCode,
-      () => setIsSpeakingResponse(msgId),
       () => setIsSpeakingResponse(null),
-      () => setIsSpeakingResponse(null)
+      () => setIsSpeakingResponse(msgId),
+      msgId
     );
   };
 
@@ -281,10 +353,10 @@ export const AiAssistantChatbot: React.FC = () => {
           </div>
           <div className="text-left pr-1">
             <span className="text-xs font-black tracking-wide block text-[#EFEFE9]">
-              🤖 AI Assistant
+              🤖 {t('ai.assistant', 'AI Assistant')}
             </span>
             <span className="text-[9px] text-[#BBA58F] font-semibold block">
-              {trimester} • {state}
+              {trimester} • {localizedState}
             </span>
           </div>
         </button>
@@ -306,12 +378,12 @@ export const AiAssistantChatbot: React.FC = () => {
               <div>
                 <div className="flex items-center gap-1.5">
                   <h3 className="text-xs sm:text-sm font-black text-[#EFEFE9] leading-none">
-                    PregNutri AI Assistant
+                    PregNutri {t('ai.assistant', 'AI Assistant')}
                   </h3>
                   <span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />
                 </div>
                 <p className="text-[10px] text-[#BBA58F] font-semibold mt-0.5">
-                  Month {month} • {trimester} • {diet}
+                  {localizedMonth} • {trimester}
                 </p>
               </div>
             </div>
@@ -370,7 +442,7 @@ export const AiAssistantChatbot: React.FC = () => {
               <div className="bg-[#E8D9CD] px-3 py-2 border-b border-[#959D90]/30 shrink-0">
                 <div className="text-[10px] font-bold text-[#523D35] mb-1 flex items-center gap-1">
                   <Sparkles className="w-3 h-3 text-[#523D35]" />
-                  <span>Suggested for {state}:</span>
+                  <span>{t('planner.suggestedFor', 'Suggested for')} {state}:</span>
                 </div>
                 <div className="flex gap-1.5 overflow-x-auto no-scrollbar pb-1">
                   {getQuickPrompts(currentLanguageCode).map((q, idx) => (
@@ -433,12 +505,12 @@ export const AiAssistantChatbot: React.FC = () => {
                               {isThisSpeaking ? (
                                 <>
                                   <Volume2 className="w-2.5 h-2.5" />
-                                  <span>Speaking</span>
+                                  <span>{t('ai.speaking', 'Speaking')}</span>
                                 </>
                               ) : (
                                 <>
                                   <Volume2 className="w-2.5 h-2.5" />
-                                  <span>Listen</span>
+                                  <span>{t('ai.listen', 'Listen')}</span>
                                 </>
                               )}
                             </button>
@@ -457,7 +529,7 @@ export const AiAssistantChatbot: React.FC = () => {
                     <div className="rounded-2xl rounded-tl-xs p-2.5 bg-[#E8D9CD] border border-[#959D90]/40 text-[#523D35] text-xs flex items-center gap-2">
                       <Sparkles className="w-3 h-3 text-[#523D35] animate-spin" />
                       <span className="text-[11px] font-semibold">
-                        Analyzing clinical guidelines &amp; local foods...
+                        {t('ai.analyzingGuidelines', 'Analyzing clinical guidelines & local foods...')}
                       </span>
                     </div>
                   </div>
@@ -486,6 +558,10 @@ export const AiAssistantChatbot: React.FC = () => {
                         ? 'ಆಹಾರ ಅಥವಾ ಆರೋಗ್ಯದ ಬಗ್ಗೆ ಪ್ರಶ್ನೆ ಕೇಳಿ...'
                         : currentLanguageCode === 'ta'
                         ? 'ஊட்டச்சத்து கேள்வி கேட்கவும்...'
+                        : currentLanguageCode === 'te'
+                        ? 'పోషకాహారం లేదా ఆరోగ్య ప్రశ్న అడగండి...'
+                        : currentLanguageCode === 'ml'
+                        ? 'ഭക്ഷണത്തെക്കുറിച്ചോ ആരോഗ്യത്തെക്കുറിച്ചോ ചോദിക്കുക...'
                         : 'Ask any maternal nutrition question...'
                     }
                     className="flex-1 px-3 py-2 bg-[#EFEFE9] rounded-xl border border-[#959D90]/60 text-xs font-semibold text-[#223030] outline-none focus:border-[#523D35] placeholder:text-[#959D90]"
@@ -494,13 +570,14 @@ export const AiAssistantChatbot: React.FC = () => {
                     type="submit"
                     disabled={!inputText.trim() || isLoading}
                     className="p-2 bg-[#223030] hover:bg-[#523D35] disabled:opacity-50 text-[#EFEFE9] rounded-xl font-bold transition shadow-xs cursor-pointer"
+                    title={t('ai.send', 'Send')}
                   >
                     <Send className="w-4 h-4" />
                   </button>
                 </form>
 
                 <div className="mt-2 pt-1.5 border-t border-[#959D90]/30 flex items-center justify-between text-[9px] text-[#523D35]">
-                  <span>🛡️ Nutritional advice only. Not medical diagnosis.</span>
+                  <span>🛡️ {currentLanguageCode === 'kn' ? 'ಪೌಷ್ಟಿಕಾಂಶ ಮಾರ್ಗದರ್ಶನ ಮಾತ್ರ. ತುರ್ತು ಚಿಕಿತ್ಸೆಯಲ್ಲ.' : currentLanguageCode === 'hi' ? 'केवल पोषण संबंधी मार्गदर्शन। चिकित्सकीय निदान नहीं।' : 'Nutritional advice only. Not medical diagnosis.'}</span>
                   <button
                     type="button"
                     onClick={() => {
@@ -510,7 +587,7 @@ export const AiAssistantChatbot: React.FC = () => {
                     className="text-rose-700 font-black hover:underline cursor-pointer flex items-center gap-0.5"
                   >
                     <ShieldAlert className="w-2.5 h-2.5" />
-                    <span>Emergency SOS</span>
+                    <span>{currentLanguageCode === 'kn' ? 'ತುರ್ತು SOS' : currentLanguageCode === 'hi' ? 'आपातकालीन SOS' : 'Emergency SOS'}</span>
                   </button>
                 </div>
               </div>

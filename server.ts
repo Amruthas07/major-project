@@ -211,11 +211,22 @@ CLINICAL & NUTRITIONAL GUIDELINES:
 // 3. AI Regional Recipe Analysis Endpoint
 app.post('/api/analyze-recipe', async (req, res) => {
   try {
-    const { region, state, city, traditionalName, image, profile } = req.body;
+    const { region, state, city, traditionalName, image, profile, language } = req.body;
 
     if (!region || !state || !traditionalName) {
       return res.status(400).json({ error: 'Region, State, and Traditional Recipe Name are required.' });
     }
+
+    const currentLang = language || 'en';
+    const langNameMap: Record<string, string> = {
+      hi: 'Hindi (हिंदी)',
+      kn: 'Kannada (ಕನ್ನಡ)',
+      ta: 'Tamil (தமிழ்)',
+      te: 'Telugu (తెలుగు)',
+      ml: 'Malayalam (മലയാളം)',
+      en: 'English'
+    };
+    const targetLanguageName = langNameMap[currentLang] || 'English';
 
     const weeks = profile?.weeksPregnant || 24;
     const trimester = weeks <= 12 ? '1st Trimester' : weeks <= 28 ? '2nd Trimester' : '3rd Trimester';
@@ -238,6 +249,7 @@ CRITICAL REQUIREMENTS:
 3. Determine if the recipe is generally suitable, requires caution, or should be avoided during pregnancy (e.g. check for unripe papaya, raw sprouts, unpasteurized dairy, excess deep frying).
 4. Provide a clear, culturally accurate short description of this dish.
 5. Provide maternal nutritional highlights and any relevant allergen warnings based on ingredients (e.g. peanuts, dairy, gluten, sesame).
+6. LANGUAGE REQUIREMENT: Write the description, cookingMethod, foodSafety.explanation, and pregnancyNutritionNotes in ${targetLanguageName} (${currentLang}). If Kannada is requested, write them in Kannada (ಕನ್ನಡ ಲಿಪಿ). If Hindi, write in Hindi. If Tamil, in Tamil. etc.
 
 Return a JSON object conforming strictly to this schema:
 {
@@ -385,10 +397,21 @@ Return a JSON object conforming strictly to this schema:
 // 4. AI Photo Meal Scanner & Analysis with Strict Real-Food Photo Validation
 app.post('/api/scan-food-photo', async (req, res) => {
   try {
-    const { image, profile, location } = req.body;
+    const { image, profile, location, language } = req.body;
     if (!image) {
       return res.status(400).json({ error: 'Image is required in base64 format' });
     }
+
+    const currentLang = language || 'en';
+    const langNameMap: Record<string, string> = {
+      hi: 'Hindi (हिंदी)',
+      kn: 'Kannada (ಕನ್ನಡ)',
+      ta: 'Tamil (தமிழ்)',
+      te: 'Telugu (తెలుగు)',
+      ml: 'Malayalam (മലയാളം)',
+      en: 'English'
+    };
+    const targetLanguageName = langNameMap[currentLang] || 'English';
 
     // Clean base64 image data
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
@@ -404,6 +427,9 @@ app.post('/api/scan-food-photo', async (req, res) => {
 
     const prompt = `
 You are an expert Clinical Food Recognition and Indian Maternal Nutrition Vision Specialist for the PregNutri AI system.
+
+LANGUAGE REQUIREMENT:
+Write the response fields ("dishOverview", "pregnancySafetyNotes", "portionDescription", and "portionConsiderations") in ${targetLanguageName} (${currentLang}). If Kannada is requested, write them in authentic Kannada (ಕನ್ನಡ ಲಿಪಿ). If Hindi is requested, write in Hindi. If Tamil, in Tamil. etc. Food names can include both authentic local regional name and recognized name.
 
 TASK 1: STRICT REAL-FOOD VALIDATION
 Carefully inspect the image before performing food analysis.

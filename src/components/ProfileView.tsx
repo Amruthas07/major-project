@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   User, 
   Heart, 
@@ -15,6 +15,7 @@ import {
   MapPin,
   Droplets
 } from 'lucide-react';
+import { useLanguage, ALL_INDIAN_LANGUAGES } from '../services/language_service';
 
 interface ProfileViewProps {
   userProfile: {
@@ -45,19 +46,36 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
   userProfile,
   onUpdateProfile
 }) => {
+  const { selectedLanguage, setLanguage, t } = useLanguage();
   const [profile, setProfile] = useState({
     ...userProfile,
     weightKg: userProfile.weightKg || 58,
     heightCm: userProfile.heightCm || 162,
-    state: userProfile.state || 'Karnataka'
+    state: userProfile.state || 'Karnataka',
+    language: selectedLanguage || userProfile.language || 'en'
   });
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+
+  useEffect(() => {
+    setProfile({
+      ...userProfile,
+      weightKg: userProfile.weightKg || 58,
+      heightCm: userProfile.heightCm || 162,
+      state: userProfile.state || 'Karnataka',
+      language: selectedLanguage || userProfile.language || 'en'
+    });
+  }, [userProfile, selectedLanguage]);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     onUpdateProfile(profile);
     setSavedSuccess(true);
     setTimeout(() => setSavedSuccess(false), 3000);
+  };
+
+  const handleLanguageChange = (newLang: string) => {
+    setLanguage(newLang);
+    setProfile(prev => ({ ...prev, language: newLang }));
   };
 
   return (
@@ -85,12 +103,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="bg-[#E8D9CD] rounded-3xl p-6 sm:p-7 border border-[#959D90] shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-[#959D90]/30">
             <User className="w-4 h-4 text-[#523D35]" />
-            <h2 className="text-base font-bold text-[#223030]">Personal Details & Demographics</h2>
+            <h2 className="text-base font-bold text-[#223030]">{t('profile.personalDetails', 'Personal Details & Demographics')}</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Full Name</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.fullName', 'Full Name')}</label>
               <input
                 type="text"
                 value={profile.name}
@@ -101,7 +119,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Age</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.age', 'Age')}</label>
               <input
                 type="number"
                 min="18"
@@ -114,7 +132,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Home State (for Regional Cuisine)</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.homeState', 'Home State (for Regional Cuisine)')}</label>
               <select
                 value={profile.state}
                 onChange={(e) => setProfile({ ...profile, state: e.target.value })}
@@ -127,19 +145,17 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Preferred Language</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.preferredLanguage', 'Preferred Language')}</label>
               <select
-                value={profile.language}
-                onChange={(e) => setProfile({ ...profile, language: e.target.value })}
+                value={selectedLanguage}
+                onChange={(e) => handleLanguageChange(e.target.value)}
                 className="w-full px-4 py-2.5 rounded-xl border border-[#959D90] bg-[#EFEFE9] text-xs font-medium text-[#223030] focus:outline-none focus:ring-2 focus:ring-[#523D35]/20 focus:border-[#523D35] transition-colors"
               >
-                <option value="en">English</option>
-                <option value="hi">Hindi (हिंदी)</option>
-                <option value="kn">Kannada (ಕನ್ನಡ)</option>
-                <option value="ta">Tamil (தமிழ்)</option>
-                <option value="te">Telugu (తెలుగు)</option>
-                <option value="mr">Marathi (मराठी)</option>
-                <option value="bn">Bengali (বাংলা)</option>
+                {ALL_INDIAN_LANGUAGES.map((lang) => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.native} ({lang.name})
+                  </option>
+                ))}
               </select>
             </div>
           </div>
@@ -149,12 +165,12 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="bg-[#E8D9CD] rounded-3xl p-6 sm:p-7 border border-[#959D90] shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-[#959D90]/30">
             <Calendar className="w-4 h-4 text-[#523D35]" />
-            <h2 className="text-base font-bold text-[#223030]">Pregnancy Stage & Biometrics</h2>
+            <h2 className="text-base font-bold text-[#223030]">{t('profile.pregnancyStage', 'Pregnancy Stage & Biometrics')}</h2>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Pregnancy Week (1–40)</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.pregnancyWeek', 'Pregnancy Week (1–40)')}</label>
               <input
                 type="number"
                 min="1"
@@ -171,20 +187,20 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Current Trimester</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.currentTrimester', 'Current Trimester')}</label>
               <select
                 value={profile.trimester}
                 onChange={(e) => setProfile({ ...profile, trimester: Number(e.target.value) })}
                 className="w-full px-4 py-2.5 rounded-xl border border-[#959D90] bg-[#EFEFE9] text-xs font-medium text-[#223030] focus:outline-none focus:ring-2 focus:ring-[#523D35]/20 focus:border-[#523D35] transition-colors"
               >
-                <option value={1}>Trimester 1 (Weeks 1–12)</option>
-                <option value={2}>Trimester 2 (Weeks 13–27)</option>
-                <option value={3}>Trimester 3 (Weeks 28–40)</option>
+                <option value={1}>{t('profile.trimester1', 'Trimester 1 (Weeks 1–12)')}</option>
+                <option value={2}>{t('profile.trimester2', 'Trimester 2 (Weeks 13–27)')}</option>
+                <option value={3}>{t('profile.trimester3', 'Trimester 3 (Weeks 28–40)')}</option>
               </select>
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Pre-Pregnancy Weight (kg)</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.prePregnancyWeight', 'Pre-Pregnancy Weight (kg)')}</label>
               <input
                 type="number"
                 step="0.5"
@@ -198,7 +214,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-xs font-bold text-[#523D35]">Height (cm)</label>
+              <label className="text-xs font-bold text-[#523D35]">{t('profile.height', 'Height (cm)')}</label>
               <input
                 type="number"
                 min="130"
@@ -216,15 +232,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
         <div className="bg-[#E8D9CD] rounded-3xl p-6 sm:p-7 border border-[#959D90] shadow-xs space-y-4">
           <div className="flex items-center gap-2 pb-3 border-b border-[#959D90]/30">
             <Heart className="w-4 h-4 text-[#523D35]" />
-            <h2 className="text-base font-bold text-[#223030]">Clinical & Dietary Settings</h2>
+            <h2 className="text-base font-bold text-[#223030]">{t('profile.clinicalSettings', 'Clinical & Dietary Settings')}</h2>
           </div>
 
           <div className="space-y-3">
             <div className="p-3.5 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/40">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold text-[#223030] block">Diet Preference</span>
+                <span className="text-xs font-bold text-[#223030] block">{t('diet.preference', 'Diet Preference')}</span>
                 <span className="text-[11px] font-extrabold text-[#523D35]">
-                  {(profile.dietPreference?.toLowerCase() === 'vegetarian' || profile.isVegetarian) ? '🥬 Vegetarian' : '🍗 Non-Vegetarian'}
+                  {(profile.dietPreference?.toLowerCase() === 'vegetarian' || profile.isVegetarian) ? `🥬 ${t('diet.vegetarian', 'Vegetarian')}` : `🍗 ${t('diet.nonVegetarian', 'Non-Vegetarian')}`}
                 </span>
               </div>
               <div className="grid grid-cols-2 gap-2 mt-2">
@@ -238,7 +254,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   }`}
                 >
                   <span>🥬</span>
-                  <span>Vegetarian</span>
+                  <span>{t('diet.vegetarian', 'Vegetarian')}</span>
                 </button>
                 <button
                   type="button"
@@ -250,20 +266,15 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
                   }`}
                 >
                   <span>🍗</span>
-                  <span>Non-Vegetarian</span>
+                  <span>{t('diet.nonVegetarian', 'Non-Vegetarian')}</span>
                 </button>
               </div>
-              <p className="text-[11px] text-[#523D35] mt-2 font-medium">
-                {(profile.dietPreference?.toLowerCase() === 'vegetarian' || profile.isVegetarian)
-                  ? 'Pure vegetarian & plant-based foods only across the entire app'
-                  : 'Includes nutritious vegetarian foods + verified safe non-vegetarian foods'}
-              </p>
             </div>
 
             <label className="flex items-center justify-between p-3.5 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/40 cursor-pointer">
               <div>
-                <span className="text-xs font-bold text-[#223030] block">Gestational Diabetes Monitoring (GDM)</span>
-                <span className="text-[11px] text-[#523D35]">Strict low glycemic index and fiber-first meal recommendations</span>
+                <span className="text-xs font-bold text-[#223030] block">{t('profile.gdm', 'Gestational Diabetes Monitoring (GDM)')}</span>
+                <span className="text-[11px] text-[#523D35]">{t('profile.gdmDesc', 'Strict low glycemic index and fiber-first meal recommendations')}</span>
               </div>
               <input
                 type="checkbox"
@@ -275,8 +286,8 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
 
             <label className="flex items-center justify-between p-3.5 rounded-2xl bg-[#EFEFE9] border border-[#959D90]/40 cursor-pointer">
               <div>
-                <span className="text-xs font-bold text-[#223030] block">Maternal Hypertension / Pre-eclampsia Monitoring</span>
-                <span className="text-[11px] text-[#523D35]">Low-sodium (&lt; 1.5g/day) and potassium-rich traditional options</span>
+                <span className="text-xs font-bold text-[#223030] block">{t('profile.hypertension', 'Maternal Hypertension / Pre-eclampsia Monitoring')}</span>
+                <span className="text-[11px] text-[#523D35]">{t('profile.hypertensionDesc', 'Low-sodium (< 1.5g/day) and potassium-rich traditional options')}</span>
               </div>
               <input
                 type="checkbox"
@@ -293,7 +304,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
           {savedSuccess ? (
             <div className="inline-flex items-center gap-1.5 text-xs font-bold text-[#523D35]">
               <Check className="w-4 h-4 text-[#523D35]" />
-              <span>Profile updated successfully!</span>
+              <span>{t('profile.savedSuccess', 'Profile updated successfully!')}</span>
             </div>
           ) : (
             <div />
@@ -303,7 +314,7 @@ export const ProfileView: React.FC<ProfileViewProps> = ({
             type="submit"
             className="px-6 py-3 bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold rounded-xl shadow-xs transition-colors cursor-pointer"
           >
-            Save Profile Settings
+            {t('profile.saveSettings', 'Save Profile Settings')}
           </button>
         </div>
 

@@ -13,7 +13,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { GlobalLocationState } from '../types';
-import { DualFoodName, FoodSubtitle } from '../services/language_service';
+import { useLanguage, DualFoodName, FoodSubtitle } from '../services/language_service';
 
 export interface FoodOrderingModalProps {
   isOpen: boolean;
@@ -60,6 +60,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
   globalLocation,
   onNavigateToFullOrdering
 }) => {
+  const { t } = useLanguage();
   const [customIngredient, setCustomIngredient] = useState('');
 
   if (!isOpen || !food) return null;
@@ -111,10 +112,10 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
             </div>
             <div>
               <span className="text-[10px] font-black uppercase tracking-wider text-[#BBA58F] block">
-                Food Ordering Module
+                {t('ordering.module', 'Food Ordering Module')}
               </span>
               <h2 className="text-base sm:text-lg font-black text-[#EFEFE9] leading-tight">
-                Order &amp; Buy Food Externally
+                {t('ordering.orderExternal', 'Order & Buy Food Externally')}
               </h2>
             </div>
           </div>
@@ -154,7 +155,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
                       : 'bg-rose-800 text-white'
                   }`}
                 >
-                  {food.isVegetarian !== false ? 'Vegetarian' : 'Non-Vegetarian'}
+                  {food.isVegetarian !== false ? t('common.veg', 'Vegetarian') : t('common.nonVeg', 'Non-Vegetarian')}
                 </span>
                 <span className="text-[11px] font-bold text-[#523D35] flex items-center gap-1">
                   <MapPin className="w-3 h-3 text-[#523D35]" />
@@ -178,11 +179,11 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
               <div className="flex items-center gap-2">
                 <Utensils className="w-4 h-4 text-[#523D35]" />
                 <h4 className="text-xs font-black uppercase tracking-wider text-[#223030]">
-                  Category A: Prepared Restaurant Food
+                  {t('ordering.categoryPrepared', 'Category A: Prepared Restaurant Food')}
                 </h4>
               </div>
               <span className="text-[10px] font-bold text-[#523D35] bg-[#E8D9CD] px-2 py-0.5 rounded-md">
-                Cooked Meals
+                {t('ordering.cookedMeals', 'Cooked Meals')}
               </span>
             </div>
 
@@ -203,7 +204,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
                     <ShoppingBag className="w-4 h-4 text-white" />
                   </div>
                   <div className="text-left">
-                    <span className="block font-black text-sm">Order on Swiggy</span>
+                    <span className="block font-black text-sm">{t('ordering.orderSwiggy', 'Order on Swiggy')}</span>
                     <span className="block text-[10px] text-white/90">Search &ldquo;{primarySearchTerm}&rdquo;</span>
                   </div>
                 </div>
@@ -221,7 +222,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
                     <Utensils className="w-4 h-4 text-white" />
                   </div>
                   <div className="text-left">
-                    <span className="block font-black text-sm">Order on Zomato</span>
+                    <span className="block font-black text-sm">{t('ordering.orderZomato', 'Order on Zomato')}</span>
                     <span className="block text-[10px] text-white/90">Search &ldquo;{primarySearchTerm}&rdquo;</span>
                   </div>
                 </div>
@@ -241,11 +242,11 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
               <div className="flex items-center gap-2">
                 <Store className="w-4 h-4 text-[#523D35]" />
                 <h4 className="text-xs font-black uppercase tracking-wider text-[#223030]">
-                  Category B: Raw Kitchen Ingredients (Groceries)
+                  {t('ordering.categoryGroceries', 'Category B: Raw Kitchen Ingredients (Groceries)')}
                 </h4>
               </div>
               <span className="text-[10px] font-bold text-[#523D35] bg-[#E8D9CD] px-2 py-0.5 rounded-md">
-                Quick Commerce
+                {t('ordering.quickCommerce', 'Quick Commerce')}
               </span>
             </div>
 
@@ -257,7 +258,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
             {ingredientList.length > 0 ? (
               <div className="space-y-2 pt-1">
                 <span className="text-[10px] font-bold uppercase text-[#523D35] tracking-wider block">
-                  Click any ingredient to search on Blinkit:
+                  {t('ordering.clickIngredient', 'Click any ingredient to search on Blinkit:')}
                 </span>
                 <div className="flex flex-wrap gap-2">
                   {ingredientList.map((ing, idx) => (
@@ -284,7 +285,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
             {/* Custom Ingredient Search on Blinkit */}
             <div className="pt-2 border-t border-[#959D90]/30 space-y-2">
               <span className="text-[10px] font-bold uppercase text-[#523D35] tracking-wider block">
-                Search Any Grocery or Raw Ingredient on Blinkit:
+                {t('ordering.categoryGroceries', 'Search Any Grocery or Raw Ingredient on Blinkit:')}
               </span>
               <div className="flex gap-2">
                 <input
@@ -309,7 +310,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
                   disabled={!customIngredient.trim()}
                   className="px-4 py-2 bg-[#F8CB46] hover:bg-[#E5B834] text-[#1E1E1E] font-black text-xs rounded-xl shadow-2xs transition disabled:opacity-40 cursor-pointer flex items-center gap-1.5"
                 >
-                  <span>Search Blinkit</span>
+                  <span>{t('ordering.searchBlinkit', 'Search Blinkit')}</span>
                   <ExternalLink className="w-3.5 h-3.5 text-[#1E1E1E]" />
                 </button>
               </div>
@@ -327,7 +328,7 @@ export const FoodOrderingModal: React.FC<FoodOrderingModalProps> = ({
                 }}
                 className="inline-flex items-center gap-1.5 text-xs font-bold text-[#223030] hover:text-[#523D35] underline cursor-pointer"
               >
-                <span>Go to Full Food Ordering Directory</span>
+                <span>{t('ordering.fullDirectory', 'Go to Full Food Ordering Directory')}</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </button>
             </div>
