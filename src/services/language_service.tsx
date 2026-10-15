@@ -5293,6 +5293,30 @@ export const FOOD_NAME_TRANSLATIONS: Record<string, Record<string, string>> = {
     te: 'ఇప్పటికే ఖాతా ఉందా?',
     ml: 'ഇതിനകം അക്കൗണ്ട് ഉണ്ടോ?'
   },
+  'auth.backToDetails': {
+    en: 'Back to Details',
+    kn: 'ವಿವರಗಳಿಗೆ ಹಿಂತಿರುಗಿ',
+    hi: 'विवरण पर वापस जाएं',
+    ta: 'விவரங்களுக்கு திரும்பவும்',
+    te: 'వివరాలకు తిరిగి వెళ్ళండి',
+    ml: 'വിശദാംശങ്ങളിലേക്ക് മടങ്ങുക'
+  },
+  'auth.sessionExpired': {
+    en: 'Verification session expired or missing',
+    kn: 'ದೃಢೀಕರಣ ಅವಧಿ ಮುಗಿದಿದೆ ಅಥವಾ ಲಭ್ಯವಿಲ್ಲ',
+    hi: 'सत्यापन सत्र समाप्त या अनुपलब्ध है',
+    ta: 'சரிபார்ப்பு அமர்வு காலாவதியானது அல்லது காணவில்லை',
+    te: 'ధృవీకరణ సెషన్ గడువు ముగిసింది లేదా తప్పిపోయింది',
+    ml: 'സ്ഥിരീകരണ സെഷൻ കാലഹരണപ്പെട്ടു അല്ലെങ്കിൽ കാണാനില്ല'
+  },
+  'auth.resendOtp': {
+    en: 'Resend SMS OTP',
+    kn: 'SMS OTP ಮರುಕಳುಹಿಸಿ',
+    hi: 'SMS OTP पुनः भेजें',
+    ta: 'SMS OTP மீண்டும் அனுப்புக',
+    te: 'SMS OTPని మళ్లీ పంపండి',
+    ml: 'SMS OTP വീണ്ടും അയക്കുക'
+  },
   'auth.backToLogin': {
     en: 'Back to Sign In',
     kn: 'ಲಾಗಿನ್‌ಗೆ ಹಿಂತಿರುಗಿ',

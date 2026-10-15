@@ -33,6 +33,7 @@ export interface AuthUser {
   phoneVerified?: boolean;
   phoneNumber?: string;
   email?: string;
+  photoURL?: string;
 }
 
 export interface UserProfile {
@@ -40,6 +41,7 @@ export interface UserProfile {
   age: number;
   weeksPregnant: number;
   pregnancyMonth?: number; // 1 to 9
+  photoURL?: string;
   dueDate: string;
   prePregnancyWeightKg: number; // in kg
   currentWeightKg: number; // in kg

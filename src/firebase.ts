@@ -9,6 +9,8 @@ import { initializeApp, getApps, getApp } from 'firebase/app';
 import { 
   getAuth, 
   signInWithPopup, 
+  signInWithRedirect,
+  getRedirectResult,
   GoogleAuthProvider, 
   signOut as fbSignOut,
   onAuthStateChanged as fbOnAuthStateChanged,
@@ -31,8 +33,12 @@ import {
   getDocs as fbGetDocs, 
   onSnapshot as fbOnSnapshot,
   deleteDoc as fbDeleteDoc,
+  getDocFromServer as fbGetDocFromServer,
+  serverTimestamp as fbServerTimestamp,
   Firestore
 } from 'firebase/firestore';
+
+export const serverTimestamp = fbServerTimestamp;
 import {
   getStorage,
   ref as fbRef,
@@ -86,6 +92,18 @@ if (hasRealFirebase) {
     realDb = dbId ? getFirestore(app, dbId) : getFirestore(app);
     realStorage = getStorage(app);
     console.log("[Firebase Init] Successfully initialized in REAL cloud mode for PregNutri-AI!");
+
+    // Validate connection to Firestore on boot (Requirement of Firebase Integration Skill)
+    async function testConnection() {
+      try {
+        await fbGetDocFromServer(fbDoc(realDb, 'test', 'connection'));
+      } catch (error) {
+        if (error instanceof Error && error.message.includes('the client is offline')) {
+          console.error("Please check your Firebase configuration.");
+        }
+      }
+    }
+    testConnection();
   } catch (err) {
     console.error("[Firebase Init] Failed to initialize real Firebase services:", err);
     throw err;
@@ -173,17 +191,46 @@ export const auth = {
     });
   },
   async signInWithGoogle() {
-    console.log("[Firebase Auth] Initiating Google Sign-In popup...");
+    console.log("[Firebase Auth] Initiating Google Sign-In with GoogleAuthProvider...");
     if (!hasRealFirebase || !realAuth) {
       throw new Error("Firebase setup is incomplete. Google Authentication requires valid Firebase credentials.");
     }
+    const provider = new GoogleAuthProvider();
+    // Always show account selection prompt so users can choose or switch Google accounts
+    provider.setCustomParameters({
+      prompt: 'select_account'
+    });
+
     try {
-      const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(realAuth, provider);
-      console.log("[Firebase Auth] Google Sign-In SUCCESSFUL! User UID:", result.user?.uid);
+      console.log("[Firebase Auth] Google Sign-In SUCCESSFUL via popup! User UID:", result.user?.uid);
       return result;
     } catch (err: any) {
-      console.error("[Firebase Auth] Google Sign-In FAILED:", err);
+      console.warn("[Firebase Auth] signInWithPopup encountered:", err.code, err.message);
+      // Fallback to signInWithRedirect if popup is blocked by the browser
+      if (err.code === 'auth/popup-blocked') {
+        console.log("[Firebase Auth] Popup blocked by browser. Initiating signInWithRedirect fallback...");
+        try {
+          await signInWithRedirect(realAuth, provider);
+          return null as any; // Redirect will cause page reload
+        } catch (redirectErr) {
+          console.error("[Firebase Auth] signInWithRedirect fallback failed:", redirectErr);
+          throw redirectErr;
+        }
+      }
+      throw err;
+    }
+  },
+  async getRedirectResult() {
+    if (!hasRealFirebase || !realAuth) return null;
+    try {
+      const result = await getRedirectResult(realAuth);
+      if (result && result.user) {
+        console.log("[Firebase Auth] User returned from Google Sign-In redirect:", result.user.uid);
+      }
+      return result;
+    } catch (err) {
+      console.error("[Firebase Auth] getRedirectResult error:", err);
       throw err;
     }
   },
@@ -302,14 +349,6 @@ export const auth = {
   async updateUserProfile(displayName: string, photoURL?: string) {
     if (!realAuth?.currentUser) return;
     return await fbUpdateProfile(realAuth.currentUser, { displayName, photoURL });
-  },
-  clearRecaptchaVerifier() {
-    if ((window as any).recaptchaVerifier) {
-      try {
-        (window as any).recaptchaVerifier.clear();
-      } catch (e) {}
-      (window as any).recaptchaVerifier = null;
-    }
   }
 };
 
@@ -336,37 +375,55 @@ export function getFirebaseErrorMessage(err: any): string {
     case 'auth/user-disabled':
       return 'This account has been disabled. Please contact maternal care support.';
     case 'auth/too-many-requests':
-      return 'Too many failed login attempts. Access has been temporarily blocked for security. Please try again later or reset your password.';
+      return 'SMS quota exceeded or too many requests. Please wait before requesting another OTP.';
     case 'auth/network-request-failed':
-      return 'Network connection failed. Please check your internet connection.';
+      return 'Network failure. Please check your internet connection.';
     case 'auth/invalid-phone-number':
-      return 'Invalid Indian mobile number format. Please enter a valid 10-digit number (+91).';
+      return 'Invalid phone number. Please enter a valid 10-digit Indian phone number (+91).';
     case 'auth/invalid-verification-code':
-      return 'Incorrect OTP code entered. Please check the 6-digit code received via SMS and re-enter.';
+      return 'Incorrect or expired OTP. Please verify the 6-digit code or request a new one.';
     case 'auth/code-expired':
-      return 'This OTP verification code has expired. Please request a new OTP.';
+      return 'Incorrect or expired OTP. This verification code has expired. Please request a new OTP.';
+    case 'auth/session-expired':
+      return 'Verification session expired or missing. Please request a new OTP.';
+    case 'auth/invalid-verification-id':
+      return 'Verification session is invalid or expired. Please request a new OTP.';
+    case 'auth/already-in-progress':
+      return 'A verification request is already in progress. Please wait a moment.';
     case 'auth/missing-verification-code':
       return 'Please enter the 6-digit OTP code sent to your phone.';
     case 'auth/captcha-check-failed':
-      return 'reCAPTCHA verification could not be completed. Please refresh and try again.';
+      return 'reCAPTCHA failure. Verification could not be completed. Please refresh and try again.';
     case 'auth/quota-exceeded':
-      return 'SMS quota limit reached on this project. Please sign in with Email & Password or Google Sign-In.';
+      return 'SMS quota exceeded or too many requests. Firebase project SMS quota limit has been reached.';
     case 'auth/billing-not-enabled':
-      return 'SMS Phone Authentication requires Firebase Blaze billing to dispatch SMS. Please use Email & Password or Google Sign-In.';
+      return 'Firebase billing not enabled. Phone SMS authentication requires Blaze billing or configured test numbers in Firebase Console.';
     case 'auth/unauthorized-domain':
-      return 'This domain is not authorized in Firebase Auth settings. Please use Email & Password registration or authorize this domain in Firebase Console.';
+      return 'Unauthorized domain. Current app domain must be added to Firebase Console under Authentication > Settings > Authorized Domains.';
     case 'auth/popup-closed-by-user':
-      return 'Sign-in popup was closed before completion. Please try again.';
+      return 'Google sign-in window was closed before completion. Please click "Continue with Google" to try again.';
     case 'auth/popup-blocked':
-      return 'Pop-up window was blocked by your browser. Please allow popups for PregNutri AI.';
+      return 'Sign-in popup was blocked by your browser. Please allow popups for PregNutri AI or retry.';
+    case 'auth/cancelled-popup-request':
+      return 'Google sign-in was interrupted. Please click "Continue with Google" to try again.';
+    case 'auth/account-exists-with-different-credential':
+      return 'An account already exists with this email address. Please sign in with your original method.';
     case 'auth/operation-not-allowed':
-      return 'This sign-in method is not enabled in Firebase Console. Please enable it under Firebase Authentication > Sign-in method.';
+      return 'Google Sign-In provider is not enabled in Firebase Console. Please enable Google under Firebase Authentication > Sign-in method.';
+    case 'auth/timeout':
+      return 'The SMS verification request timed out after 20 seconds. Firebase took too long to respond. Please check your network connection and click Retry.';
     default:
       if (message.includes('auth/invalid-credential')) {
         return 'Invalid email or password. Please check your details and try again.';
       }
-      if (message.includes('billing') || message.includes('quota')) {
-        return 'SMS service limit reached or billing not enabled. Please sign in using Email & Password or Google.';
+      if (message.includes('billing')) {
+        return 'Firebase billing not enabled. Phone SMS authentication requires Blaze billing or configured test numbers in Firebase Console.';
+      }
+      if (message.includes('quota') || message.includes('too-many-requests')) {
+        return 'SMS quota exceeded or too many requests. Please wait before requesting another OTP.';
+      }
+      if (message.includes('unauthorized-domain')) {
+        return 'Unauthorized domain. Current domain must be added to Firebase Console under Authentication > Settings > Authorized Domains.';
       }
       return message || 'Authentication failed. Please check your details and try again.';
   }

@@ -1,11 +1,12 @@
 {
   "projectId": "pregnutri-ai",
-  "appId": "1:445176491013:web:8bf6d9f5e3c25d937d406c",
+  "appId": "1:445176491013:web:6828d92f00035fb77d406c",
   "apiKey": "AIzaSyBWqWkDEFs5lcnDDuLuIUcui_JhkV09p2Y",
   "authDomain": "pregnutri-ai.firebaseapp.com",
+  "firestoreDatabaseId": "ai-studio-pregnutriai-f7ae757a-80e9-4afb-9731-2c39175faafd",
   "storageBucket": "pregnutri-ai.firebasestorage.app",
   "messagingSenderId": "445176491013",
-  "measurementId": "G-32B4SRLC6L",
-  "oAuthClientId": "",
+  "measurementId": "",
+  "oAuthClientId": "445176491013-02uv6o431jf6poqasgv200siodmh5pfv.apps.googleusercontent.com",
   "recaptchaSiteKey": ""
 }

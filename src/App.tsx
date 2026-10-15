@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ShieldAlert, Phone, Lock, Baby, Sparkles } from 'lucide-react';
 import { Header } from './components/Header';
 import { MainNavigation, NavTabId } from './components/MainNavigation';
 import { DashboardView } from './components/DashboardView';
@@ -50,6 +51,7 @@ export default function App() {
     toggleMedicationTaken,
     resetAllData,
     currentUser,
+    isAuthenticated,
     isAuthChecking,
     isAuthModalOpen,
     setIsAuthModalOpen,
@@ -109,82 +111,107 @@ export default function App() {
 
       {/* 3. Primary Module Layout Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {activeTab === 'dashboard' && (
-          <DashboardView
-            onNavigateTab={(tab) => setActiveTab(tab)}
-            onOpenProfile={() => setIsProfileModalOpen(true)}
-          />
-        )}
+        {!isAuthenticated ? (
+          <div className="flex flex-col items-center justify-center py-20 text-center max-w-lg mx-auto bg-white/70 backdrop-blur-xs p-8 rounded-3xl border border-[#959D90]/40 shadow-sm animate-in fade-in">
+            <div className="w-16 h-16 rounded-3xl bg-[#223030] text-[#BBA58F] border border-[#523D35] flex items-center justify-center mb-5 shadow-md">
+              <Baby className="w-8 h-8" />
+            </div>
+            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#E8D9CD] text-[#523D35] border border-[#BBA58F]/40 uppercase tracking-wider mb-2">
+              Maternal Healthcare Portal
+            </span>
+            <h2 className="text-xl font-extrabold text-[#223030]">Welcome to PregNutri AI</h2>
+            <p className="text-xs text-[#523D35] mt-2.5 leading-relaxed">
+              Sign in or create your maternal account to access personalized ICMR-NIN nutrition recommendations, regional meal plans, pregnancy tracking, and clinical reports.
+            </p>
+            <button
+              type="button"
+              onClick={() => setIsAuthModalOpen(true)}
+              className="mt-6 px-6 py-3 rounded-2xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-2"
+            >
+              <Sparkles className="w-4 h-4 text-[#BBA58F]" />
+              <span>Sign In or Create Account</span>
+            </button>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'dashboard' && (
+              <DashboardView
+                onNavigateTab={(tab) => setActiveTab(tab)}
+                onOpenProfile={() => setIsProfileModalOpen(true)}
+              />
+            )}
 
-        {activeTab === 'food-scanner' && (
-          <FoodScannerView
-            profile={userProfile}
-            loggedMeals={loggedMeals}
-            globalLocation={globalLocation}
-            onSaveMeal={addLoggedMeal}
-            onDeleteMeal={deleteLoggedMeal}
-            onNavigateTab={(tab) => setActiveTab(tab as NavTabId)}
-          />
-        )}
+            {activeTab === 'food-scanner' && (
+              <FoodScannerView
+                profile={userProfile}
+                loggedMeals={loggedMeals}
+                globalLocation={globalLocation}
+                onSaveMeal={addLoggedMeal}
+                onDeleteMeal={deleteLoggedMeal}
+                onNavigateTab={(tab) => setActiveTab(tab as NavTabId)}
+              />
+            )}
 
-        {(activeTab === 'food-database' || activeTab === 'recipes') && (
-          <FoodDatabaseView />
-        )}
+            {(activeTab === 'food-database' || activeTab === 'recipes') && (
+              <FoodDatabaseView />
+            )}
 
-        {activeTab === 'meal-planner' && (
-          <MealPlannerView />
-        )}
+            {activeTab === 'meal-planner' && (
+              <MealPlannerView />
+            )}
 
-        {activeTab === 'welfare-schemes' && (
-          <WelfareSchemesView
-            schemes={INITIAL_WELFARE_SCHEMES}
-            globalLocation={globalLocation}
-          />
-        )}
+            {activeTab === 'welfare-schemes' && (
+              <WelfareSchemesView
+                schemes={INITIAL_WELFARE_SCHEMES}
+                globalLocation={globalLocation}
+              />
+            )}
 
-        {activeTab === 'health-facilities' && (
-          <HealthFacilitiesView
-            facilities={INITIAL_HEALTH_FACILITIES}
-            globalLocation={globalLocation}
-            onUpdateLocation={setGlobalLocation}
-          />
-        )}
+            {activeTab === 'health-facilities' && (
+              <HealthFacilitiesView
+                facilities={INITIAL_HEALTH_FACILITIES}
+                globalLocation={globalLocation}
+                onUpdateLocation={setGlobalLocation}
+              />
+            )}
 
-        {activeTab === 'ask-ai' && (
-          <AskAiView
-            profile={userProfile}
-            globalLocation={globalLocation}
-          />
-        )}
+            {activeTab === 'ask-ai' && (
+              <AskAiView
+                profile={userProfile}
+                globalLocation={globalLocation}
+              />
+            )}
 
-        {activeTab === 'order-delivery' && (
-          <OrderDeliveryView
-            products={INITIAL_ORDER_PRODUCTS}
-            globalLocation={globalLocation}
-          />
-        )}
+            {activeTab === 'order-delivery' && (
+              <OrderDeliveryView
+                products={INITIAL_ORDER_PRODUCTS}
+                globalLocation={globalLocation}
+              />
+            )}
 
-        {activeTab === 'reports' && (
-          <UserReportsView
-            onNavigateTab={(tab) => setActiveTab(tab)}
-          />
-        )}
+            {activeTab === 'reports' && (
+              <UserReportsView
+                onNavigateTab={(tab) => setActiveTab(tab)}
+              />
+            )}
 
-        {activeTab === 'clinical-report' && (
-          <ClinicalReportView
-            profile={userProfile}
-            weightRecords={weightRecords}
-            clinicalReports={clinicalReports}
-            medications={medications}
-            onAddWeightRecord={addWeightRecord}
-            onAddClinicalReport={addClinicalReport}
-            onToggleMedicationTaken={toggleMedicationTaken}
-            onAddMedication={addMedication}
-          />
-        )}
+            {activeTab === 'clinical-report' && (
+              <ClinicalReportView
+                profile={userProfile}
+                weightRecords={weightRecords}
+                clinicalReports={clinicalReports}
+                medications={medications}
+                onAddWeightRecord={addWeightRecord}
+                onAddClinicalReport={addClinicalReport}
+                onToggleMedicationTaken={toggleMedicationTaken}
+                onAddMedication={addMedication}
+              />
+            )}
 
-        {activeTab === 'research-paper' && (
-          <ResearchPaperView />
+            {activeTab === 'research-paper' && (
+              <ResearchPaperView />
+            )}
+          </>
         )}
       </main>
 
@@ -217,10 +244,11 @@ export default function App() {
 
       {/* 7. Authentication Modal (Login / Sign Up / Forgot Password) */}
       <AuthModal
-        isOpen={isAuthModalOpen || !currentUser}
-        onClose={() => currentUser && setIsAuthModalOpen(false)}
+        isOpen={isAuthModalOpen || !isAuthenticated}
+        onClose={() => isAuthenticated && setIsAuthModalOpen(false)}
         onAuthSuccess={handleAuthSuccess}
-        canDismiss={!!currentUser}
+        canDismiss={isAuthenticated}
+        pendingUser={currentUser && (!currentUser.phoneVerified || currentUser.onboardingStatus === 'phone_verification_pending') ? currentUser : undefined}
       />
 
       {/* 8. Initial Pregnancy Profile Setup Modal */}

@@ -1,7 +1,7 @@
-import { AuthUser, UserProfile, GlobalLocationState } from '../types';
+import { AuthUser, UserProfile, GlobalLocationState, OnboardingStatus } from '../types';
 import { INITIAL_USER_PROFILE } from '../data/mockData';
 import { GlobalLocationService } from './global_location_service';
-import { auth, firestoreService, hasRealFirebase, getFirebaseErrorMessage } from '../firebase';
+import { auth, firestoreService, hasRealFirebase, getFirebaseErrorMessage, serverTimestamp } from '../firebase';
 
 export interface StoredUserAccount {
   id: string;
@@ -10,6 +10,9 @@ export interface StoredUserAccount {
   passwordHash: string; // Stored securely in client storage
   hasCompletedProfile: boolean;
   createdAt: string;
+  phoneVerified?: boolean;
+  phoneNumber?: string;
+  onboardingStatus?: OnboardingStatus;
   profile?: UserProfile;
   location?: GlobalLocationState;
   waterIntakeMl?: number;
@@ -33,9 +36,15 @@ const DEFAULT_DEMO_ACCOUNT: StoredUserAccount = {
   passwordHash: 'demo123',
   hasCompletedProfile: true,
   createdAt: new Date().toISOString(),
+  phoneVerified: true,
+  phoneNumber: '+919876543210',
+  onboardingStatus: 'active',
   profile: {
     ...INITIAL_USER_PROFILE,
     name: 'Demo Mother',
+    phoneVerified: true,
+    mobileNumber: '+919876543210',
+    onboardingStatus: 'active',
     age: 27,
     pregnancyMonth: 6,
     weeksPregnant: 24,
@@ -409,66 +418,107 @@ class AuthService {
   // FIREBASE INTEGRATION METHODS (Real Cloud-First Auth)
   // -------------------------------------------------------------
   public async firebaseSignUp(params: {
-    name: string;
+    fullName?: string;
+    name?: string;
     email: string;
     password: string;
+    pregnancyMonth: number;
+    state: string;
+    dietPreference: 'Vegetarian' | 'Non-Vegetarian';
     phone?: string;
-    pregnancyMonth?: number;
-    dietPreference?: 'Vegetarian' | 'Non-Vegetarian';
-    state?: string;
   }): Promise<{ success: boolean; user?: AuthUser; message?: string }> {
-    const { name, email, password, phone, pregnancyMonth = 6, dietPreference = 'Vegetarian', state = 'Karnataka' } = params;
-    const trimmedName = name.trim();
-    const trimmedEmail = email.trim().toLowerCase();
-
-    if (!trimmedName) return { success: false, message: 'Please enter your full name.' };
-    if (!trimmedEmail || !trimmedEmail.includes('@')) return { success: false, message: 'Please enter a valid email address.' };
-    if (password.length < 6) return { success: false, message: 'Password must be at least 6 characters long.' };
-
+    const trimmedName = (params.fullName || params.name || '').trim();
+    const trimmedEmail = (params.email || '').trim().toLowerCase();
+    const password = params.password || '';
+    const pregnancyMonth = Number(params.pregnancyMonth) || 6;
+    const state = params.state || 'Karnataka';
+    const dietPreference = params.dietPreference || 'Vegetarian';
     const weeksPregnant = Math.min(40, Math.max(2, (pregnancyMonth - 1) * 4 + 2));
+
+    if (!trimmedName) {
+      return { success: false, message: 'Please enter your full name.' };
+    }
+    if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      return { success: false, message: 'Please enter a valid email address.' };
+    }
+    if (password.length < 6) {
+      return { success: false, message: 'Password must be at least 6 characters long.' };
+    }
+    if (!state) {
+      return { success: false, message: 'Please select your Indian State.' };
+    }
 
     // 1. If Real Firebase credentials are configured:
     if (hasRealFirebase) {
       try {
-        const cred = await auth.createUserWithEmail(trimmedEmail, password);
-        const fbUser = cred.user;
-        const uid = fbUser.uid;
+        let uid = '';
 
-        await auth.updateUserProfile(trimmedName);
+        try {
+          const cred = await auth.createUserWithEmail(trimmedEmail, password);
+          const fbUser = cred.user;
+          uid = fbUser.uid;
+          await auth.updateUserProfile(trimmedName);
+        } catch (authErr: any) {
+          if (authErr.code === 'auth/email-already-in-use') {
+            return {
+              success: false,
+              message: 'An account with this email address already exists. Please sign in or use Google Sign-In.'
+            };
+          }
+          throw authErr;
+        }
 
         const newProfile: UserProfile = {
           ...INITIAL_USER_PROFILE,
           name: trimmedName,
           email: trimmedEmail,
-          mobileNumber: phone ? (phone.startsWith('+91') ? phone : `+91${phone}`) : undefined,
+          mobileNumber: params.phone || '',
+          phoneVerified: true,
+          onboardingStatus: 'active',
           pregnancyMonth,
           weeksPregnant,
           dietPreference: dietPreference === 'Non-Vegetarian' ? 'non-vegetarian' : 'vegetarian',
           state
         };
 
-        // Save profile to Firestore (no passwords in Firestore)
+        // Save profile to Firestore under users/{uid}
         await firestoreService.setDoc('users', uid, {
           uid,
+          fullName: trimmedName,
           name: trimmedName,
           email: trimmedEmail,
-          phone: phone ? (phone.startsWith('+91') ? phone : `+91${phone}`) : '',
-          age: 27,
           pregnancyMonth,
           weeksPregnant,
-          dietPreference: newProfile.dietPreference,
           state,
+          dietPreference,
+          phoneVerified: true,
+          onboardingStatus: 'active',
           hasCompletedProfile: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
+          authProvider: 'email',
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
 
-        // Cache locally
+        // Cache locally for instant offline hydration
         try {
           localStorage.setItem(`profile_${uid}`, JSON.stringify(newProfile));
           localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(newProfile));
           localStorage.setItem(STORAGE_SESSION_KEY, uid);
         } catch (e) {}
+
+        const users = this.getAllUsers();
+        users[uid] = {
+          id: uid,
+          name: trimmedName,
+          emailOrPhone: trimmedEmail,
+          passwordHash: 'managed-by-firebase-auth',
+          hasCompletedProfile: true,
+          createdAt: new Date().toISOString(),
+          phoneVerified: true,
+          onboardingStatus: 'active',
+          profile: newProfile
+        };
+        this.saveAllUsers(users);
 
         return {
           success: true,
@@ -476,6 +526,9 @@ class AuthService {
             id: uid,
             name: trimmedName,
             emailOrPhone: trimmedEmail,
+            email: trimmedEmail,
+            phoneVerified: true,
+            onboardingStatus: 'active',
             hasCompletedProfile: true,
             createdAt: new Date().toISOString()
           }
@@ -486,7 +539,7 @@ class AuthService {
       }
     }
 
-    // 2. Seamless local client storage fallback (when Firebase API key is pending)
+    // 2. Seamless local client storage fallback (when Firebase credentials pending)
     const localRes = this.signup(trimmedName, trimmedEmail, password);
     if (!localRes.success || !localRes.user) {
       return localRes;
@@ -496,7 +549,9 @@ class AuthService {
       ...INITIAL_USER_PROFILE,
       name: trimmedName,
       email: trimmedEmail,
-      mobileNumber: phone ? (phone.startsWith('+91') ? phone : `+91${phone}`) : undefined,
+      mobileNumber: params.phone || '',
+      phoneVerified: true,
+      onboardingStatus: 'active',
       pregnancyMonth,
       weeksPregnant,
       dietPreference: dietPreference === 'Non-Vegetarian' ? 'non-vegetarian' : 'vegetarian',
@@ -504,12 +559,90 @@ class AuthService {
     };
 
     this.saveCompleteUserProfile(localRes.user.id, newProfile);
+    localRes.user.phoneVerified = true;
+    localRes.user.onboardingStatus = 'active';
     localRes.user.hasCompletedProfile = true;
 
     return {
       success: true,
       user: localRes.user
     };
+  }
+
+  public async completePhoneVerification(
+    uid: string,
+    verifiedPhone: string
+  ): Promise<{ success: boolean; user?: AuthUser; message?: string }> {
+    if (!uid || !verifiedPhone) {
+      return { success: false, message: 'Invalid verification parameters.' };
+    }
+
+    try {
+      if (hasRealFirebase) {
+        // Update user document in Firestore to persist verified status
+        await firestoreService.updateDoc('users', uid, {
+          phone: verifiedPhone,
+          phoneVerified: true,
+          onboardingStatus: 'active',
+          hasCompletedProfile: true,
+          updatedAt: new Date().toISOString()
+        });
+      }
+
+      // Update cached profile
+      let userProf: UserProfile = INITIAL_USER_PROFILE;
+      try {
+        const cached = localStorage.getItem(`profile_${uid}`);
+        if (cached) {
+          userProf = JSON.parse(cached);
+        }
+      } catch (e) {}
+
+      userProf.phoneVerified = true;
+      userProf.onboardingStatus = 'active';
+      userProf.mobileNumber = verifiedPhone;
+
+      try {
+        localStorage.setItem(`profile_${uid}`, JSON.stringify(userProf));
+        localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(userProf));
+        localStorage.setItem(STORAGE_SESSION_KEY, uid);
+      } catch (e) {}
+
+      // Update in local accounts if any
+      const users = this.getAllUsers();
+      if (users[uid]) {
+        users[uid].phoneVerified = true;
+        users[uid].phoneNumber = verifiedPhone;
+        users[uid].onboardingStatus = 'active';
+        users[uid].hasCompletedProfile = true;
+        if (users[uid].profile) {
+          users[uid].profile!.phoneVerified = true;
+          users[uid].profile!.onboardingStatus = 'active';
+          users[uid].profile!.mobileNumber = verifiedPhone;
+        }
+        this.saveAllUsers(users);
+      }
+
+      const updatedUser: AuthUser = {
+        id: uid,
+        name: userProf.name || 'Mother',
+        emailOrPhone: userProf.email || verifiedPhone,
+        phoneNumber: verifiedPhone,
+        phoneVerified: true,
+        onboardingStatus: 'active',
+        hasCompletedProfile: true,
+        createdAt: new Date().toISOString()
+      };
+
+      return {
+        success: true,
+        user: updatedUser,
+        message: 'Phone number verified successfully!'
+      };
+    } catch (err: any) {
+      console.error('[completePhoneVerification Error]', err);
+      return { success: false, message: err.message || 'Failed to complete phone verification.' };
+    }
   }
 
   public async firebaseLogin(
@@ -549,14 +682,21 @@ class AuthService {
           localStorage.setItem(STORAGE_SESSION_KEY, uid);
         } catch (e) {}
 
+        const docData = snap.exists() ? snap.data() : null;
+        const phone = docData?.phone || docData?.mobileNumber || '';
+
         return {
           success: true,
           user: {
             id: uid,
             name: displayName,
             emailOrPhone: fbUser.email || trimmed,
-            hasCompletedProfile: snap.exists(),
-            createdAt: new Date().toISOString()
+            email: fbUser.email || trimmed,
+            phoneNumber: phone,
+            phoneVerified: true,
+            onboardingStatus: 'active',
+            hasCompletedProfile: true,
+            createdAt: docData?.createdAt || new Date().toISOString()
           }
         };
       } catch (err: any) {
@@ -568,13 +708,21 @@ class AuthService {
     // 2. Local fallback login
     const localRes = this.login(trimmed, password);
     if (localRes.success && localRes.account) {
+      const isVerified = localRes.account.phoneVerified ?? true;
+      const onboardingStatus: OnboardingStatus = isVerified
+        ? (localRes.account.onboardingStatus || 'active')
+        : 'phone_verification_pending';
+
       return {
         success: true,
         user: {
           id: localRes.account.id,
           name: localRes.account.name,
           emailOrPhone: localRes.account.emailOrPhone,
-          hasCompletedProfile: localRes.account.hasCompletedProfile,
+          phoneNumber: localRes.account.phoneNumber,
+          phoneVerified: isVerified,
+          onboardingStatus: onboardingStatus,
+          hasCompletedProfile: localRes.account.hasCompletedProfile && isVerified,
           createdAt: localRes.account.createdAt
         },
         account: localRes.account
@@ -583,7 +731,12 @@ class AuthService {
     return { success: false, message: localRes.message || 'Invalid credentials. Please verify your details.' };
   }
 
-  public async firebaseGoogleSignIn(): Promise<{ success: boolean; user?: AuthUser; message?: string }> {
+  public async firebaseGoogleSignIn(options?: {
+    state?: string;
+    dietPreference?: 'Vegetarian' | 'Non-Vegetarian' | 'vegetarian' | 'non-vegetarian';
+    pregnancyMonth?: number;
+    weeksPregnant?: number;
+  }): Promise<{ success: boolean; user?: AuthUser; isNewUser?: boolean; redirecting?: boolean; message?: string }> {
     if (!hasRealFirebase) {
       return {
         success: false,
@@ -593,66 +746,170 @@ class AuthService {
 
     try {
       const res = await auth.signInWithGoogle();
-      const fbUser = res.user;
-      const uid = fbUser.uid;
-      const displayName = fbUser.displayName || 'Mother';
-      const email = fbUser.email || '';
-
-      // Check if user doc exists in Firestore to prevent duplicate profile creation
-      const snap = await firestoreService.getDoc('users', uid);
-      const isExisting = snap.exists();
-
-      if (!isExisting) {
-        // Create initial profile in Firestore
-        const initProfile: UserProfile = {
-          ...INITIAL_USER_PROFILE,
-          name: displayName,
-          email
+      if (!res || !res.user) {
+        // Redirect flow was initiated because popup was blocked
+        return {
+          success: true,
+          redirecting: true,
+          message: 'Redirecting to Google for account selection...'
         };
-        await firestoreService.setDoc('users', uid, {
-          uid,
-          name: displayName,
-          email,
-          pregnancyMonth: 6,
-          weeksPregnant: 24,
-          dietPreference: 'vegetarian',
-          state: 'Karnataka',
-          hasCompletedProfile: true,
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString()
-        });
-        try {
-          localStorage.setItem(`profile_${uid}`, JSON.stringify(initProfile));
-          localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(initProfile));
-        } catch (e) {}
-      } else {
-        const d = snap.data();
-        if (d) {
-          const prof: UserProfile = { ...INITIAL_USER_PROFILE, ...d };
-          try {
-            localStorage.setItem(`profile_${uid}`, JSON.stringify(prof));
-            localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(prof));
-          } catch (e) {}
-        }
       }
 
+      return await this.processFirebaseUser(res.user, options);
+    } catch (err: any) {
+      console.error('[Google Sign-In Error]', err);
+      return { success: false, message: getFirebaseErrorMessage(err) };
+    }
+  }
+
+  public async handleRedirectAuthResult(): Promise<{ success: boolean; user?: AuthUser; isNewUser?: boolean } | null> {
+    if (!hasRealFirebase) return null;
+    try {
+      const res = await auth.getRedirectResult();
+      if (!res || !res.user) return null;
+      console.log('[AuthService] Processing user from Google Sign-In redirect:', res.user.uid);
+      return await this.processFirebaseUser(res.user);
+    } catch (err) {
+      console.error('[AuthService] handleRedirectAuthResult error:', err);
+      return null;
+    }
+  }
+
+  public async processFirebaseUser(
+    fbUser: any,
+    options?: {
+      state?: string;
+      dietPreference?: 'Vegetarian' | 'Non-Vegetarian' | 'vegetarian' | 'non-vegetarian';
+      pregnancyMonth?: number;
+      weeksPregnant?: number;
+    }
+  ): Promise<{ success: boolean; user?: AuthUser; isNewUser?: boolean; message?: string }> {
+    const uid = fbUser.uid;
+    const displayName = fbUser.displayName || 'Mother';
+    const email = fbUser.email || '';
+    const photoURL = fbUser.photoURL || '';
+
+    // Check if user doc exists in Firestore to prevent duplicate profile creation or overwriting
+    const snap = await firestoreService.getDoc('users', uid);
+    const isExisting = snap.exists();
+
+    if (!isExisting) {
+      // Create initial profile in Firestore preserving any form preferences provided
+      const selectedState = options?.state || 'Karnataka';
+      const selectedDiet = options?.dietPreference
+        ? (options.dietPreference.toLowerCase().includes('non') ? 'Non-Vegetarian' : 'Vegetarian')
+        : 'Vegetarian';
+      const selectedMonth = options?.pregnancyMonth || 6;
+      const selectedWeeks = options?.weeksPregnant || 24;
+
+      const initProfile: UserProfile = {
+        ...INITIAL_USER_PROFILE,
+        name: displayName,
+        email,
+        mobileNumber: fbUser.phoneNumber || '',
+        photoURL,
+        state: selectedState,
+        dietPreference: selectedDiet,
+        pregnancyMonth: selectedMonth,
+        weeksPregnant: selectedWeeks,
+        phoneVerified: true, // Google accounts are verified via Google Auth
+        onboardingStatus: 'active'
+      };
+
+      await firestoreService.setDoc('users', uid, {
+        uid,
+        name: displayName,
+        email,
+        phone: fbUser.phoneNumber || '',
+        photoURL,
+        pregnancyMonth: selectedMonth,
+        weeksPregnant: selectedWeeks,
+        dietPreference: selectedDiet,
+        state: selectedState,
+        phoneVerified: true,
+        onboardingStatus: 'active',
+        hasCompletedProfile: true,
+        authProvider: 'google.com',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+
       try {
+        localStorage.setItem(`profile_${uid}`, JSON.stringify(initProfile));
+        localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(initProfile));
+        localStorage.setItem(STORAGE_SESSION_KEY, uid);
+      } catch (e) {}
+
+      // Keep local user database in sync
+      const users = this.getAllUsers();
+      users[uid] = {
+        id: uid,
+        name: displayName,
+        emailOrPhone: email,
+        passwordHash: 'google-oauth-token',
+        hasCompletedProfile: true,
+        createdAt: new Date().toISOString(),
+        phoneVerified: true,
+        onboardingStatus: 'active',
+        profile: initProfile
+      };
+      this.saveAllUsers(users);
+
+      return {
+        success: true,
+        isNewUser: true,
+        user: {
+          id: uid,
+          name: displayName,
+          emailOrPhone: email,
+          email,
+          photoURL,
+          phoneVerified: true,
+          onboardingStatus: 'active',
+          hasCompletedProfile: true,
+          createdAt: new Date().toISOString()
+        }
+      };
+    } else {
+      // Existing user: Strictly preserve all existing Firestore data without overwriting
+      const d = snap.data();
+      const existingName = d?.name || displayName;
+      const existingState = d?.state || 'Karnataka';
+      const existingDiet = d?.dietPreference || 'Vegetarian';
+
+      const prof: UserProfile = {
+        ...INITIAL_USER_PROFILE,
+        ...d,
+        name: existingName,
+        email: d?.email || email,
+        photoURL: d?.photoURL || photoURL,
+        state: existingState,
+        dietPreference: existingDiet,
+        phoneVerified: true,
+        onboardingStatus: 'active'
+      };
+
+      try {
+        localStorage.setItem(`profile_${uid}`, JSON.stringify(prof));
+        localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(prof));
         localStorage.setItem(STORAGE_SESSION_KEY, uid);
       } catch (e) {}
 
       return {
         success: true,
+        isNewUser: false,
         user: {
           id: uid,
-          name: displayName,
-          emailOrPhone: email,
+          name: existingName,
+          emailOrPhone: email || d?.phone || '',
+          email: email,
+          photoURL: d?.photoURL || photoURL,
+          phoneVerified: true,
+          onboardingStatus: 'active',
           hasCompletedProfile: true,
-          createdAt: new Date().toISOString()
+          createdAt: d?.createdAt || new Date().toISOString()
         }
       };
-    } catch (err: any) {
-      console.error('[Google Sign-In Error]', err);
-      return { success: false, message: getFirebaseErrorMessage(err) };
     }
   }
 
@@ -677,7 +934,7 @@ class AuthService {
     } else {
       return {
         success: false,
-        message: 'Please enter a valid 10-digit Indian mobile number.'
+        message: 'Invalid phone number. Please enter a valid 10-digit Indian mobile number (+91).'
       };
     }
 
@@ -725,12 +982,16 @@ class AuthService {
         const initProfile: UserProfile = {
           ...INITIAL_USER_PROFILE,
           name: 'Mother',
-          mobileNumber: phone
+          mobileNumber: phone,
+          phoneVerified: true,
+          onboardingStatus: 'active'
         };
         await firestoreService.setDoc('users', uid, {
           uid,
           name: 'Mother',
           phone,
+          phoneVerified: true,
+          onboardingStatus: 'active',
           pregnancyMonth: 6,
           weeksPregnant: 24,
           dietPreference: 'vegetarian',
@@ -745,13 +1006,17 @@ class AuthService {
         } catch (e) {}
       } else {
         const d = snap.data();
-        if (d) {
-          const prof: UserProfile = { ...INITIAL_USER_PROFILE, ...d };
-          try {
-            localStorage.setItem(`profile_${uid}`, JSON.stringify(prof));
-            localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(prof));
-          } catch (e) {}
-        }
+        await firestoreService.updateDoc('users', uid, {
+          phone,
+          phoneVerified: true,
+          onboardingStatus: 'active',
+          updatedAt: new Date().toISOString()
+        });
+        const prof: UserProfile = { ...INITIAL_USER_PROFILE, ...d, phoneVerified: true, onboardingStatus: 'active', mobileNumber: phone };
+        try {
+          localStorage.setItem(`profile_${uid}`, JSON.stringify(prof));
+          localStorage.setItem('pregnutri_user_profile_v3', JSON.stringify(prof));
+        } catch (e) {}
       }
 
       try {
@@ -764,6 +1029,9 @@ class AuthService {
           id: uid,
           name: snap.exists() ? (snap.data()?.name || 'Mother') : 'Mother',
           emailOrPhone: phone,
+          phoneNumber: phone,
+          phoneVerified: true,
+          onboardingStatus: 'active',
           hasCompletedProfile: true,
           createdAt: new Date().toISOString()
         }

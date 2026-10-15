@@ -9,7 +9,8 @@ import {
   WeightRecord,
   ClinicalReport,
   MedicationItem,
-  AuthUser
+  AuthUser,
+  OnboardingStatus
 } from '../types';
 import { LoggedMealRecord } from '../nutrition_engine';
 import { GlobalLocationService } from '../services/global_location_service';
@@ -267,11 +268,16 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     const active = authService.getActiveUser();
     if (active) {
+      const isVerified = active.phoneVerified ?? true;
+      const onboardingStatus = isVerified ? (active.onboardingStatus || 'active') : 'phone_verification_pending';
       return {
         id: active.id,
         name: active.name,
         emailOrPhone: active.emailOrPhone,
-        hasCompletedProfile: active.hasCompletedProfile,
+        phoneNumber: active.phoneNumber,
+        phoneVerified: isVerified,
+        onboardingStatus,
+        hasCompletedProfile: active.hasCompletedProfile && isVerified,
         createdAt: active.createdAt
       };
     }
@@ -279,11 +285,30 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const [isAuthChecking, setIsAuthChecking] = useState<boolean>(true);
-  const isAuthenticated = !!currentUser;
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(!currentUser);
+  const isAuthenticated = useMemo(() => {
+    return !!currentUser && currentUser.phoneVerified === true && currentUser.onboardingStatus === 'active';
+  }, [currentUser]);
+
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState<boolean>(() => {
+    const active = authService.getActiveUser();
+    if (!active) return true;
+    return active.phoneVerified === false || active.onboardingStatus === 'phone_verification_pending';
+  });
+
   const [isProfileSetupModalOpen, setIsProfileSetupModalOpen] = useState<boolean>(
-    !!currentUser && !currentUser.hasCompletedProfile
+    !!currentUser && currentUser.phoneVerified === true && !currentUser.hasCompletedProfile
   );
+
+  // Check for Google Sign-In redirect completion on mount
+  useEffect(() => {
+    authService.handleRedirectAuthResult().then((res) => {
+      if (res && res.user) {
+        console.log('[AppContext] Successfully handled Google Sign-In redirect for:', res.user.name);
+      }
+    }).catch((err) => {
+      console.warn('[AppContext] Redirect auth check notice:', err);
+    });
+  }, []);
 
   // Synchronize Firebase Authentication State via onAuthStateChanged
   useEffect(() => {
@@ -294,6 +319,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const uid = fbUser.uid;
         let loadedProfile: UserProfile | null = null;
         let hasProfile = false;
+        const isGoogleAuth = fbUser.providerData?.some((p: any) => p.providerId === 'google.com') || false;
+        const isPasswordAuth = fbUser.providerData?.some((p: any) => p.providerId === 'password') || false;
+        const isEmailAuth = !!fbUser.email;
+        const isDirectPhoneAuth = !!fbUser.phoneNumber;
+        let isPhoneVerified = isDirectPhoneAuth || isGoogleAuth || isPasswordAuth || isEmailAuth;
+        let phoneNum = fbUser.phoneNumber || '';
+        let onboardingStatus: OnboardingStatus = 'active';
 
         // 1. Check user-specific localStorage cache
         try {
@@ -301,6 +333,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           if (cached) {
             const parsed = JSON.parse(cached);
             if (parsed && parsed.name) {
+              isPhoneVerified = true;
+              onboardingStatus = 'active';
+              if (parsed.mobileNumber) {
+                phoneNum = parsed.mobileNumber;
+              }
               loadedProfile = sanitizeUserProfile(parsed);
               hasProfile = true;
             }
@@ -312,16 +349,26 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
           const snap = await firestoreService.getDoc('users', uid);
           if (snap.exists()) {
             const data = snap.data();
-            if (data && data.name) {
-              loadedProfile = sanitizeUserProfile({
-                ...INITIAL_USER_PROFILE,
-                ...data
-              });
-              hasProfile = true;
-              try {
-                localStorage.setItem(`profile_${uid}`, JSON.stringify(loadedProfile));
-                localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(loadedProfile));
-              } catch (e) {}
+            if (data) {
+              isPhoneVerified = true;
+              onboardingStatus = 'active';
+              if (data.phone) {
+                phoneNum = data.phone;
+              }
+              if (data.name) {
+                loadedProfile = sanitizeUserProfile({
+                  ...INITIAL_USER_PROFILE,
+                  ...data,
+                  photoURL: fbUser.photoURL || data.photoURL,
+                  phoneVerified: isPhoneVerified,
+                  onboardingStatus
+                });
+                hasProfile = true;
+                try {
+                  localStorage.setItem(`profile_${uid}`, JSON.stringify(loadedProfile));
+                  localStorage.setItem(STORAGE_KEY_PROFILE, JSON.stringify(loadedProfile));
+                } catch (e) {}
+              }
             }
           }
         } catch (e) {
@@ -331,8 +378,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         const userObj: AuthUser = {
           id: uid,
           name: loadedProfile?.name || fbUser.displayName || 'Mother',
-          emailOrPhone: fbUser.email || fbUser.phoneNumber || '',
-          hasCompletedProfile: hasProfile,
+          emailOrPhone: fbUser.email || phoneNum,
+          email: fbUser.email || undefined,
+          phoneNumber: phoneNum,
+          photoURL: fbUser.photoURL || loadedProfile?.photoURL,
+          phoneVerified: isPhoneVerified,
+          onboardingStatus,
+          hasCompletedProfile: hasProfile && isPhoneVerified,
           createdAt: new Date().toISOString()
         };
 
@@ -356,17 +408,28 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             }
           }
         }
-        setIsAuthModalOpen(false);
-        setIsProfileSetupModalOpen(!hasProfile);
+
+        if (isGoogleAuth || isPasswordAuth || isEmailAuth || isPhoneVerified) {
+          setIsAuthModalOpen(false);
+          setIsProfileSetupModalOpen(!hasProfile);
+        } else {
+          setIsAuthModalOpen(false);
+          setIsProfileSetupModalOpen(!hasProfile);
+        }
       } else {
         // Firebase user signed out or null; check active session fallback
         const active = authService.getActiveUser();
         if (active) {
+          const isVerified = active.phoneVerified ?? true;
+          const onboardingStatus = isVerified ? (active.onboardingStatus || 'active') : 'phone_verification_pending';
           setCurrentUser({
             id: active.id,
             name: active.name,
             emailOrPhone: active.emailOrPhone,
-            hasCompletedProfile: active.hasCompletedProfile,
+            phoneNumber: active.phoneNumber,
+            phoneVerified: isVerified,
+            onboardingStatus,
+            hasCompletedProfile: active.hasCompletedProfile && isVerified,
             createdAt: active.createdAt
           });
           if (active.profile) {
@@ -376,8 +439,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
             GlobalLocationService.setLocation(active.location);
             setGlobalLocation(active.location);
           }
-          setIsAuthModalOpen(false);
-          setIsProfileSetupModalOpen(!active.hasCompletedProfile);
+          if (!isVerified) {
+            setIsAuthModalOpen(true);
+            setIsProfileSetupModalOpen(false);
+          } else {
+            setIsAuthModalOpen(false);
+            setIsProfileSetupModalOpen(!active.hasCompletedProfile);
+          }
         } else {
           setCurrentUser(null);
           setIsAuthModalOpen(true);
@@ -1082,13 +1150,24 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   // Auth Action Handlers
   const handleAuthSuccess = async (user: AuthUser, needsProfileSetup: boolean) => {
     setCurrentUser(user);
+
+    // CRITICAL SECURITY CHECK: Block entry to dashboard if phone is not verified
+    if (!user.phoneVerified || user.onboardingStatus === 'phone_verification_pending') {
+      console.warn('[handleAuthSuccess] Access to dashboard blocked: phone verification pending for user:', user.id);
+      setIsAuthModalOpen(true);
+      setIsProfileSetupModalOpen(false);
+      return;
+    }
+
     setIsAuthModalOpen(false);
     if (needsProfileSetup) {
       const initialProfileForUser: UserProfile = {
         ...INITIAL_USER_PROFILE,
         name: user.name,
+        phoneVerified: true,
+        onboardingStatus: 'active',
         email: user.emailOrPhone.includes('@') ? user.emailOrPhone : undefined,
-        mobileNumber: !user.emailOrPhone.includes('@') ? user.emailOrPhone : undefined
+        mobileNumber: user.phoneNumber || (!user.emailOrPhone.includes('@') ? user.emailOrPhone : undefined)
       };
       setUserProfile(initialProfileForUser);
       try {

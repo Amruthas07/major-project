@@ -12,7 +12,6 @@ import {
   Bell,
   Volume2,
   VolumeX,
-  Phone,
   Utensils,
   Camera,
   Bot,
@@ -65,7 +64,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
     toggleMealCompleted,
     openAddToPlanModal,
     setIsProfileModalOpen,
-    setIsSosModalOpen,
     setActiveTab: contextSetActiveTab
   } = useAppContext();
 
@@ -262,15 +260,6 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
           >
             <Scale className="w-3.5 h-3.5 text-[#523D35]" />
             <span>{t('dashboard.logWeight', '+ Log Weight')}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsSosModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black flex items-center gap-1.5 transition cursor-pointer shadow-xs border border-red-500"
-          >
-            <Phone className="w-3.5 h-3.5 fill-current" />
-            <span>{t('sos.title', 'Emergency SOS')}</span>
           </button>
         </div>
       </div>
