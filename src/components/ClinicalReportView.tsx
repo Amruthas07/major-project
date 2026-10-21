@@ -209,7 +209,7 @@ export const ClinicalReportView: React.FC<ClinicalReportViewProps> = ({
             <div className="bg-[#E8D9CD] rounded-2xl p-4.5 border border-[#959D90] shadow-xs space-y-1">
               <span className="text-xs text-[#523D35] font-semibold block">{t('profile.prePregnancyWeight', 'Pre-Pregnancy Weight')}</span>
               <span className="text-xl sm:text-2xl font-extrabold text-[#223030]">{profile.prePregnancyWeightKg} kg</span>
-              <span className="text-[11px] text-[#959D90] block">{t('profile.height', 'Height')}: {profile.heightCm} cm</span>
+              <span className="text-[11px] text-[#523D35] font-semibold block">{t('profile.height', 'Height')}: {profile.heightCm} cm</span>
             </div>
 
             <div className="bg-[#E8D9CD] rounded-2xl p-4.5 border border-[#959D90] shadow-xs space-y-1">
@@ -227,7 +227,7 @@ export const ClinicalReportView: React.FC<ClinicalReportViewProps> = ({
             <div className="bg-[#E8D9CD] rounded-2xl p-4.5 border border-[#959D90] shadow-xs space-y-1">
               <span className="text-xs text-[#523D35] font-semibold block">{t('clinical.targetWeightGain', 'Target Weight Gain')}</span>
               <span className="text-xl sm:text-2xl font-extrabold text-[#223030]">11.5 – 16.0 kg</span>
-              <span className="text-[11px] text-[#959D90] block">IOM Guidelines</span>
+              <span className="text-[11px] text-[#523D35] font-semibold block">IOM Guidelines</span>
             </div>
           </div>
 
@@ -507,7 +507,7 @@ export const ClinicalReportView: React.FC<ClinicalReportViewProps> = ({
               </div>
 
               <div className="text-right">
-                <span className="text-xs text-[#959D90] block font-mono">{t('clinical.rchPortalId', 'RCH ID')}: {profile.rchId}</span>
+                <span className="text-xs text-amber-100/90 block font-mono">{t('clinical.rchPortalId', 'RCH ID')}: {profile.rchId}</span>
                 <span className="text-xs text-[#BBA58F] font-bold">MCP Card #{profile.mcpCardNumber}</span>
               </div>
             </div>

@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { ImageOff, Loader2, ExternalLink, ShieldCheck, Utensils } from 'lucide-react';
 import { getVerifiedDishPhoto, FoodImageMetadata } from '../data/food_image_registry';
+import { Maternal3DArt } from './Maternal3DArt';
+import { resolveMealVisual } from '../utils/meal_image_resolver';
 
 interface VerifiedFoodImageProps {
   src?: string | null;
@@ -146,17 +148,23 @@ export const VerifiedFoodImage: React.FC<VerifiedFoodImageProps> = ({
         </div>
       )}
 
-      {/* 2. CULINARY DISH CARD FALLBACK */}
-      {(hasError || !currentUrl) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center bg-[#E8D9CD] text-[#223030] space-y-2">
-          <div className="w-12 h-12 rounded-2xl bg-[#223030] text-[#BBA58F] flex items-center justify-center shadow-xs">
-            <Utensils className="w-6 h-6" />
+      {/* 2. CULINARY 3D DISH CARD FALLBACK */}
+      {(hasError || !currentUrl) && (() => {
+        const visual = resolveMealVisual(dishName || alt);
+        return (
+          <div className="absolute inset-0 flex flex-col items-center justify-center p-4 text-center bg-gradient-to-b from-[#EFEFE9] to-[#E8D9CD] text-[#223030] space-y-1.5 select-none">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 flex items-center justify-center filter drop-shadow-md">
+              <Maternal3DArt type={visual.artType} className="w-full h-full object-contain" alt={dishName || alt} />
+            </div>
+            <p className="text-xs font-black text-[#223030] line-clamp-1 max-w-[200px]">
+              {dishName || alt || 'Maternal Nutrition Dish'}
+            </p>
+            <span className="text-[10px] font-bold text-[#523D35] bg-white/70 px-2 py-0.5 rounded-full border border-[#BBA58F]/30">
+              3D Maternal Recipe
+            </span>
           </div>
-          <p className="text-xs font-bold text-[#223030] line-clamp-1 max-w-[200px]">
-            {dishName || alt || 'Maternal Nutrition Dish'}
-          </p>
-        </div>
-      )}
+        );
+      })()}
 
       {/* 3. VERIFIED DISH PHOTOGRAPH */}
       {currentUrl && !hasError && (

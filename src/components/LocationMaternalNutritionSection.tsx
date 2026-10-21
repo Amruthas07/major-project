@@ -167,24 +167,24 @@ export const LocationMaternalNutritionSection: React.FC<LocationMaternalNutritio
                 {/* Nutrient Badges */}
                 <div className="grid grid-cols-4 gap-1 text-center pt-1">
                   <div className="bg-[#EFEFE9] rounded-lg p-1.5 border border-[#959D90]/40">
-                    <span className="text-[9px] text-[#959D90] font-bold block uppercase">Energy</span>
+                    <span className="text-[9px] text-[#523D35] font-black block uppercase">Energy</span>
                     <span className="text-xs font-black text-[#223030]">{food.calories}</span>
-                    <span className="text-[9px] text-[#523D35] block">kcal</span>
+                    <span className="text-[9px] text-[#523D35] font-bold block">kcal</span>
                   </div>
                   <div className="bg-[#EFEFE9] rounded-lg p-1.5 border border-[#959D90]/40">
-                    <span className="text-[9px] text-[#959D90] font-bold block uppercase">Protein</span>
+                    <span className="text-[9px] text-[#523D35] font-black block uppercase">Protein</span>
                     <span className="text-xs font-black text-[#223030]">{food.protein}</span>
-                    <span className="text-[9px] text-[#523D35] block">g</span>
+                    <span className="text-[9px] text-[#523D35] font-bold block">g</span>
                   </div>
                   <div className="bg-[#EFEFE9] rounded-lg p-1.5 border border-[#959D90]/40">
-                    <span className="text-[9px] text-[#959D90] font-bold block uppercase">Iron</span>
+                    <span className="text-[9px] text-[#523D35] font-black block uppercase">Iron</span>
                     <span className="text-xs font-black text-[#223030]">{food.iron}</span>
-                    <span className="text-[9px] text-[#523D35] block">mg</span>
+                    <span className="text-[9px] text-[#523D35] font-bold block">mg</span>
                   </div>
                   <div className="bg-[#EFEFE9] rounded-lg p-1.5 border border-[#959D90]/40">
-                    <span className="text-[9px] text-[#959D90] font-bold block uppercase">Calcium</span>
+                    <span className="text-[9px] text-[#523D35] font-black block uppercase">Calcium</span>
                     <span className="text-xs font-black text-[#223030]">{food.calcium}</span>
-                    <span className="text-[9px] text-[#523D35] block">mg</span>
+                    <span className="text-[9px] text-[#523D35] font-bold block">mg</span>
                   </div>
                 </div>
               </div>
@@ -200,7 +200,7 @@ export const LocationMaternalNutritionSection: React.FC<LocationMaternalNutritio
                   className="px-3.5 py-1.5 rounded-xl text-xs font-black flex items-center gap-1 transition bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] shadow-xs cursor-pointer"
                 >
                   <Plus className="w-3.5 h-3.5 text-[#BBA58F]" />
-                  <span>+ Add to Plan</span>
+                  <span>Add to Plan</span>
                 </button>
               </div>
             </div>

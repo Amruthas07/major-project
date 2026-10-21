@@ -1005,7 +1005,7 @@ export const RegionalRecipeDetailModal: React.FC<RegionalRecipeDetailModalProps>
                 >
                   <Calendar className="w-4 h-4" />
                   <span>
-                    {existingPlannedMeal ? '✓ Added (Change Slot/Day)' : '+ Add to Meal Plan'}
+                    {existingPlannedMeal ? '✓ Added (Change Slot/Day)' : 'Add to Meal Plan'}
                   </span>
                 </button>
 

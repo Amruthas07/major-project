@@ -21,6 +21,7 @@ import {
 import { useAppContext } from '../context/AppContext';
 import { useLanguage } from '../services/language_service';
 import { voiceService } from '../services/voice_service';
+import { Maternal3DArt } from './Maternal3DArt';
 
 interface ChatMessage {
   id: string;
@@ -343,7 +344,7 @@ export const AiAssistantChatbot: React.FC = () => {
             setIsMinimized(false);
           }}
           aria-label="Open AI Assistant"
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2.5 px-4 py-3 bg-[#223030] text-[#EFEFE9] hover:bg-[#523D35] rounded-full shadow-2xl border-2 border-[#BBA58F] transition-all transform hover:scale-105 active:scale-95 group cursor-pointer"
+          className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-40 flex items-center gap-2 sm:gap-2.5 px-3 py-2 sm:px-4 sm:py-3 bg-[#223030] text-[#EFEFE9] hover:bg-[#523D35] rounded-full shadow-2xl border-2 border-[#BBA58F] transition-all transform hover:scale-105 active:scale-95 group cursor-pointer"
         >
           <div className="relative">
             <div className="w-8 h-8 rounded-full bg-[#523D35] flex items-center justify-center border border-[#BBA58F]/50">
@@ -365,8 +366,8 @@ export const AiAssistantChatbot: React.FC = () => {
       {/* 2. Floating AI Assistant Chat Panel */}
       {isOpen && (
         <div
-          className={`fixed right-4 sm:right-6 bottom-6 z-50 w-[92vw] sm:w-[410px] bg-[#EFEFE9] rounded-3xl shadow-2xl border border-[#523D35]/50 flex flex-col overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-bottom-6 ${
-            isMinimized ? 'h-[64px]' : 'h-[580px] max-h-[85vh]'
+          className={`fixed right-3 sm:right-6 bottom-20 sm:bottom-6 z-50 w-[94vw] sm:w-[410px] bg-[#EFEFE9] rounded-3xl shadow-2xl border border-[#523D35]/50 flex flex-col overflow-hidden transition-all duration-200 animate-in fade-in slide-in-from-bottom-6 ${
+            isMinimized ? 'h-[64px]' : 'h-[540px] max-h-[80vh]'
           }`}
         >
           {/* Header */}
@@ -460,6 +461,19 @@ export const AiAssistantChatbot: React.FC = () => {
 
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-3.5 space-y-3 bg-[#EFEFE9]">
+                {/* 3D Maternal Health Welcome Hero */}
+                <div className="p-3 bg-white/90 rounded-2xl border border-[#959D90]/30 shadow-2xs flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-xl bg-[#E8D9CD] p-1 shrink-0 flex items-center justify-center border border-[#BBA58F]/40 shadow-xs">
+                    <Maternal3DArt type="mother-and-baby" className="w-full h-full object-contain" alt="Maternal Support" />
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-black uppercase text-[#523D35] block">Compassionate AI Support</span>
+                    <p className="text-xs text-[#223030] font-bold leading-tight">
+                      Ask about safe Indian foods, cravings, nausea remedies, or trimester nutrient targets.
+                    </p>
+                  </div>
+                </div>
+
                 {messages.map((msg) => {
                   const isUser = msg.sender === 'user';
                   const isThisSpeaking = isSpeakingResponse === msg.id;
@@ -564,7 +578,7 @@ export const AiAssistantChatbot: React.FC = () => {
                         ? 'ഭക്ഷണത്തെക്കുറിച്ചോ ആരോഗ്യത്തെക്കുറിച്ചോ ചോദിക്കുക...'
                         : 'Ask any maternal nutrition question...'
                     }
-                    className="flex-1 px-3 py-2 bg-[#EFEFE9] rounded-xl border border-[#959D90]/60 text-xs font-semibold text-[#223030] outline-none focus:border-[#523D35] placeholder:text-[#959D90]"
+                    className="flex-1 px-3 py-2 bg-[#EFEFE9] rounded-xl border border-[#959D90]/60 text-xs font-semibold text-[#223030] outline-none focus:border-[#523D35] placeholder:text-[#523D35]/70"
                   />
                   <button
                     type="submit"

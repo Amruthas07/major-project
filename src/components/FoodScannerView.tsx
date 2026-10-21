@@ -1103,7 +1103,7 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
                 onClick={() => setStep('manual')}
                 className="w-full py-3.5 border-2 border-dashed border-slate-200 hover:border-emerald-400 text-slate-600 hover:text-emerald-700 rounded-2xl text-xs font-bold flex items-center justify-center gap-2 transition"
               >
-                <Plus className="w-4 h-4" /> ➕ Add Another Food
+                <Plus className="w-4 h-4" /> Add Another Food Item
               </button>
 
               {/* Proceed to Portions */}
@@ -1538,7 +1538,7 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
                   className="w-full py-4.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black rounded-2xl shadow-xl shadow-emerald-200 flex items-center justify-center gap-2.5 text-base transition scale-100 hover:scale-[1.01] active:scale-[0.99]"
                 >
                   <Plus className="w-5 h-5" />
-                  <span>➕ Add to Today's Intake ({selectedMealType})</span>
+                  <span>Add to Today's Intake ({selectedMealType})</span>
                 </button>
               </div>
             </div>
@@ -1791,7 +1791,7 @@ export const FoodScannerView: React.FC<FoodScannerViewProps> = ({
                           className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold transition flex items-center gap-1 shadow-xs"
                         >
                           <Plus className="w-3 h-3" />
-                          <span>+ Add to {selectedDay} Plan</span>
+                          <span>Add to {selectedDay} Plan</span>
                         </button>
                       </div>
                     </div>

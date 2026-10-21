@@ -198,7 +198,7 @@ export const FoodDetailModal: React.FC<FoodDetailModalProps> = ({
               }}
               className="px-5 py-2.5 rounded-xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold transition-all shadow-xs flex items-center gap-1.5 cursor-pointer"
             >
-              <span>+ Add to Today's Meals</span>
+              <span>Add to Today's Meals</span>
             </button>
           )}
         </div>

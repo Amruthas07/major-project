@@ -827,12 +827,12 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                     {t('reports.nutrientIntake', 'Average Daily Nutrient Intake')}
                   </h3>
                   <p className="text-xs text-[#959D90] mt-0.5">
-                    Calculated strictly from meals logged on the {recordedDaysCount} active recording days.
+                    {t('reports.calculatedStrictly', 'Calculated strictly from meals logged on the active recording days.')}
                   </p>
                 </div>
 
                 <span className="text-[11px] bg-[#EFEFE9] text-[#523D35] px-2.5 py-1 rounded-md font-semibold border border-[#BBA58F]/20">
-                  Target: ICMR Guidelines for Pregnancy
+                  {t('reports.targetIcmr', 'Target: ICMR Guidelines for Pregnancy')}
                 </span>
               </div>
 
@@ -840,8 +840,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Calories */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Calories</span>
-                    <span className="text-[10px] text-[#959D90]">RDA ~2,300</span>
+                    <span>{t('calories', 'Calories')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('rda', 'RDA')} ~2,300</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgCalories} kcal</div>
                   <div className="w-full bg-[#BBA58F]/20 h-1.5 rounded-full mt-2 overflow-hidden">
@@ -855,8 +855,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Protein */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Protein</span>
-                    <span className="text-[10px] text-[#959D90]">RDA ~65-70g</span>
+                    <span>{t('protein', 'Protein')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('rda', 'RDA')} ~65-70g</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgProtein} g</div>
                   <div className="w-full bg-[#BBA58F]/20 h-1.5 rounded-full mt-2 overflow-hidden">
@@ -870,8 +870,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Iron */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Iron</span>
-                    <span className="text-[10px] text-[#959D90]">RDA ~27mg</span>
+                    <span>{t('iron', 'Iron')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('rda', 'RDA')} ~27mg</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgIron} mg</div>
                   <div className="w-full bg-[#BBA58F]/20 h-1.5 rounded-full mt-2 overflow-hidden">
@@ -885,8 +885,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Calcium */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Calcium</span>
-                    <span className="text-[10px] text-[#959D90]">RDA ~1,000mg</span>
+                    <span>{t('calcium', 'Calcium')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('rda', 'RDA')} ~1,000mg</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgCalcium} mg</div>
                   <div className="w-full bg-[#BBA58F]/20 h-1.5 rounded-full mt-2 overflow-hidden">
@@ -900,8 +900,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Carbohydrates */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Carbohydrates</span>
-                    <span className="text-[10px] text-[#959D90]">Energy</span>
+                    <span>{t('carbs', 'Carbohydrates')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('energy', 'Energy')}</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgCarbs} g</div>
                 </div>
@@ -909,8 +909,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Healthy Fats */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Fats</span>
-                    <span className="text-[10px] text-[#959D90]">Lipids</span>
+                    <span>{t('fats', 'Fats')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('lipids', 'Lipids')}</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgFat} g</div>
                 </div>
@@ -918,8 +918,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Dietary Fibre */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Dietary Fibre</span>
-                    <span className="text-[10px] text-[#959D90]">Digestion</span>
+                    <span>{t('dietaryFibre', 'Dietary Fibre')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('digestion', 'Digestion')}</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgFiber} g</div>
                 </div>
@@ -927,8 +927,8 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                 {/* Folate */}
                 <div className="p-3.5 bg-[#EFEFE9]/50 rounded-xl border border-[#BBA58F]/20">
                   <div className="flex justify-between items-center text-xs text-[#523D35] font-semibold">
-                    <span>Folate</span>
-                    <span className="text-[10px] text-[#959D90]">RDA ~570mcg</span>
+                    <span>{t('folate', 'Folate')}</span>
+                    <span className="text-[10px] text-[#959D90]">{t('rda', 'RDA')} ~570mcg</span>
                   </div>
                   <div className="text-xl font-black text-[#223030] mt-1">{nutritionStats.avgFolate} mcg</div>
                 </div>
@@ -1016,7 +1016,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
 
               {topFoodsList.length === 0 ? (
                 <div className="text-xs text-[#959D90] italic py-6 text-center">
-                  No individual food records found in logged meals.
+                  {t('noFoodRecordsFound', 'No individual food records found in logged meals.')}
                 </div>
               ) : (
                 <div className="space-y-2">
@@ -1032,7 +1032,7 @@ export const UserReportsView: React.FC<UserReportsViewProps> = ({ onNavigateTab 
                         <span className="truncate">{name}</span>
                       </span>
                       <span className="text-[#523D35] font-bold shrink-0 ml-2">
-                        {count} time{count === 1 ? '' : 's'}
+                        {count} {count === 1 ? t('timeSingle', 'time') : t('times', 'times')}
                       </span>
                     </div>
                   ))}

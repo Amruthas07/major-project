@@ -95,7 +95,7 @@ export const WaterReminderAlertNotification: React.FC = () => {
               className="flex-1 py-1.5 px-3 rounded-xl bg-[#BBA58F] hover:bg-[#E8D9CD] text-[#223030] text-xs font-black flex items-center justify-center gap-1.5 transition shadow-xs cursor-pointer"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>+250 ml (Drank 1 Glass)</span>
+              <span>250 ml (Drank 1 Glass)</span>
             </button>
 
             <button

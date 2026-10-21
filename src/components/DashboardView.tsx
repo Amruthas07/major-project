@@ -38,6 +38,10 @@ import { normalizeDietPreference } from '../utils/diet_preference';
 import { checkFoodAllergies } from '../utils/allergy_checker';
 import { KAGGLE_PROCESSED_FOOD_DATABASE } from '../services/kaggle_food_pipeline';
 import { VerifiedFoodImage } from './VerifiedFoodImage';
+import NutritionCards from './NutritionCards';
+import WaterTracker from './WaterTracker';
+import { Maternal3DArt } from './Maternal3DArt';
+import { MaternalFood3DVisual } from './MaternalFood3DVisual';
 
 interface DashboardViewProps {
   onNavigateTab?: (tab: NavTabId) => void;
@@ -223,11 +227,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-7xl mx-auto">
       {/* ======================================================== */}
-      {/* 1. WELCOME HEADER (Simple, Clean, Non-Cluttered)         */}
+      {/* 1. WELCOME HEADER (Polished 3D Maternal Artwork)         */}
       {/* ======================================================== */}
-      <div className="bg-[#223030] border border-[#523D35] rounded-3xl p-6 sm:p-7 text-[#EFEFE9] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-5">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#523D35] text-[#E8D9CD] text-xs font-semibold border border-[#BBA58F]/30">
+      <div className="bg-gradient-to-r from-[#223030] via-[#283C38] to-[#1E2E2C] border border-[#523D35] rounded-3xl p-6 sm:p-7 text-[#EFEFE9] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="space-y-2.5 max-w-2xl relative z-10">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#523D35] text-[#E8D9CD] text-xs font-semibold border border-[#BBA58F]/30 shadow-xs">
             <Sparkles className="w-3.5 h-3.5 text-[#BBA58F]" />
             <span>
               {t('common.week', 'Week')} {userProfile.weeksPregnant} • {t(selectedTrimester === '1st Trimester' ? 'trimester.1st' : selectedTrimester === '2nd Trimester' ? 'trimester.2nd' : 'trimester.3rd', selectedTrimester)} • {formatLocalizedWeekday(selectedDay, currentLanguageCode, false)}
@@ -238,29 +242,85 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
             {greeting}, {userProfile.name ? userProfile.name.split(' ')[0] : 'Mother'} 🙏
           </h1>
 
-          <p className="text-sm text-[#E8D9CD] max-w-xl">
+          <p className="text-xs sm:text-sm text-[#E8D9CD]/90 max-w-xl leading-relaxed">
             {t('dashboard.welcomeSubtitle', 'Here is your nutrition summary for today. Track meals, stay hydrated, and reach your maternal wellness goals.')}
+          </p>
+
+          <div className="pt-2 flex items-center gap-2.5 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setIsLogWeightModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-[#E8D9CD] hover:bg-[#BBA58F] text-[#223030] text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+            >
+              <Scale className="w-3.5 h-3.5 text-[#523D35]" />
+              <span>{t('dashboard.logWeight', 'Log Weight')}</span>
+            </button>
+          </div>
+        </div>
+
+        {/* 3D Maternal Health Visual Badge */}
+        <div className="hidden sm:flex items-center justify-center shrink-0 relative z-10">
+          <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-[#523D35]/30 border border-[#BBA58F]/30 p-2 flex items-center justify-center shadow-inner group">
+            <Maternal3DArt
+              type="pregnant-mother"
+              className="w-full h-full object-contain filter drop-shadow-xl transform group-hover:scale-105 transition-transform duration-300"
+              alt="3D Maternal Wellness"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ======================================================== */}
+      {/* 1.5 PREGNANCY & WELLNESS OVERVIEW (3D Cards & Progress)  */}
+      {/* ======================================================== */}
+      <div className="bg-[#EFEFE9] border border-[#959D90]/40 rounded-3xl p-5 sm:p-6 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+        {/* Left: 3D Mother & Baby Artwork with Week Progress */}
+        <div className="md:col-span-4 flex items-center gap-4 bg-white/80 p-4 rounded-2xl border border-[#959D90]/30 shadow-2xs">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#E8D9CD] p-1 shrink-0 flex items-center justify-center border border-[#BBA58F]/40 shadow-xs">
+            <Maternal3DArt type="mother-and-baby" className="w-full h-full object-contain" alt="Mother and Baby Care" />
+          </div>
+          <div>
+            <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#523D35] block">Maternal Journey</span>
+            <span className="text-lg font-black text-[#223030] block">Week {userProfile.weeksPregnant} <span className="text-xs font-normal text-[#959D90]">of 40</span></span>
+            <div className="w-28 sm:w-32 bg-[#E8D9CD] h-2 rounded-full overflow-hidden mt-1.5 border border-[#959D90]/30">
+              <div
+                className="bg-[#523D35] h-full rounded-full transition-all"
+                style={{ width: `${Math.min(100, Math.round((userProfile.weeksPregnant / 40) * 100))}%` }}
+              />
+            </div>
+            <span className="text-[10px] text-[#523D35] font-semibold mt-1 block">
+              {Math.max(0, 40 - userProfile.weeksPregnant)} weeks to delivery
+            </span>
+          </div>
+        </div>
+
+        {/* Center: Trimester Clinical & Nutritional Highlights */}
+        <div className="md:col-span-5 space-y-1.5 px-1 sm:px-2">
+          <div className="flex items-center gap-2">
+            <span className="px-2.5 py-0.5 rounded-full bg-[#523D35] text-[#EFEFE9] text-xs font-extrabold">
+              {selectedTrimester} Focus
+            </span>
+            <span className="text-xs font-bold text-[#223030]">ICMR-NIN 2020 Protocol</span>
+          </div>
+          <p className="text-xs text-[#523D35] leading-relaxed">
+            {selectedTrimester === '1st Trimester'
+              ? 'Focus on Folate (570 µg), hydration, and iron absorption. Neural tube formation active.'
+              : selectedTrimester === '2nd Trimester'
+              ? 'Rapid skeletal & organ growth. Target Calcium (1,000 mg), Iron (27 mg), and +350 kcal energy.'
+              : 'Maximal fetal weight gain and brain development. Ensure rich protein (78 g), DHA, and fluids.'}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 flex-wrap">
-          <button
-            type="button"
-            onClick={handleEditProfile}
-            className="px-4 py-2 rounded-xl bg-[#523D35] hover:bg-[#523D35]/80 text-[#EFEFE9] border border-[#BBA58F]/40 text-xs font-bold flex items-center gap-2 transition cursor-pointer"
-          >
-            <Edit3 className="w-3.5 h-3.5 text-[#BBA58F]" />
-            <span>{t('header.editProfile', 'Edit Profile')}</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setIsLogWeightModalOpen(true)}
-            className="px-4 py-2 rounded-xl bg-[#E8D9CD] hover:bg-[#BBA58F] text-[#223030] text-xs font-bold flex items-center gap-2 transition cursor-pointer"
-          >
-            <Scale className="w-3.5 h-3.5 text-[#523D35]" />
-            <span>{t('dashboard.logWeight', '+ Log Weight')}</span>
-          </button>
+        {/* Right: Quick Daily Compliance Badges */}
+        <div className="md:col-span-3 flex md:flex-col justify-between sm:justify-start gap-2.5">
+          <div className="flex-1 bg-white/80 p-2.5 rounded-xl border border-[#959D90]/30 text-xs">
+            <span className="text-[10px] font-bold text-[#959D90] uppercase block">Hydration</span>
+            <span className="text-sm font-black text-[#223030]">{(waterIntakeMl / 1000).toFixed(1)} / 3.0 L</span>
+          </div>
+          <div className="flex-1 bg-white/80 p-2.5 rounded-xl border border-[#959D90]/30 text-xs">
+            <span className="text-[10px] font-bold text-[#959D90] uppercase block">Logged Meals</span>
+            <span className="text-sm font-black text-[#223030]">{dayNutrition.completedMealCount} of {dayNutrition.totalMealCount} eaten</span>
+          </div>
         </div>
       </div>
 
@@ -355,137 +415,28 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
       </div>
 
       {/* ======================================================== */}
-      {/* 3. TODAY'S NUTRITION (Simple, Accurate Cards)            */}
+      {/* 3. TODAY'S NUTRITION (Premium 3D Visuals & WCAG AA)      */}
       {/* ======================================================== */}
-      <div className="bg-[#EFEFE9] border border-[#959D90]/40 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#959D90]/30">
-          <div className="flex items-center space-x-2.5">
-            <div className="w-9 h-9 rounded-2xl bg-[#523D35] text-[#EFEFE9] flex items-center justify-center font-bold">
-              <Flame className="w-4 h-4 text-[#BBA58F]" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-[#223030]">
-                {t('dashboard.todaysNutrition', "Today's Nutrition")} ({formatLocalizedWeekday(selectedDay, currentLanguageCode, false)})
-              </h2>
-              <p className="text-[11px] text-[#523D35]">
-                {t('planner.calculatedStrictly', 'Calculated from meals planned for')} {formatLocalizedWeekday(selectedDay, currentLanguageCode, false)} vs. ICMR {t(selectedTrimester === '1st Trimester' ? 'trimester.1st' : selectedTrimester === '2nd Trimester' ? 'trimester.2nd' : 'trimester.3rd', selectedTrimester)} RDA
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => handleNavigate('meal-planner')}
-            className="px-3.5 py-1.5 rounded-xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold flex items-center gap-1.5 transition self-start sm:self-auto cursor-pointer shadow-xs"
-          >
-            <span>{t('dashboard.openPlanner', 'Open Meal Planner')}</span>
-            <ChevronRight className="w-3.5 h-3.5 text-[#BBA58F]" />
-          </button>
-        </div>
-
-        {/* 4 Core Requested Nutrient Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-          {/* 1. Calories */}
-          <div className="bg-[#E8D9CD] rounded-2xl p-4 border border-[#959D90]/30 space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-[#223030]">{t('nutrient.calories', 'Calories')}</span>
-              <span className="text-[11px] font-bold text-[#523D35]">{calPercent}%</span>
-            </div>
-            <div className="text-xl font-black text-[#223030]">
-              {dayNutrition.calories}{' '}
-              <span className="text-xs font-normal text-[#523D35]">/ {targetCalories} kcal</span>
-            </div>
-            <div className="h-2 w-full bg-[#EFEFE9] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#523D35] rounded-full transition-all duration-500"
-                style={{ width: `${calPercent}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-[#523D35] block font-medium">
-              {Math.max(0, targetCalories - dayNutrition.calories)} kcal {t('dashboard.remainingToday', 'remaining today')}
-            </span>
-          </div>
-
-          {/* 2. Protein */}
-          <div className="bg-[#E8D9CD] rounded-2xl p-4 border border-[#959D90]/30 space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-[#223030]">{t('nutrient.protein', 'Protein')}</span>
-              <span className="text-[11px] font-bold text-[#523D35]">{protPercent}%</span>
-            </div>
-            <div className="text-xl font-black text-[#223030]">
-              {dayNutrition.protein}g{' '}
-              <span className="text-xs font-normal text-[#523D35]">/ {targetProtein}g</span>
-            </div>
-            <div className="h-2 w-full bg-[#EFEFE9] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#523D35] rounded-full transition-all duration-500"
-                style={{ width: `${protPercent}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-[#523D35] block font-medium">
-              {Math.max(0, Number((targetProtein - dayNutrition.protein).toFixed(1)))}g {t('dashboard.remainingToday', 'remaining today')}
-            </span>
-          </div>
-
-          {/* 3. Carbohydrates */}
-          <div className="bg-[#E8D9CD] rounded-2xl p-4 border border-[#959D90]/30 space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-[#223030]">{t('nutrient.carbs', 'Carbohydrates')}</span>
-              <span className="text-[11px] font-bold text-[#523D35]">{carbsPercent}%</span>
-            </div>
-            <div className="text-xl font-black text-[#223030]">
-              {dayNutrition.carbs}g{' '}
-              <span className="text-xs font-normal text-[#523D35]">/ {targetCarbs}g</span>
-            </div>
-            <div className="h-2 w-full bg-[#EFEFE9] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#523D35] rounded-full transition-all duration-500"
-                style={{ width: `${carbsPercent}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-[#523D35] block font-medium">
-              {Math.max(0, Number((targetCarbs - dayNutrition.carbs).toFixed(1)))}g {t('dashboard.remainingToday', 'remaining today')}
-            </span>
-          </div>
-
-          {/* 4. Dietary Fibre */}
-          <div className="bg-[#E8D9CD] rounded-2xl p-4 border border-[#959D90]/30 space-y-2">
-            <div className="flex justify-between items-center text-xs">
-              <span className="font-bold text-[#223030]">{t('nutrient.fiber', 'Dietary Fibre')}</span>
-              <span className="text-[11px] font-bold text-[#523D35]">{fiberPercent}%</span>
-            </div>
-            <div className="text-xl font-black text-[#223030]">
-              {dayNutrition.fiber}g{' '}
-              <span className="text-xs font-normal text-[#523D35]">/ {targetFiber}g</span>
-            </div>
-            <div className="h-2 w-full bg-[#EFEFE9] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#523D35] rounded-full transition-all duration-500"
-                style={{ width: `${fiberPercent}%` }}
-              />
-            </div>
-            <span className="text-[10px] text-[#523D35] block font-medium">
-              {Math.max(0, Number((targetFiber - dayNutrition.fiber).toFixed(1)))}g {t('dashboard.remainingToday', 'remaining today')}
-            </span>
-          </div>
-        </div>
-
-        {/* Secondary Micronutrients Strip (Iron & Calcium) */}
-        <div className="grid grid-cols-2 gap-3 pt-1 text-xs">
-          <div className="p-3 bg-white rounded-xl border border-[#959D90]/30 flex items-center justify-between">
-            <span className="font-semibold text-[#523D35]">{t('nutrient.iron', 'Iron')} (Fe):</span>
-            <span className="font-bold text-[#223030]">
-              {dayNutrition.iron} mg / {targetIron} mg ({ironPercent}%)
-            </span>
-          </div>
-
-          <div className="p-3 bg-white rounded-xl border border-[#959D90]/30 flex items-center justify-between">
-            <span className="font-semibold text-[#523D35]">{t('nutrient.calcium', 'Calcium')} (Ca):</span>
-            <span className="font-bold text-[#223030]">
-              {dayNutrition.calcium} mg / {targetCalcium} mg ({calcPercent}%)
-            </span>
-          </div>
-        </div>
+      <div className="space-y-3">
+        <NutritionCards
+          nutritionData={{
+            calories: dayNutrition.calories,
+            protein: dayNutrition.protein,
+            carbs: dayNutrition.carbs,
+            fibre: dayNutrition.fiber,
+            iron: dayNutrition.iron,
+            calcium: dayNutrition.calcium
+          }}
+          targets={{
+            calories: targetCalories,
+            protein: targetProtein,
+            carbs: targetCarbs,
+            fibre: targetFiber,
+            iron: targetIron,
+            calcium: targetCalcium
+          }}
+          lang={currentLanguageCode}
+        />
       </div>
 
       {/* ======================================================== */}
@@ -493,121 +444,83 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* ======================================================== */}
-        {/* TODAY'S WATER                                            */}
+        {/* TODAY'S WATER (3D Hydration Widget)                      */}
         {/* ======================================================== */}
-        <div className="bg-[#EFEFE9] border border-[#959D90]/40 rounded-3xl p-5 sm:p-6 shadow-xs space-y-4">
-          <div className="flex items-center justify-between pb-3 border-b border-[#959D90]/30">
-            <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-2xl bg-emerald-800 text-white flex items-center justify-center font-bold">
-                <Droplets className="w-4 h-4 text-emerald-200" />
-              </div>
-              <div>
-                <h2 className="text-base font-bold text-[#223030]">{t('dashboard.waterIntake', "Today's Water Intake")}</h2>
-                <p className="text-[11px] text-[#523D35]">{t('dashboard.amnioticFluid', 'Amniotic fluid & maternal hydration')}</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-base font-black text-[#223030]">
-                {waterLitersDrunk} L / {waterLitersTarget} L
-              </div>
-              <span className="text-[10px] text-[#523D35] font-semibold">{waterIntakeMl} ml {t('dashboard.logged', 'logged')}</span>
-            </div>
-          </div>
+        <div className="space-y-4">
+          <WaterTracker
+            waterIntake={waterIntakeMl}
+            onAddWater={() => updateWaterIntake(waterIntakeMl + 250)}
+            maxGoal={targetWaterMl}
+            lang={currentLanguageCode}
+          />
 
-          {/* Water Progress Bar */}
-          <div className="space-y-1.5">
-            <div className="flex justify-between text-xs text-[#523D35]">
-              <span>{t('dashboard.progress', 'Progress')}: {glassesDrunk} {t('dashboard.glassesDrunk', 'Glasses Drunk')}</span>
-              <span className="font-bold text-[#223030]">{waterPercent}% {t('dashboard.achieved', 'Achieved')}</span>
-            </div>
-            <div className="h-3 w-full bg-[#E8D9CD] rounded-full overflow-hidden p-0.5 border border-[#959D90]/30">
-              <div
-                className="h-full bg-emerald-700 rounded-full transition-all duration-500"
-                style={{ width: `${waterPercent}%` }}
-              />
-            </div>
-          </div>
-
-          {/* Quick Add Water Buttons */}
-          <div className="space-y-2 pt-1">
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => updateWaterIntake(waterIntakeMl + 250)}
-                className="py-2.5 px-3 rounded-xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5 text-[#BBA58F]" />
-                <span>+ 250 ml ({t('dashboard.glass', 'Glass')})</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => updateWaterIntake(waterIntakeMl + 500)}
-                className="py-2.5 px-3 rounded-xl bg-[#523D35] hover:bg-[#523D35]/80 text-[#EFEFE9] font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5 text-[#BBA58F]" />
-                <span>+ 500 ml ({t('dashboard.bottle', 'Bottle')})</span>
-              </button>
-
+          <div className="bg-[#EFEFE9] border border-[#959D90]/40 rounded-2xl p-4 shadow-xs space-y-3">
+            <div className="flex items-center justify-between text-xs font-semibold text-[#523D35]">
+              <span>{glassesDrunk} {t('dashboard.glassesDrunk', 'Glasses Drunk')} ({waterLitersDrunk} L / {waterLitersTarget} L)</span>
               <button
                 type="button"
                 onClick={() => updateWaterIntake(Math.max(0, waterIntakeMl - 250))}
-                className="py-2.5 px-3 rounded-xl bg-[#E8D9CD] hover:bg-[#BBA58F]/40 text-[#223030] font-bold text-xs flex items-center justify-center gap-1 transition border border-[#959D90]/40 cursor-pointer"
+                className="py-1 px-2.5 rounded-lg bg-[#E8D9CD] hover:bg-[#BBA58F]/40 text-[#223030] font-bold text-xs flex items-center gap-1 transition border border-[#959D90]/40 cursor-pointer"
               >
-                <Minus className="w-3.5 h-3.5" />
+                <Minus className="w-3 h-3" />
                 <span>- 250 ml</span>
               </button>
             </div>
-          </div>
 
-          {/* Compact Reminder Settings */}
-          <div className="pt-3 border-t border-[#959D90]/30 flex items-center justify-between text-xs gap-2 flex-wrap">
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => updateWaterReminder({ enabled: !waterReminderSettings.enabled })}
-                className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                  waterReminderSettings.enabled ? 'bg-emerald-800 text-white' : 'bg-[#959D90] text-[#223030]'
-                }`}
-              >
-                {waterReminderSettings.enabled ? (
-                  <>
-                    <Bell className="w-3 h-3" />
-                    <span>{t('reminder.on', 'Reminder ON')}</span>
-                  </>
-                ) : (
-                  <span>{t('reminder.off', 'Reminder OFF')}</span>
-                )}
-              </button>
+            {/* Compact Reminder Settings */}
+            <div className="pt-2 border-t border-[#959D90]/30 flex items-center justify-between text-xs gap-2 flex-wrap">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => updateWaterReminder({ enabled: !waterReminderSettings.enabled })}
+                  className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
+                    waterReminderSettings.enabled ? 'bg-emerald-800 text-white' : 'bg-[#959D90] text-[#223030]'
+                  }`}
+                >
+                  {waterReminderSettings.enabled ? (
+                    <>
+                      <Bell className="w-3 h-3" />
+                      <span>{t('reminder.on', 'Reminder ON')}</span>
+                    </>
+                  ) : (
+                    <span>{t('reminder.off', 'Reminder OFF')}</span>
+                  )}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => updateWaterReminder({ soundEnabled: !waterReminderSettings.soundEnabled })}
-                className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-[#959D90]/40 text-[#223030] hover:bg-[#E8D9CD] transition cursor-pointer flex items-center gap-1"
-              >
-                {waterReminderSettings.soundEnabled ? (
-                  <>
-                    <Volume2 className="w-3 h-3 text-emerald-700" />
-                    <span>{t('reminder.soundOn', 'Sound ON')}</span>
-                  </>
-                ) : (
-                  <>
-                    <VolumeX className="w-3 h-3 text-[#959D90]" />
-                    <span>{t('reminder.soundOff', 'Sound OFF')}</span>
-                  </>
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => updateWaterReminder({ soundEnabled: !waterReminderSettings.soundEnabled })}
+                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-[#959D90]/40 text-[#223030] hover:bg-[#E8D9CD] transition cursor-pointer flex items-center gap-1"
+                >
+                  {waterReminderSettings.soundEnabled ? (
+                    <>
+                      <Volume2 className="w-3 h-3 text-emerald-700" />
+                      <span>{t('reminder.soundOn', 'Sound ON')}</span>
+                    </>
+                  ) : (
+                    <>
+                      <VolumeX className="w-3 h-3 text-[#959D90]" />
+                      <span>{t('reminder.soundOff', 'Sound OFF')}</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await triggerTestWaterReminder();
+                  }}
+                  className="text-[11px] font-bold text-[#523D35] hover:text-[#223030] hover:underline cursor-pointer"
+                >
+                  {t('reminder.testAlert', 'Test Alert')}
+                </button>
+                <span className="text-[10px] text-[#523D35] font-medium">
+                  {t('dashboard.amnioticFluid', 'Amniotic fluid & maternal hydration')}
+                </span>
+              </div>
             </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                await triggerTestWaterReminder();
-              }}
-              className="text-[11px] font-bold text-[#523D35] hover:text-[#223030] hover:underline cursor-pointer"
-            >
-              {t('reminder.testAlert', 'Test Alert')}
-            </button>
           </div>
         </div>
 
@@ -631,7 +544,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
               className="px-3 py-1.5 rounded-lg bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold flex items-center gap-1 transition cursor-pointer shadow-xs"
             >
               <Edit3 className="w-3 h-3 text-[#BBA58F]" />
-              <span>{activeDoctorVisit.date ? t('action.update', 'Update') : `+ ${t('action.add', 'Add')}`}</span>
+              <span>{activeDoctorVisit.date ? t('action.update', 'Update') : t('action.add', 'Add')}</span>
             </button>
           </div>
 
@@ -742,7 +655,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                       <button
                         type="button"
                         onClick={() => toggleMealCompleted(m.id)}
-                        className="flex items-center gap-2 text-left flex-1 min-w-0 cursor-pointer"
+                        className="flex items-center gap-2.5 text-left flex-1 min-w-0 cursor-pointer"
                       >
                         <div
                           className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition ${
@@ -750,6 +663,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                           }`}
                         >
                           {m.isCompleted && <Check className="w-3 h-3" />}
+                        </div>
+                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#FAF7F2] p-1 shrink-0 border border-[#959D90]/30 flex items-center justify-center shadow-2xs">
+                          <MaternalFood3DVisual foodId={m.foodId} dishName={m.name} category="Breakfast" />
                         </div>
                         <div className="min-w-0">
                           <DualFoodName
@@ -801,7 +717,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                       <button
                         type="button"
                         onClick={() => toggleMealCompleted(m.id)}
-                        className="flex items-center gap-2 text-left flex-1 min-w-0 cursor-pointer"
+                        className="flex items-center gap-2.5 text-left flex-1 min-w-0 cursor-pointer"
                       >
                         <div
                           className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition ${
@@ -809,6 +725,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                           }`}
                         >
                           {m.isCompleted && <Check className="w-3 h-3" />}
+                        </div>
+                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#FAF7F2] p-1 shrink-0 border border-[#959D90]/30 flex items-center justify-center shadow-2xs">
+                          <MaternalFood3DVisual foodId={m.foodId} dishName={m.name} category="Lunch" />
                         </div>
                         <div className="min-w-0">
                           <DualFoodName
@@ -860,7 +779,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                       <button
                         type="button"
                         onClick={() => toggleMealCompleted(m.id)}
-                        className="flex items-center gap-2 text-left flex-1 min-w-0 cursor-pointer"
+                        className="flex items-center gap-2.5 text-left flex-1 min-w-0 cursor-pointer"
                       >
                         <div
                           className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition ${
@@ -868,6 +787,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                           }`}
                         >
                           {m.isCompleted && <Check className="w-3 h-3" />}
+                        </div>
+                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#FAF7F2] p-1 shrink-0 border border-[#959D90]/30 flex items-center justify-center shadow-2xs">
+                          <MaternalFood3DVisual foodId={m.foodId} dishName={m.name} category="Dinner" />
                         </div>
                         <div className="min-w-0">
                           <DualFoodName
@@ -919,7 +841,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                       <button
                         type="button"
                         onClick={() => toggleMealCompleted(m.id)}
-                        className="flex items-center gap-2 text-left flex-1 min-w-0 cursor-pointer"
+                        className="flex items-center gap-2.5 text-left flex-1 min-w-0 cursor-pointer"
                       >
                         <div
                           className={`w-4 h-4 rounded flex items-center justify-center shrink-0 transition ${
@@ -927,6 +849,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                           }`}
                         >
                           {m.isCompleted && <Check className="w-3 h-3" />}
+                        </div>
+                        <div className="w-9 h-9 rounded-xl overflow-hidden bg-[#FAF7F2] p-1 shrink-0 border border-[#959D90]/30 flex items-center justify-center shadow-2xs">
+                          <MaternalFood3DVisual foodId={m.foodId} dishName={m.name} category="Evening Snack" />
                         </div>
                         <div className="min-w-0">
                           <DualFoodName
@@ -1042,7 +967,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
                   className="w-full py-1.5 px-3 rounded-xl bg-[#E8D9CD] hover:bg-[#523D35] hover:text-white text-[#223030] text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer mt-2"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  <span>+ {t('recipe.addToMealPlan', 'Add to Meal Plan')}</span>
+                  <span>{t('recipe.addToMealPlan', 'Add to Meal Plan')}</span>
                 </button>
               </div>
             </div>

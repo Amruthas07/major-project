@@ -3,6 +3,7 @@ import { UserProfile, GlobalLocationState, AuthUser } from '../types';
 import { Sparkles, Globe, User, LogOut, ChevronDown, Heart, ShieldCheck, MapPin, Search, Check, LogIn, Bell, X, Phone } from 'lucide-react';
 import { useLanguage, ALL_INDIAN_LANGUAGES, DualText } from '../services/language_service';
 import { useAppContext } from '../context/AppContext';
+import { firestoreService, hasRealFirebase, serverTimestamp } from '../firebase';
 
 interface HeaderProps {
   profile: UserProfile;
@@ -77,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="bg-[#223030] text-[#EFEFE9] border-b border-[#523D35]/60 sticky top-0 z-40 shadow-md">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between min-h-20 py-2.5 flex-wrap gap-y-2">
           {/* Left Side: Brand Logo & Title */}
           <div className="flex items-center space-x-3.5">
             <div className="w-11 h-11 rounded-2xl bg-[#523D35] border border-[#BBA58F]/40 flex items-center justify-center shadow-md text-[#EFEFE9] font-extrabold text-2xl tracking-tighter shrink-0">
@@ -93,8 +94,8 @@ export const Header: React.FC<HeaderProps> = ({
                   PREVIEW
                 </span>
               </div>
-              <div className="text-xs text-[#E8D9CD] tracking-normal font-medium hidden sm:block">
-                <DualText textKey="app.tagline" fallback="Clinical Maternal Nutrition & Smart Logs Companion" />
+              <div className="text-[11px] sm:text-xs text-amber-100 tracking-normal font-semibold mt-0.5 leading-tight block">
+                <DualText textKey="app.tagline" fallback="Clinical Maternal Nutrition & Smart Logs Companion" className="text-[11px] sm:text-xs text-amber-100 font-semibold" />
               </div>
             </div>
           </div>
@@ -153,7 +154,7 @@ export const Header: React.FC<HeaderProps> = ({
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-bold text-[#EFEFE9] flex items-center gap-1.5">
                         <Globe className="w-3.5 h-3.5 text-[#BBA58F]" />
-                        <span><DualText textKey="header.selectLanguage" fallback="Select Language" /></span>
+                        <span><DualText textKey="header.selectLanguage" fallback="Select Language" className="text-[#EFEFE9] font-bold" /></span>
                       </span>
                       <span className="text-[10px] text-[#223030] font-bold bg-[#BBA58F] px-2 py-0.5 rounded-full">
                         {ALL_INDIAN_LANGUAGES.length} Languages
@@ -193,6 +194,13 @@ export const Header: React.FC<HeaderProps> = ({
                           onClick={() => {
                             setLanguage(lang.code);
                             setShowLangMenu(false);
+                            if (currentUser?.id && hasRealFirebase) {
+                              firestoreService.updateDoc('users', currentUser.id, {
+                                preferredLanguage: lang.code,
+                                language: lang.code,
+                                updatedAt: serverTimestamp()
+                              }).catch((e: any) => console.warn('Language preference Firestore sync notice', e));
+                            }
                           }}
                           className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition cursor-pointer ${
                             isSelected
@@ -206,7 +214,7 @@ export const Header: React.FC<HeaderProps> = ({
                                 {lang.name} — {lang.native}
                               </span>
                               {lang.region && (
-                                <span className="text-[10px] text-[#959D90] truncate">
+                                <span className="text-[10px] text-[#BBA58F] truncate">
                                   {lang.region} • {lang.script}
                                 </span>
                               )}
@@ -221,7 +229,7 @@ export const Header: React.FC<HeaderProps> = ({
                       );
                     })}
                     {filteredLanguages.length === 0 && (
-                      <div className="text-center py-6 text-xs text-[#959D90]">
+                      <div className="text-center py-6 text-xs text-[#E8D9CD]">
                         No matching language found
                       </div>
                     )}
@@ -239,10 +247,10 @@ export const Header: React.FC<HeaderProps> = ({
               <Heart className="w-3.5 h-3.5 text-[#BBA58F] fill-[#BBA58F]/20" />
               <div className="flex flex-col">
                 <span className="text-[#EFEFE9] font-semibold text-xs leading-tight flex items-center gap-1">
-                  <DualText textKey="common.week" fallback="Week" /> {profile.weeksPregnant}
+                  <DualText textKey="common.week" fallback="Week" className="text-[#EFEFE9] font-semibold" /> {profile.weeksPregnant}
                 </span>
                 <span className="text-[#E8D9CD] text-[10px] leading-none flex items-center gap-1">
-                  <DualText textKey="common.trimester" fallback="Trimester" /> {trimesterNumber}
+                  <DualText textKey="common.trimester" fallback="Trimester" className="text-[#E8D9CD]" /> {trimesterNumber}
                 </span>
               </div>
             </div>

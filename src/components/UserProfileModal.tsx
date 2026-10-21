@@ -427,7 +427,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({
               >
                 {showManualLocation
                   ? t('profile.hideManualLocation', 'Hide detailed manual location inputs')
-                  : t('profile.showManualLocation', '+ Enter or adjust location details manually')}
+                  : t('profile.showManualLocation', 'Enter or adjust location details manually')}
               </button>
 
               {showManualLocation && (

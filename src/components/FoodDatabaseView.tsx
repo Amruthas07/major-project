@@ -1228,7 +1228,7 @@ export const FoodDatabaseView: React.FC = () => {
                       className="px-5 py-2.5 rounded-xl text-xs font-black shadow-md flex items-center gap-1.5 transition bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] cursor-pointer"
                     >
                       <Plus className="w-4 h-4 text-[#BBA58F]" />
-                      <span>{t('recipe.addToMealPlan', '+ Add to Maternal Meal Plan')}</span>
+                      <span>{t('recipe.addToMealPlan', 'Add to Maternal Meal Plan')}</span>
                     </button>
                   )}
                 </div>

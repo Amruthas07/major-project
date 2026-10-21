@@ -21,6 +21,7 @@ import { GlobalLocationService } from '../services/global_location_service';
 import { StateData } from '../data/india_geographic_hierarchy';
 import { useLanguage } from '../services/language_service';
 import { getFirebaseErrorMessage } from '../firebase';
+import { Maternal3DArt } from './Maternal3DArt';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -347,11 +348,12 @@ export const AuthModal: React.FC<AuthModalProps> = ({
 
   return (
     <div className="fixed inset-0 z-50 bg-[#223030]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-[#EFEFE9] rounded-3xl max-w-lg w-full shadow-2xl border border-[#523D35]/30 overflow-hidden text-[#223030] my-6 animate-in fade-in zoom-in-95">
-        {/* Top Header Banner */}
-        <div className="bg-[#223030] text-[#EFEFE9] p-5 sm:p-6 relative overflow-hidden border-b border-[#523D35]">
-          <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center space-x-3">
+      <div className="bg-[#EFEFE9] rounded-3xl max-w-lg md:max-w-4xl lg:max-w-5xl w-full shadow-2xl border border-[#523D35]/30 overflow-hidden text-[#223030] my-6 animate-in fade-in zoom-in-95 grid grid-cols-1 md:grid-cols-12">
+        {/* Left Side: 3D Maternal Health Hero Panel (Desktop & Tablet) */}
+        <div className="md:col-span-5 bg-gradient-to-b from-[#223030] via-[#2A3E3B] to-[#1E2E2C] text-[#EFEFE9] p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-[#523D35]">
+          {/* Brand Header */}
+          <div className="relative z-10">
+            <div className="flex items-center space-x-3 mb-2">
               <div className="w-10 h-10 rounded-2xl bg-[#523D35] border border-[#BBA58F]/40 flex items-center justify-center font-black text-xl text-[#EFEFE9] shadow-inner">
                 P
               </div>
@@ -361,66 +363,104 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                     PregNutri <span className="text-[#BBA58F]">AI</span>
                   </span>
                   <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#523D35] text-[#E8D9CD] border border-[#BBA58F]/30 uppercase tracking-wider">
-                    Care Portal
+                    Maternal Care
                   </span>
                 </div>
                 <p className="text-[11px] text-[#E8D9CD]">{t('auth.loginSubtitle', 'AI-Powered Maternal Healthcare & Nutrition Support')}</p>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl bg-[#523D35]/60 flex items-center justify-center text-[#BBA58F]">
-                <Baby className="w-5 h-5" />
-              </div>
-              {canDismiss && onClose && (
-                <button
-                  type="button"
-                  onClick={onClose}
-                  className="p-1.5 rounded-xl bg-[#523D35]/60 hover:bg-[#523D35] text-[#E8D9CD] transition cursor-pointer"
-                  title="Close Dialog"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              )}
+          {/* Center 3D Pregnant Mother Illustration */}
+          <div className="my-4 sm:my-6 flex flex-col items-center justify-center relative z-10">
+            <div className="relative w-44 sm:w-56 aspect-square flex items-center justify-center">
+              <div className="absolute inset-0 bg-[#4A7C75]/20 rounded-full blur-2xl transform scale-110" />
+              <Maternal3DArt
+                type="pregnant-mother"
+                className="w-full h-full relative z-10 filter drop-shadow-2xl"
+                alt="3D Pregnant Mother Cradling Belly"
+              />
+            </div>
+
+            <div className="mt-3 text-center">
+              <h2 className="text-sm sm:text-base font-extrabold text-[#EFEFE9] tracking-tight">
+                Nurturing Mother & Baby
+              </h2>
+              <p className="text-xs text-[#E8D9CD]/90 mt-1 max-w-xs leading-relaxed">
+                Personalized Indian regional nutrition, meal timing, and trimester wellness guided by ICMR-NIN standards.
+              </p>
             </div>
           </div>
 
-          <div className="mt-3.5 pt-2.5 border-t border-[#523D35]/80 flex items-center justify-between text-xs text-[#E8D9CD]">
-            <span className="flex items-center gap-1">
-              <ShieldCheck className="w-3.5 h-3.5 text-[#BBA58F]" />
-              <span>ICMR-NIN 2020 Maternal Standard</span>
-            </span>
-            <span className="text-[11px] text-[#BBA58F] font-medium">State-Specific Food Integration</span>
+          {/* Maternal Healthcare Trust Badges */}
+          <div className="pt-3 border-t border-[#523D35]/80 space-y-2 text-xs text-[#E8D9CD] relative z-10">
+            <div className="flex items-center gap-2">
+              <ShieldCheck className="w-4 h-4 text-[#BBA58F] shrink-0" />
+              <span className="font-medium">ICMR-NIN 2020 Maternal Standard</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#BBA58F] shrink-0" />
+              <span className="font-medium">Karnataka, TN, Kerala, AP & Telangana Meals</span>
+            </div>
           </div>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="grid grid-cols-2 p-1.5 bg-[#E8D9CD] border-b border-[#959D90]/40">
-          <button
-            type="button"
-            onClick={() => handleSwitchTab('login')}
-            className={`py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
-              activeTab === 'login' || activeTab === 'forgot'
-                ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
-                : 'text-[#523D35] hover:text-[#223030]'
-            }`}
-          >
-            <span>{t('auth.signIn', 'Sign In')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSwitchTab('signup')}
-            className={`py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
-              activeTab === 'signup'
-                ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
-                : 'text-[#523D35] hover:text-[#223030]'
-            }`}
-          >
-            <span>{t('auth.signUp', 'Create Account')}</span>
-          </button>
-        </div>
+        {/* Right Side: Authentication Forms */}
+        <div className="md:col-span-7 flex flex-col bg-[#EFEFE9]">
+          {/* Top Header Banner for Mobile & Close Button */}
+          <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[#959D90]/30 bg-[#E8D9CD]/40">
+            <div className="md:hidden flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl bg-[#223030] text-[#EFEFE9] flex items-center justify-center font-bold text-sm">
+                P
+              </div>
+              <span className="font-extrabold text-sm text-[#223030]">PregNutri AI</span>
+            </div>
 
-        <div className="p-5 sm:p-6 max-h-[75vh] overflow-y-auto">
+            <div className="hidden md:block">
+              <span className="text-xs font-bold text-[#523D35] uppercase tracking-wider">
+                {activeTab === 'signup' ? t('auth.signUp', 'Create Account') : t('auth.signIn', 'Sign In')}
+              </span>
+            </div>
+
+            {canDismiss && onClose && (
+              <button
+                type="button"
+                onClick={onClose}
+                className="p-1.5 rounded-xl bg-[#E8D9CD] hover:bg-[#BBA58F]/40 text-[#223030] transition cursor-pointer border border-[#959D90]/40 ml-auto"
+                title="Close Dialog"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
+
+          {/* Tab Switcher */}
+          <div className="grid grid-cols-2 p-1.5 bg-[#E8D9CD] border-b border-[#959D90]/40">
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('login')}
+              className={`py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'login' || activeTab === 'forgot'
+                  ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
+                  : 'text-[#523D35] hover:text-[#223030]'
+              }`}
+            >
+              <span>{t('auth.signIn', 'Sign In')}</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchTab('signup')}
+              className={`py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                activeTab === 'signup'
+                  ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
+                  : 'text-[#523D35] hover:text-[#223030]'
+              }`}
+            >
+              <span>{t('auth.signUp', 'Create Account')}</span>
+            </button>
+          </div>
+
+          <div className="p-5 sm:p-6 max-h-[75vh] overflow-y-auto">
           {/* Error Message Banner */}
           {errorMsg && (
             <div className="mb-4 p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-900 text-xs space-y-1.5 animate-in fade-in">
@@ -969,5 +1009,6 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };

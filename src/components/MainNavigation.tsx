@@ -49,7 +49,7 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({ activeTab, onSel
   return (
     <nav className="bg-[#EFEFE9] border-b border-[#959D90]/40 sticky top-20 z-30 shadow-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center space-x-1 sm:space-x-2 overflow-x-auto no-scrollbar py-2.5">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto no-scrollbar py-2.5 touch-pan-x scroll-smooth">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -57,22 +57,22 @@ export const MainNavigation: React.FC<MainNavigationProps> = ({ activeTab, onSel
                 key={tab.id}
                 type="button"
                 onClick={() => onSelectTab(tab.id)}
-                className={`relative flex items-center space-x-2 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`relative flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all duration-200 cursor-pointer shrink-0 ${
                   isActive
-                    ? 'text-[#223030] bg-[#E8D9CD] font-bold shadow-xs border border-[#BBA58F]/50'
-                    : 'text-[#523D35] hover:text-[#223030] hover:bg-[#E8D9CD]/50'
+                    ? 'text-[#EFEFE9] bg-[#223030] shadow-md border border-[#523D35]'
+                    : 'text-[#223030] bg-white/70 hover:bg-[#E8D9CD] hover:text-[#223030] border border-[#959D90]/30'
                 }`}
               >
                 <span className="text-base shrink-0">{tab.icon}</span>
                 <DualText
                   textKey={tab.textKey}
                   fallback={tab.label}
-                  className={`text-xs sm:text-sm leading-tight ${isActive ? 'text-[#223030] font-bold' : 'text-[#523D35] font-medium'}`}
-                  miniClassName="text-[10px] text-[#959D90] font-normal leading-none"
+                  className={`text-xs sm:text-sm leading-normal ${isActive ? 'text-[#EFEFE9] font-black' : 'text-[#223030] font-bold'}`}
+                  miniClassName="text-[10px] text-[#BBA58F] font-normal leading-none"
                 />
 
                 {isActive && (
-                  <span className="absolute bottom-0 left-3 right-3 h-0.5 bg-[#BBA58F] rounded-full animate-in fade-in" />
+                  <span className="absolute bottom-0.5 left-3 right-3 h-0.5 bg-[#BBA58F] rounded-full animate-in fade-in" />
                 )}
               </button>
             );

@@ -28,6 +28,7 @@ import { REGIONAL_RECIPES_DATABASE, RegionalRecipe } from '../data/regional_reci
 import { LoggedMealRecord } from '../nutrition_engine';
 import { FOOD_DATABASE_ITEMS } from '../foods_db';
 import { FoodItem } from '../data';
+import { useLanguage } from '../services/language_service';
 
 interface HomeDashboardProps {
   userName: string;
@@ -66,6 +67,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
   onSelectFood,
   onLogMealDirect
 }) => {
+  const { t } = useLanguage();
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
 
@@ -173,18 +175,18 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
           <div className="flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <h2 className="text-lg sm:text-xl font-bold text-slate-900">Today's Nutrition</h2>
+                <h2 className="text-lg sm:text-xl font-bold text-slate-900">{t('todaysNutrition', "Today's Nutrition")}</h2>
                 <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 text-[10px] font-bold">
-                  ICMR RDA Target
+                  {t('targetIcmrGuidelines', 'ICMR RDA Target')}
                 </span>
               </div>
-              <p className="text-xs text-slate-500 mt-0.5">Calculated from your logged maternal meals</p>
+              <p className="text-xs text-slate-500 mt-0.5">{t('calculatedFromMeals', 'Calculated from your logged maternal meals')}</p>
             </div>
             <button
               onClick={() => onNavigate('tracker')}
               className="inline-flex items-center gap-1.5 text-xs font-bold text-pink-600 hover:text-pink-700 hover:underline cursor-pointer"
             >
-              <span>Go to Meal Tracker</span>
+              <span>{t('openPlanner', 'Go to Meal Tracker')}</span>
               <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -194,7 +196,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             {/* Calories */}
             <div className="bg-slate-50 border border-slate-200/70 rounded-2xl p-4 space-y-2">
               <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-bold">Energy</span>
+                <span className="text-xs font-bold">{t('energy', 'Energy')}</span>
                 <Flame className="w-4 h-4 text-pink-600" />
               </div>
               <div className="text-xl font-black text-slate-900">
@@ -212,7 +214,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             {/* Protein */}
             <div className="bg-slate-50 border border-slate-200/70 rounded-2xl p-4 space-y-2">
               <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-bold">Protein</span>
+                <span className="text-xs font-bold">{t('protein', 'Protein')}</span>
                 <Dumbbell className="w-4 h-4 text-pink-600" />
               </div>
               <div className="text-xl font-black text-slate-900">
@@ -230,7 +232,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             {/* Iron */}
             <div className="bg-slate-50 border border-slate-200/70 rounded-2xl p-4 space-y-2">
               <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-bold">Iron</span>
+                <span className="text-xs font-bold">{t('iron', 'Iron')}</span>
                 <Sparkles className="w-4 h-4 text-pink-600" />
               </div>
               <div className="text-xl font-black text-slate-900">
@@ -248,7 +250,7 @@ export const HomeDashboard: React.FC<HomeDashboardProps> = ({
             {/* Dietary Fibre */}
             <div className="bg-slate-50 border border-slate-200/70 rounded-2xl p-4 space-y-2">
               <div className="flex items-center justify-between text-slate-500">
-                <span className="text-xs font-bold">Fibre</span>
+                <span className="text-xs font-bold">{t('dietaryFibre', 'Fibre')}</span>
                 <Apple className="w-4 h-4 text-pink-600" />
               </div>
               <div className="text-xl font-black text-slate-900">

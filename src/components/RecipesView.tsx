@@ -614,7 +614,7 @@ export const RecipesView: React.FC = () => {
                     ) : (
                       <>
                         <Plus className="w-3.5 h-3.5 text-[#BBA58F]" />
-                        <span>+ Add to Plan</span>
+                        <span>Add to Plan</span>
                       </>
                     )}
                   </button>

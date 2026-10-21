@@ -163,7 +163,7 @@ export const FoodAlternativeModal: React.FC<FoodAlternativeModalProps> = ({
                           className="px-3.5 py-2 bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5 transition cursor-pointer"
                         >
                           <Plus className="w-3.5 h-3.5 text-[#BBA58F]" />
-                          <span>+ Add to Plan</span>
+                          <span>Add to Plan</span>
                         </button>
                       </div>
                     </div>

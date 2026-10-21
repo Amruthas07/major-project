@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { getFoodLocalizedSubtitle, COMPREHENSIVE_FOOD_TRANSLATIONS } from './food_translations';
+import { translations as centralTranslations } from '../i18n/translations';
 
 export interface LanguageOption {
   code: string;
@@ -294,19 +295,19 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     as: 'পৰিবেশনৰ পৰিমাণ'
   },
   'recipe.addToMealPlan': {
-    en: '+ Add to Meal Planner',
-    hi: '+ भोजन योजना में जोड़ें',
-    kn: '+ ಊಟದ ಯೋಜನೆಗೆ ಸೇರಿಸಿ',
-    ta: '+ உணவுத் திட்டத்தில் சேர்க்கவும்',
-    te: '+ భోజన ప్రణాళికలో చేర్చండి',
-    ml: '+ ഭക്ഷണ പദ്ധതിയിലേക്ക് ചേർക്കുക',
-    mr: '+ जेवण नियोजनात जोडा',
-    bn: '+ খাবার পরিকল্পনায় যোগ করুন',
-    gu: '+ ભોજન યોજનામાં ઉમેરો',
-    pa: '+ ਖਾਣਾ ਯੋਜਨਾ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ',
-    or: '+ ଖାଦ୍ୟ ଯୋଜନାରେ ଯୋଡନ୍ତୁ',
-    ur: '+ کھانے کے منصوبے میں شامل کریں',
-    as: '+ আহাৰ পৰিকল্পনাত যোগ কৰক'
+    en: 'Add to Meal Planner',
+    hi: 'भोजन योजना में जोड़ें',
+    kn: 'ಊಟದ ಯೋಜನೆಗೆ ಸೇರಿಸಿ',
+    ta: 'உணவுத் திட்டத்தில் சேர்க்கவும்',
+    te: 'భోజన ప్రణాళికలో చేర్చండి',
+    ml: 'ഭക്ഷണ പദ്ധതിയിലേക്ക് ചേർക്കുക',
+    mr: 'जेवण नियोजनात जोडा',
+    bn: 'খাবার পরিকল্পনায় যোগ করুন',
+    gu: 'ભોજન યોજનામાં ઉમેરો',
+    pa: 'ਖਾਣਾ ਯੋਜਨਾ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ',
+    or: 'ଖାଦ୍ୟ ଯୋଜନାରେ ଯୋଡନ୍ତୁ',
+    ur: 'کھانے کے منصوبے میں شامل کریں',
+    as: 'আহাৰ পৰিকল্পনাত যোগ কৰক'
   },
   'recipe.viewFullRecipe': {
     en: 'Open Full Recipe Card',
@@ -703,19 +704,19 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     as: 'বিৱৰণ আৰু পুষ্টি উপাদান চাওক'
   },
   'btn.addToMeal': {
-    en: '+ Add to Meal',
-    hi: '+ भोजन में जोड़ें',
-    kn: '+ ಊಟಕ್ಕೆ ಸೇರಿಸಿ',
-    ta: '+ உணவில் சேர்க்கவும்',
-    te: '+ భోజనంలో చేర్చండి',
-    ml: '+ ഭക്ഷണത്തിൽ ചേർക്കുക',
-    mr: '+ आहारात जोडा',
-    bn: '+ খাবারে যোগ করুন',
-    gu: '+ ભોજનમાં ઉમેરો',
-    pa: '+ ਭੋਜਨ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ',
-    or: '+ ଖାଦ୍ୟରେ ଯୋଡନ୍ତୁ',
-    ur: '+ کھانے میں شامل کریں',
-    as: '+ আহাৰত যোগ কৰক'
+    en: 'Add to Meal',
+    hi: 'भोजन में जोड़ें',
+    kn: 'ಊಟಕ್ಕೆ ಸೇರಿಸಿ',
+    ta: 'உணவில் சேர்க்கவும்',
+    te: 'భోజనంలో చేర్చండి',
+    ml: 'ഭക്ഷണത്തിൽ ചേർക്കുക',
+    mr: 'आहारात जोडा',
+    bn: 'খাবারে যোগ করুন',
+    gu: 'ભોજનમાં ઉમેરો',
+    pa: 'ਭੋਜਨ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ',
+    or: 'ଖାଦ୍ୟରେ ଯୋଡନ୍ତୁ',
+    ur: 'کھانے میں شامل کریں',
+    as: 'আহাৰত যোগ কৰক'
   },
   'btn.addedToMeal': {
     en: '✓ Added to Today\'s Meal',
@@ -1435,19 +1436,19 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string>> = {
     as: 'পুষ্টি পৰিকল্পনা'
   },
   'planner.addDish': {
-    en: '+ Add Dish',
-    hi: '+ व्यंजन जोड़ें',
-    kn: '+ ಆಹಾರ ಸೇರಿಸಿ',
-    ta: '+ உணவு சேர்க்கவும்',
-    te: '+ ఆహారం జోడించండి',
-    ml: '+ ഭക്ഷണം ചേർക്കുക',
-    mr: '+ पदार्थ जोडा',
-    bn: '+ খাবার যোগ করুন',
-    gu: '+ વાનગી ઉમેરો',
-    pa: '+ ਪਕਵਾਨ ਸ਼ਾਮਲ ਕਰੋ',
-    or: '+ ଖାଦ୍ୟ ଯୋଡନ୍ତୁ',
-    ur: '+ کھانا شامل کریں',
-    as: '+ খাদ্য যোগ কৰক'
+    en: 'Add Dish',
+    hi: 'व्यंजन जोड़ें',
+    kn: 'ಆಹಾರ ಸೇರಿಸಿ',
+    ta: 'உணவு சேர்க்கவும்',
+    te: 'ఆహారం జోడించండి',
+    ml: 'ഭക്ഷണം ചേർക്കുക',
+    mr: 'पदार्थ जोडा',
+    bn: 'খাবার যোগ করুন',
+    gu: 'વાનગી ઉમેરો',
+    pa: 'ਪਕਵਾਨ ਸ਼ਾਮਲ ਕਰੋ',
+    or: 'ଖାଦ୍ୟ ଯୋଡନ୍ତୁ',
+    ur: 'کھانا شامل کریں',
+    as: 'খাদ্য যোগ কৰক'
   },
   'planner.added': {
     en: '✓ Added',
@@ -4175,12 +4176,12 @@ export const INGREDIENT_TRANSLATIONS: Record<string, Record<string, string>> = {
     ml: 'ഓട്ടോ പ്ലാൻ:'
   },
   'planner.addFood': {
-    en: '+ Add Food Item',
-    kn: '+ ಆಹಾರ ಪದಾರ್ಥ ಸೇರಿಸಿ',
-    hi: '+ खाद्य सामग्री जोड़ें',
-    ta: '+ உணவுப் பொருளைச் சேர்க்கவும்',
-    te: '+ ఆహార పదార్థాన్ని జోడించండి',
-    ml: '+ ഭക്ഷണം ചേർക്കുക'
+    en: 'Add Food Item',
+    kn: 'ಆಹಾರ ಪದಾರ್ಥ ಸೇರಿಸಿ',
+    hi: 'खाद्य सामग्री जोड़ें',
+    ta: 'உணவுப் பொருளைச் சேர்க்கவும்',
+    te: 'ఆహార పదార్థాన్ని జోడించండి',
+    ml: 'ഭക്ഷണം ചേർക്കുക'
   },
   'planner.viewSummary': {
     en: '7-Day Nutrition Summary',
@@ -5967,9 +5968,11 @@ class LanguageServiceImpl {
 
   constructor() {
     try {
-      const saved = localStorage.getItem('pregnutri_language_code_v3') || localStorage.getItem('pregnutri_language_code');
-      if (saved && ALL_INDIAN_LANGUAGES.some((l) => l.code === saved)) {
-        this.currentLanguageCode = saved;
+      if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+        const saved = localStorage.getItem('pregnutri_language_code_v3') || localStorage.getItem('pregnutri_language_code');
+        if (saved && ALL_INDIAN_LANGUAGES.some((l) => l.code === saved)) {
+          this.currentLanguageCode = saved;
+        }
       }
     } catch (e) {
       console.warn('LanguageService init storage warning', e);
@@ -6035,10 +6038,14 @@ class LanguageServiceImpl {
 
   // Translation helper with strict fallback to English and regional script fallback
   public t(key: string, fallback: string = key): string {
+    const langCode = this.currentLanguageCode || 'en';
+    if (centralTranslations?.[langCode]?.[key]) {
+      return centralTranslations[langCode][key];
+    }
     const entry = UI_TRANSLATIONS[key];
-    if (!entry) return fallback;
-    const langCode = this.currentLanguageCode;
-    if (entry[langCode]) return entry[langCode];
+    if (entry && entry[langCode]) {
+      return entry[langCode];
+    }
 
     // Regional/Script fallback mappings for regional dialects
     const fallbackMap: Record<string, string> = {
@@ -6053,11 +6060,19 @@ class LanguageServiceImpl {
     };
 
     const fbLang = fallbackMap[langCode];
-    if (fbLang && entry[fbLang]) {
+    if (fbLang && entry && entry[fbLang]) {
       return entry[fbLang];
     }
 
-    return entry['en'] || fallback;
+    if (entry && entry['en']) {
+      return entry['en'];
+    }
+
+    if (centralTranslations?.['en']?.[key]) {
+      return centralTranslations['en'][key];
+    }
+
+    return fallback;
   }
 
   // Dual text representation (now returns primary only, single language UI)
@@ -6329,7 +6344,7 @@ export const DualText: React.FC<{
 }> = ({
   textKey,
   fallback,
-  className = 'font-bold text-slate-900',
+  className = '',
   miniClassName = '',
   inline = false
 }) => {
@@ -6364,7 +6379,7 @@ export const DualFoodName: React.FC<{
   name,
   fallbackName,
   regionalName,
-  className = 'font-bold text-[#223030]',
+  className = '',
   miniClassName = '',
   inline = false
 }) => {

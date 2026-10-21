@@ -254,7 +254,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         <div className="bg-[#223030] rounded-3xl p-6 text-[#EFEFE9] border border-[#959D90]/40 flex flex-col justify-between space-y-4">
           <div>
-            <span className="text-[11px] font-bold text-[#959D90] uppercase tracking-wider block">
+            <span className="text-[11px] font-bold text-amber-100 uppercase tracking-wider block">
               {t('consistency.score', 'Consistency Score')}
             </span>
             <div className="flex items-baseline gap-3 mt-2">
@@ -275,7 +275,7 @@ export const WeeklyNutritionSummaryView: React.FC<WeeklyNutritionSummaryViewProp
             </p>
           </div>
 
-          <div className="pt-2 border-t border-[#959D90]/30 flex items-center justify-between text-xs text-[#959D90]">
+          <div className="pt-2 border-t border-[#959D90]/30 flex items-center justify-between text-xs text-[#E8D9CD]">
             <span>{t('planner.mealsPlanned', 'Meals Consumed')}</span>
             <span className="font-extrabold text-[#EFEFE9]">
               {weeklyData.totalCompletedMeals} / {weeklyData.totalPlannedMeals}

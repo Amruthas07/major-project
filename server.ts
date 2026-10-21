@@ -3,12 +3,11 @@ import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
-import { createServer as createViteServer } from 'vite';
 
 dotenv.config();
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
 
 // Set up JSON body parser with a generous size limit for base64 images
 app.use(express.json({ limit: '10mb' }));
@@ -1331,8 +1330,11 @@ app.get('/api/food-image', async (req, res) => {
 // -------------------------------------------------------------
 
 async function setupServer() {
-  if (process.env.NODE_ENV !== "production") {
-    // Mount Vite dev server middleware
+  const isDev = process.env.NODE_ENV === 'development' || (!process.env.NODE_ENV && !fs.existsSync(path.join(process.cwd(), 'dist', 'index.html')));
+
+  if (isDev) {
+    // Mount Vite dev server middleware in development
+    const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -1348,7 +1350,7 @@ async function setupServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://0.0.0.0:${PORT} in ${process.env.NODE_ENV || 'development'} mode`);
+    console.log(`Server running at http://0.0.0.0:${PORT} in ${isDev ? 'development' : 'production'} mode`);
   });
 }
 

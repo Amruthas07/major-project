@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useLanguage } from '../services/language_service';
 import { voiceService } from '../services/voice_service';
+import { Maternal3DArt } from './Maternal3DArt';
 
 interface AskAiViewProps {
   profile: UserProfile;

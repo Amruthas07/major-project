@@ -8,6 +8,7 @@
 
 import { PROJECT_FOOD_DATASET, ProjectFoodDatasetItem } from './project_food_dataset';
 import { REGIONAL_DISHES_CATALOG } from './regional_dishes_catalog';
+import { regionalFoodDatabase } from './foodDatabase';
 
 export type FoodImageSourceType = 
   | 'project-dataset' 
@@ -540,6 +541,40 @@ export function getVerifiedDishPhoto(
         isVegetarian: p.isVegetarian,
         dishDescription: p.safetyExplanation,
         googleDriveFileId: p.googleDriveFileId
+      };
+    }
+  }
+
+  // 1.5. Match against regionalFoodDatabase items
+  for (const rFood of regionalFoodDatabase) {
+    const isVeg = rFood.diet === 'Vegetarian';
+    if (isVegetarian !== undefined && isVeg !== isVegetarian) continue;
+
+    const enName = rFood.name.en.toLowerCase();
+    const knName = rFood.name.kn.toLowerCase();
+    const hiName = rFood.name.hi.toLowerCase();
+    const rId = rFood.id.toLowerCase();
+
+    if (
+      raw === rId || clean === rId ||
+      raw === enName || clean === enName || withoutParens === enName ||
+      raw === knName || clean === knName ||
+      raw === hiName || clean === hiName ||
+      raw.includes(enName) || enName.includes(clean)
+    ) {
+      return {
+        dishId: rFood.id,
+        exactDishName: rFood.name.en,
+        regionalAliases: [rFood.name.en, rFood.name.kn, rFood.name.hi],
+        state: rFood.state,
+        region: 'South',
+        primaryUrl: rFood.imageUrl,
+        fallbacks: [rFood.imageUrl],
+        imageSource: 'Verified Regional Culinary Dataset',
+        imageLicense: 'Editorial Standard',
+        isVerified: true,
+        isVegetarian: isVeg,
+        dishDescription: rFood.recipe.en
       };
     }
   }
