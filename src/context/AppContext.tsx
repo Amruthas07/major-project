@@ -19,12 +19,19 @@ import { LocationNutritionEngine } from '../services/location_nutrition_engine';
 import { authService } from '../services/auth_service';
 import { firestoreService, auth, hasRealFirebase } from '../firebase';
 import { waterSoundService } from '../services/water_sound_service';
+import { notificationService } from '../services/notification_service';
 import {
   getLocalTodayDateString,
+  getLocalDateString,
   getLocalDayOfWeek,
   getLocalTimeString,
+  getUserTimeZone,
+  parseTimeInTimeZone,
+  calculateNextUpcomingReminder,
+  UpcomingReminderInfo,
   calculatePregnancyProgression
 } from '../utils/date_utils';
+import { MealReminderSettings } from '../types';
 import {
   INITIAL_USER_PROFILE,
   INITIAL_MEAL_PLAN,
@@ -33,6 +40,15 @@ import {
   INITIAL_MEDICATIONS
 } from '../data/mockData';
 import { NavTabId } from '../components/MainNavigation';
+
+export interface ActiveMaternalAlert {
+  type: 'water' | 'meal' | 'doctor';
+  title: string;
+  message: string;
+  subtext?: string;
+  mealKey?: string;
+  timestamp: number;
+}
 
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday' | 'Saturday' | 'Sunday';
 export type MealCategory = 'Breakfast' | 'Mid-Morning Snack' | 'Lunch' | 'Evening Snack' | 'Dinner';
@@ -194,6 +210,10 @@ interface AppContextType {
   activeWaterAlert: { visible: boolean; timestamp: number } | null;
   dismissWaterAlert: () => void;
   triggerTestWaterReminder: (overrideSound?: boolean) => Promise<boolean>;
+  activeReminderAlert: ActiveMaternalAlert | null;
+  dismissReminderAlert: () => void;
+  nextUpcomingReminder: UpcomingReminderInfo;
+  userTimeZone: string;
 
   // Scanned Food Logs
   loggedMeals: LoggedMealRecord[];
@@ -987,12 +1007,45 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return {};
   });
 
-  const todayDateStr = getLocalTodayDateString();
+  // Live Real-Time Clock & Timezone Tracking (Synchronized with device time & location)
+  const [currentLiveTimestamp, setCurrentLiveTimestamp] = useState<number>(Date.now());
+
+  const userTimeZone = useMemo(() => {
+    return getUserTimeZone(
+      userProfile.state || userProfile.city || globalLocation.state || globalLocation.country
+    );
+  }, [userProfile.state, userProfile.city, globalLocation.state, globalLocation.country]);
+
+  // Today's local date string - automatically advances at midnight without losing historical logs!
+  const todayDateStr = useMemo(() => {
+    return getLocalDateString(new Date(currentLiveTimestamp), userTimeZone);
+  }, [currentLiveTimestamp, userTimeZone]);
+
   const waterIntakeMl = dailyWaterLogs[todayDateStr] || 0;
+
+  // Heartbeat & Date Rollover Listener:
+  // Synchronizes real clock on interval, tab visibility change, focus, and cross-tab storage events.
+  useEffect(() => {
+    const onTick = () => {
+      setCurrentLiveTimestamp(Date.now());
+    };
+
+    document.addEventListener('visibilitychange', onTick);
+    window.addEventListener('focus', onTick);
+    window.addEventListener('storage', onTick);
+
+    const intervalId = setInterval(onTick, 10000);
+    return () => {
+      document.removeEventListener('visibilitychange', onTick);
+      window.removeEventListener('focus', onTick);
+      window.removeEventListener('storage', onTick);
+      clearInterval(intervalId);
+    };
+  }, []);
 
   const updateWaterIntake = (amountMl: number) => {
     const validAmount = Math.max(0, amountMl);
-    const today = getLocalTodayDateString();
+    const today = getLocalDateString(new Date(), userTimeZone);
     setDailyWaterLogs((prev) => {
       const updated = { ...prev, [today]: validAmount };
       try {
@@ -1049,7 +1102,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
               ? 'custom'
               : '1hour'),
           customMinutes: parsed.customMinutes ?? 45,
-          soundEnabled: parsed.soundEnabled ?? true // Default: Sound ON
+          soundEnabled: parsed.soundEnabled ?? true
         };
       }
     } catch (e) {}
@@ -1063,8 +1116,14 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   });
 
   const [activeWaterAlert, setActiveWaterAlert] = useState<{ visible: boolean; timestamp: number } | null>(null);
+  const [activeReminderAlert, setActiveReminderAlert] = useState<ActiveMaternalAlert | null>(null);
 
   const dismissWaterAlert = () => {
+    setActiveWaterAlert(null);
+  };
+
+  const dismissReminderAlert = () => {
+    setActiveReminderAlert(null);
     setActiveWaterAlert(null);
   };
 
@@ -1080,6 +1139,13 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       played = await waterSoundService.playWaterReminderSound();
     }
     setActiveWaterAlert({ visible: true, timestamp: Date.now() });
+    setActiveReminderAlert({
+      type: 'water',
+      title: 'Water Intake Reminder',
+      message: 'Time to drink a fresh glass of water. Maintain healthy amniotic fluid for baby and mother.',
+      subtext: 'Recommended: 250 ml (1 full glass)',
+      timestamp: Date.now()
+    });
     return played;
   };
 
@@ -1090,7 +1156,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     customMinutes?: number;
     soundEnabled?: boolean;
   }) => {
-    // Initialize or unlock Web Audio on direct user interaction
     waterSoundService.initOrUnlockAudio();
 
     setWaterReminderSettings((prev) => {
@@ -1101,7 +1166,6 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       };
       try {
         localStorage.setItem(STORAGE_KEY_WATER_SETTINGS, JSON.stringify(updated));
-        // Reset cadence so user doesn't get immediately alerted right after changing intervals
         localStorage.setItem(STORAGE_KEY_WATER_REMINDER_TIME, String(Date.now()));
       } catch (e) {}
       if (currentUser) {
@@ -1111,41 +1175,164 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     });
   };
 
-  // Automated background interval checker for scheduled water reminders
+  // Automated background interval checker for:
+  // 1. Water intake reminders
+  // 2. 5 maternal meal intervals (Breakfast, Mid-Morning Snack, Lunch, Evening Snack, Dinner)
+  // 3. Prenatal doctor visit appointments
   useEffect(() => {
-    if (!waterReminderSettings.enabled) return;
+    const now = currentLiveTimestamp;
+    const todayStr = getLocalDateString(new Date(now), userTimeZone);
 
-    // Seed initial timer timestamp if none exists
-    try {
-      if (!localStorage.getItem(STORAGE_KEY_WATER_REMINDER_TIME)) {
-        localStorage.setItem(STORAGE_KEY_WATER_REMINDER_TIME, String(Date.now()));
-      }
-    } catch (e) {}
-
-    const intervalMs = Math.max(15, waterReminderSettings.intervalMinutes || 60) * 60 * 1000;
-
-    const checkInterval = setInterval(() => {
+    // 1. Water Cadence Check
+    if (waterReminderSettings.enabled) {
       try {
         const lastTsStr = localStorage.getItem(STORAGE_KEY_WATER_REMINDER_TIME);
-        const lastTs = lastTsStr ? Number(lastTsStr) : 0;
-        const now = Date.now();
+        let lastTs = lastTsStr ? Number(lastTsStr) : 0;
+        const intervalMs = Math.max(15, waterReminderSettings.intervalMinutes || 60) * 60 * 1000;
 
-        if (lastTs && now - lastTs >= intervalMs) {
+        if (!lastTs) {
+          lastTs = now;
+          localStorage.setItem(STORAGE_KEY_WATER_REMINDER_TIME, String(now));
+        } else if (now - lastTs >= intervalMs) {
           localStorage.setItem(STORAGE_KEY_WATER_REMINDER_TIME, String(now));
 
-          // Play sound alert once if sound is enabled
+          const dedupeKey = `water_${todayStr}_${Math.floor(now / (15 * 60 * 1000))}`;
+          notificationService.sendNotification(
+            dedupeKey,
+            '💧 Maternal Hydration Reminder',
+            {
+              body: 'Time to drink a fresh glass of water. Maintain healthy amniotic fluid for baby and mother.',
+              cooldownSeconds: 120
+            }
+          );
+
           if (waterReminderSettings.soundEnabled) {
             waterSoundService.playWaterReminderSound().catch(() => {});
           }
 
-          // Show visual notification banner/alert
+          setActiveReminderAlert({
+            type: 'water',
+            title: 'Water Intake Reminder',
+            message: 'Time to drink a fresh glass of water. Maintain healthy amniotic fluid for baby and mother.',
+            subtext: 'Recommended: 250 ml (1 full glass)',
+            timestamp: now
+          });
           setActiveWaterAlert({ visible: true, timestamp: now });
         }
       } catch (e) {}
-    }, 10000); // Check cadence every 10s
+    }
 
-    return () => clearInterval(checkInterval);
-  }, [waterReminderSettings.enabled, waterReminderSettings.intervalMinutes, waterReminderSettings.soundEnabled]);
+    // 2. Five Maternal Meal Reminders Check
+    const mealSettings = userProfile.mealReminderSettings;
+    const mealsList: { key: keyof MealReminderSettings; label: string; defaultTime: string }[] = [
+      { key: 'breakfast', label: 'Breakfast', defaultTime: '08:00' },
+      { key: 'morningSnack', label: 'Mid-Morning Snack', defaultTime: '10:30' },
+      { key: 'lunch', label: 'Lunch', defaultTime: '13:00' },
+      { key: 'eveningSnack', label: 'Evening Snack', defaultTime: '17:00' },
+      { key: 'dinner', label: 'Dinner', defaultTime: '20:00' }
+    ];
+
+    for (const m of mealsList) {
+      const itemConfig = mealSettings?.[m.key];
+      const isEnabled = itemConfig ? (itemConfig as any).enabled !== false : true;
+      if (!isEnabled) continue;
+
+      const timeStr = (itemConfig as any)?.time || m.defaultTime;
+      const [h, min] = timeStr.split(':').map((v: string) => parseInt(v, 10) || 0);
+      const scheduledMs = parseTimeInTimeZone(todayStr, h, min, userTimeZone);
+
+      // Only trigger if scheduled time has arrived and is within 10 minutes (not long-passed!)
+      if (now >= scheduledMs && now - scheduledMs < 10 * 60 * 1000) {
+        const dedupeKey = `meal_${m.key}_${todayStr}`;
+        const storageKey = `pregnutri_alert_ts_${dedupeKey}`;
+        const alreadyFired = localStorage.getItem(storageKey);
+
+        if (!alreadyFired) {
+          notificationService.sendNotification(
+            dedupeKey,
+            `🍽️ Maternal ${m.label} Reminder`,
+            {
+              body: `It is time for your scheduled ${m.label.toLowerCase()}. Track your meal to ensure optimal pregnancy nutrition.`,
+              cooldownSeconds: 3600
+            }
+          );
+
+          if (waterReminderSettings.soundEnabled) {
+            waterSoundService.playWaterReminderSound().catch(() => {});
+          }
+
+          setActiveReminderAlert({
+            type: 'meal',
+            mealKey: m.key,
+            title: `Maternal ${m.label} Reminder`,
+            message: `Time for your scheduled ${m.label.toLowerCase()} to nourish your baby and maintain maternal vitality.`,
+            subtext: `Scheduled for ${timeStr} • ${m.label}`,
+            timestamp: now
+          });
+        }
+      }
+    }
+
+    // 3. Prenatal Doctor Visit Reminder Check
+    if (userProfile.nextDoctorVisit?.date && userProfile.nextDoctorVisit.reminderEnabled !== false) {
+      const visitDate = userProfile.nextDoctorVisit.date;
+      const visitTime = userProfile.nextDoctorVisit.time || '10:00';
+      const [dh, dmin] = visitTime.split(':').map((v: string) => parseInt(v, 10) || 0);
+      const apptMs = parseTimeInTimeZone(visitDate, dh, dmin, userTimeZone);
+
+      if (apptMs > now) {
+        const advance24h = apptMs - 24 * 60 * 60 * 1000;
+        if (now >= advance24h && now - advance24h < 2 * 60 * 60 * 1000) {
+          const dedupeKey = `doctor_24h_${visitDate}_${visitTime}`;
+          const storageKey = `pregnutri_alert_ts_${dedupeKey}`;
+          if (!localStorage.getItem(storageKey)) {
+            notificationService.sendNotification(
+              dedupeKey,
+              '📅 Prenatal Doctor Visit Tomorrow',
+              {
+                body: `Reminder: Prenatal checkup scheduled tomorrow at ${visitTime} with ${userProfile.nextDoctorVisit.doctorName || 'Doctor'}.`,
+                cooldownSeconds: 86400
+              }
+            );
+
+            setActiveReminderAlert({
+              type: 'doctor',
+              title: 'Doctor Visit Tomorrow',
+              message: `You have an upcoming prenatal checkup tomorrow at ${visitTime} with ${userProfile.nextDoctorVisit.doctorName || 'your doctor'}.`,
+              subtext: userProfile.nextDoctorVisit.hospitalName ? `Hospital: ${userProfile.nextDoctorVisit.hospitalName}` : undefined,
+              timestamp: now
+            });
+          }
+        }
+      }
+    }
+  }, [
+    currentLiveTimestamp,
+    userTimeZone,
+    waterReminderSettings.enabled,
+    waterReminderSettings.intervalMinutes,
+    waterReminderSettings.soundEnabled,
+    userProfile.mealReminderSettings,
+    userProfile.nextDoctorVisit
+  ]);
+
+  // Recalculate upcoming reminders dynamically from actual current time and saved schedules
+  const nextUpcomingReminder = useMemo<UpcomingReminderInfo>(() => {
+    const lastTs = Number(localStorage.getItem(STORAGE_KEY_WATER_REMINDER_TIME) || 0);
+    return calculateNextUpcomingReminder(
+      waterReminderSettings,
+      userProfile.mealReminderSettings,
+      userProfile.nextDoctorVisit,
+      lastTs,
+      userTimeZone
+    );
+  }, [
+    currentLiveTimestamp,
+    waterReminderSettings,
+    userProfile.mealReminderSettings,
+    userProfile.nextDoctorVisit,
+    userTimeZone
+  ]);
 
   // Auth Action Handlers
   const handleAuthSuccess = async (user: AuthUser, needsProfileSetup: boolean) => {
@@ -1806,6 +1993,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         activeWaterAlert,
         dismissWaterAlert,
         triggerTestWaterReminder,
+        activeReminderAlert,
+        dismissReminderAlert,
+        nextUpcomingReminder,
+        userTimeZone,
         loggedMeals,
         addLoggedMeal,
         deleteLoggedMeal,

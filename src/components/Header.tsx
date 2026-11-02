@@ -17,6 +17,33 @@ interface HeaderProps {
   onOpenSos?: () => void;
 }
 
+const HEADER_LOCATION_NAMES: Record<string, Record<string, string>> = {
+  'Hullahalli': { kn: 'ಹುಲ್ಲಹಳ್ಳಿ', hi: 'हुल्लाहल्ली', ta: 'ஹுல்லஹள்ளி', te: 'హుల్లహళ్ళి', ml: 'ഹുല്ലഹള്ളി' },
+  'Nanjangud': { kn: 'ನಂಜನಗೂಡು', hi: 'नंजनगुड़', ta: 'நஞ்சன்கூடு', te: 'నంజనగూడు', ml: 'നഞ്ചൻഗുഡ്' },
+  'Mysuru': { kn: 'ಮೈಸೂರು', hi: 'मैसूरु', ta: 'மைசூரு', te: 'మైసూరు', ml: 'മൈസൂരു' },
+  'Mysore': { kn: 'ಮೈಸೂರು', hi: 'मैसूर', ta: 'மைசூர்', te: 'మైసూర్', ml: 'മൈసూర్' },
+  'Karnataka': { kn: 'ಕರ್ನಾಟಕ', hi: 'कर्नाटक', ta: 'கர்நாடகா', te: 'కర్ణాటక', ml: 'കർണാടക' },
+  'Bengaluru': { kn: 'ಬೆಂಗಳೂರು', hi: 'बेंगलुरु', ta: 'பெங்களூரு', te: 'బెంగళూరు', ml: 'ബെംഗളൂരു' },
+  'Bangalore': { kn: 'ಬೆಂಗಳೂರು', hi: 'बेंगलुरु', ta: 'பெங்களூரு', te: 'బెంగళూరు', ml: 'ബെംഗളൂരു' },
+  'Mandya': { kn: 'ಮಂಡ್ಯ', hi: 'मंड्या', ta: 'மண்டியா', te: 'ಮಂಡ್ಯ', ml: 'മാണ്ഡ്യ' },
+  'Hassan': { kn: 'ಹಾಸನ', hi: 'हासन', ta: 'ஹாசன்', te: 'హాసన్', ml: 'ഹാಸನ್' },
+  'Hunsur': { kn: 'ಹುಣಸೂರು', hi: 'हुणसूर', ta: 'ஹுன்சூர்', te: 'హున్సూర్', ml: 'ഹുൻസൂർ' },
+  'Debur': { kn: 'ದೇಬೂರು', hi: 'देबूर', ta: 'தேபூர்', te: 'దేబూరు', ml: 'ദേബൂർ' },
+  'Hadinaru': { kn: 'ಹದಿನಾರು', hi: 'हदीनारू', ta: 'ஹதினாரு', te: 'హదినారు', ml: 'ഹദിനാറു' },
+  'Kadakola': { kn: 'ಕಡಕೋಳ', hi: 'कडकोला', ta: 'கடகோலா', te: 'కడకోల', ml: 'കടകോള' },
+  'Bilikere': { kn: 'ಬಿಳಿಕೆರೆ', hi: 'बिलीकेरे', ta: 'பிலிகெரே', te: 'బిలికెరె', ml: 'ബിലികെരെ' },
+  'Tamil Nadu': { kn: 'ತಮಿಳುನಾಡು', hi: 'तमिलनाडु', ta: 'தமிழ்நாடு', te: 'తమిళనాడు', ml: 'തಮಿഴ്ನಾട്' },
+  'Kerala': { kn: 'ಕೇರಳ', hi: 'केरल', ta: 'கேரளா', te: 'കേരള', ml: 'കേരളം' },
+  'Andhra Pradesh': { kn: 'ಆಂಧ್ರಪ್ರದೇಶ', hi: 'आंध्र प्रदेश', ta: 'ஆந்திரப் பிரதேசம்', te: 'ఆంధ్రప్రదేశ్', ml: 'ആന്ധ്രാಪ್ರದೇಶ್' },
+  'Telangana': { kn: 'ತೆಲಂಗಾಣ', hi: 'तेलंगाना', ta: 'தெலுங்கானா', te: 'తెలంగాణ', ml: 'തെലങ്കാന' },
+  'Maharashtra': { kn: 'ಮಹಾರಾಷ್ಟ್ರ', hi: 'महाराष्ट्र', ta: 'மகாராஷ்டிரா', te: 'మహారాష్ట్ర', ml: 'മഹാരാഷ്ട്ര' }
+};
+
+const localizeLocationName = (name: string | undefined, lang: string): string => {
+  if (!name) return '';
+  return HEADER_LOCATION_NAMES[name]?.[lang] || name;
+};
+
 export const Header: React.FC<HeaderProps> = ({
   profile,
   globalLocation,
@@ -29,7 +56,11 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenSos
 }) => {
   const { currentLanguage, setLanguage, isEnglish, t } = useLanguage();
-  const { setIsSmartReminderModalOpen, setIsSosModalOpen } = useAppContext();
+  const locLang = currentLanguage.code;
+  const primaryLoc = localizeLocationName(profile.village || globalLocation.village || profile.taluk || globalLocation.taluk || profile.district || globalLocation.district || profile.city || globalLocation.city, locLang);
+  const districtLoc = localizeLocationName(profile.district || globalLocation.district, locLang);
+  const stateLoc = localizeLocationName(profile.state || globalLocation.state || 'Karnataka', locLang);
+  const { setIsSosModalOpen } = useAppContext();
   const [showLangMenu, setShowLangMenu] = useState(false);
   const [langSearch, setLangSearch] = useState('');
   const [showConfirmReset, setShowConfirmReset] = useState(false);
@@ -91,7 +122,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wider uppercase bg-[#523D35] text-[#E8D9CD] border border-[#BBA58F]/40">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#BBA58F] mr-1"></span>
-                  PREVIEW
+                  {t('header.preview', 'PREVIEW')}
                 </span>
               </div>
               <div className="text-[11px] sm:text-xs text-amber-100 tracking-normal font-semibold mt-0.5 leading-tight block">
@@ -111,14 +142,12 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <MapPin className="w-3.5 h-3.5 text-[#BBA58F] shrink-0" />
               <span className="truncate hidden sm:inline text-[#EFEFE9]">
-                {profile.village || globalLocation.village || profile.taluk || globalLocation.taluk || profile.district || globalLocation.district || profile.city || globalLocation.city}
-                {(profile.district || globalLocation.district) && (profile.village || profile.city) !== (profile.district || globalLocation.district)
-                  ? `, ${profile.district || globalLocation.district}`
-                  : ''}
-                {`, ${profile.state || globalLocation.state || 'Karnataka'}`}
+                {primaryLoc}
+                {districtLoc && primaryLoc !== districtLoc ? `, ${districtLoc}` : ''}
+                {`, ${stateLoc}`}
               </span>
               <span className="truncate sm:hidden text-[#EFEFE9]">
-                {profile.village || globalLocation.village || profile.taluk || profile.city || 'Mysuru'}
+                {primaryLoc || localizeLocationName('Mysuru', locLang)}
               </span>
             </button>
 
@@ -254,17 +283,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
             </div>
-
-            {/* Smart Reminders Button */}
-            <button
-              type="button"
-              onClick={() => setIsSmartReminderModalOpen(true)}
-              className="flex items-center space-x-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg bg-[#523D35]/70 hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold border border-[#BBA58F]/40 transition cursor-pointer shadow-xs"
-              title="Smart Reminders: Water, Meals, Doctor Visits"
-            >
-              <Bell className="w-3.5 h-3.5 text-[#BBA58F]" />
-              <span className="hidden sm:inline">{t('header.reminders', 'Reminders')}</span>
-            </button>
 
             {/* User Profile / Auth Button */}
             {currentUser ? (

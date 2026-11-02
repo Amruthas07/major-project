@@ -216,9 +216,113 @@ export const CENTRALIZED_GOVERNMENT_SCHEMES: GovernmentScheme[] = [
       ta: "ஆதார் அட்டை, தாய் அட்டை (MCP), உள்ளூர் குடியிருப்பு சான்றிதழ்.",
       te: "ఆధಾರ್ కార్డు, తల్లి కార్డు (MCP), స్థానిక నివాస ధృవీకరణ పత్రం."
     },
-    officialPortalUrl: "https://dwcd.karnataka.gov.in",
-    website: "https://dwcd.karnataka.gov.in",
-    sourceUrl: "https://dwcd.karnataka.gov.in",
+    officialPortalUrl: "https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/",
+    website: "https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/",
+    sourceUrl: "https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/",
+    lastVerified: "2026-08-12",
+    isActive: true
+  },
+  {
+    id: "gruha_lakshmi",
+    name: {
+      en: "Gruha Lakshmi Scheme",
+      kn: "ಗೃಹ ಲಕ್ಷ್ಮಿ ಯೋಜನೆ",
+      hi: "गृह लक्ष्मी योजना (कर्नाटक)",
+      ta: "கிரஹ லக்ஷ்மி திட்டம் (கர்நாடகா)",
+      te: "గృహ లక్ష్మి పథకం (కర్ణాటక)"
+    },
+    authority: {
+      en: "State Government (Department of Women and Child Development, Karnataka)",
+      kn: "ರಾಜ್ಯ ಸರ್ಕಾರ (ಮಹಿಳಾ ಮತ್ತು ಮಕ್ಕಳ ಅಭಿವೃದ್ಧಿ ಇಲಾಖೆ, ಕರ್ನಾಟಕ)",
+      hi: "राज्य सरकार (महिला एवं बाल विकास विभाग, कर्नाटक)",
+      ta: "மாநில அரசு (மகளிர் மற்றும் குழந்தைகள் மேம்பாட்டுத் துறை, கர்நாடகா)",
+      te: "రాష్ట్ర ప్రభుత్వం (మహిళా మరియు శిశు అభివృద్ధి శాఖ, కర్ణాటక)"
+    },
+    level: "State",
+    state: "Karnataka",
+    purpose: {
+      en: "Provides monthly financial assistance of ₹2,000 via Direct Benefit Transfer to female heads of household to ensure nutritional security and financial independence.",
+      kn: "ಮಹಿಳೆಯರ ಆರ್ಥಿಕ ಸಬಲೀಕರಣ ಮತ್ತು ಪೌಷ್ಟಿಕಾಂಶ ಬೆಂಬಲಕ್ಕಾಗಿ ಮನೆಯ ಯಜಮಾನಿಗೆ ಪ್ರತಿ ತಿಂಗಳು ₹2,000 ನೇರ ಬ್ಯಾಂಕ್ ಜಮೆ ನೀಡುವ ಯೋಜನೆ.",
+      hi: "महिला मुखिया को पोषण सुरक्षा और वित्तीय स्वतंत्रता प्रदान करने के लिए प्रति माह ₹2,000 की प्रत्यक्ष बैंक सहायता।",
+      ta: "குடும்ப பெண் தலைவிக்கு ஊட்டச்சத்து மற்றும் நிதி சுதந்திரத்திற்காக மாதம் ₹2,000 நேரடி வங்கி பரிமாற்றம்.",
+      te: "మహిళల ఆర్థిక స్వావలంబన మరియు పోషకాహార భద్రత కోసం నెలకు ₹2,000 నేరుగా బ్యాంక్ ఖాతాలో జమ చేసే పథకం."
+    },
+    eligibility: {
+      en: "Women listed as head of household in Karnataka Antyodaya, BPL, or APL ration cards. Excludes income-tax or GST-paying individuals.",
+      kn: "ಕರ್ನಾಟಕದ ಅಂತ್ಯೋದಯ, ಬಿಪಿಎಲ್ ಅಥವಾ ಎಪಿಎಲ್ ರೇಷನ್ ಕಾರ್ಡ್‌ನಲ್ಲಿ ಮನೆಯ ಯಜಮಾನಿ ಎಂದು ನಮೂದಾಗಿರುವ ಮಹಿಳೆಯರು (ಆದಾಯ ತೆರಿಗೆ/ಜಿಎಸ್‌ಟಿ ಪಾವತಿದಾರರನ್ನು ಹೊರತುಪಡಿಸಿ).",
+      hi: "कर्नाटक के अंत्योदय, बीपीएल या एपीएल राशन कार्ड में महिला मुखिया के रूप में दर्ज महिलाएं (आयकर/जीएसटी दाताओं को छोड़कर)।",
+      ta: "கர்நாடகாவின் அந்தியோதயா, BPL அல்லது APL ரேஷன் கார்டில் குடும்ப தலைவியாக உள்ள பெண்கள்.",
+      te: "కర్ణాటక అంత్యోదయ, బిపిఎల్ లేదా ఎపిఎల్ రేషన్ కార్డులలో మహిళా యజమానులుగా ఉన్నవారు."
+    },
+    benefits: {
+      en: "Guaranteed monthly cash transfer of ₹2,000 credited directly into the woman beneficiary's Aadhaar-seeded bank account.",
+      kn: "ಪ್ರತಿ ತಿಂಗಳು ₹2,000 ನೇರ ಬ್ಯಾಂಕ್ ಖಾತೆಗೆ ಜಮೆ.",
+      hi: "प्रति माह ₹2,000 सीधे लाभार्थी के आधार-लिंक्ड बैंक खाते में।",
+      ta: "ஒவ்வொரு மாதமும் ₹2,000 நேரடியாக ஆதார் இணைக்கப்பட்ட வங்கிக் கணக்கில்.",
+      te: "ప్రతి నెలా ₹2,000 నేరుగా ఆధార్-సీడెడ్ బ్యాంక్ ఖాతాలో జమ."
+    },
+    documents: {
+      en: "Karnataka Ration Card (BPL/APL/AAY), Aadhaar Card of Head Woman, Aadhaar-linked Bank Account Passbook, Aadhaar-seeded Mobile Number.",
+      kn: "ರೇಷನ್ ಕಾರ್ಡ್, ಆಧಾರ್ ಕಾರ್ಡ್, ಆಧಾರ್ ಲಿಂಕ್ ಆದ ಬ್ಯಾಂಕ್ ಪಾಸ್‌ಬುಕ್, ಮೊಬೈಲ್ ಸಂಖ್ಯೆ.",
+      hi: "राशन कार्ड, आधार कार्ड, आधार से जुड़ा बैंक खाता पासबुक, मोबाइल नंबर।",
+      ta: "ரேஷன் கார்டு, ஆதார் அட்டை, வங்கி கணக்கு புத்தகம், மொபைல் எண்.",
+      te: "రేషన్ కార్డు, ఆధార్ కార్డు, బ్యాంక్ పాస్ బుక్, మొబైల్ సంఖ్య."
+    },
+    officialPortalUrl: "https://sevasindhuservices.karnataka.gov.in",
+    website: "https://sevasindhuservices.karnataka.gov.in",
+    sourceUrl: "https://sevasindhuservices.karnataka.gov.in",
+    lastVerified: "2026-08-12",
+    isActive: true
+  },
+  {
+    id: "prasuti_araike",
+    name: {
+      en: "Prasuti Araike & Nagu Magu Scheme",
+      kn: "ಪ್ರಸೂತಿ ಆರೈಕೆ ಮತ್ತು ನಗು ಮಗು ಯೋಜನೆ",
+      hi: "प्रसूति अराईके एवं नगु मगु योजना (कर्नाटक)",
+      ta: "பிரசூதி அரைக்கே & நகு மகு திட்டம் (கர்நாடகா)",
+      te: "ప్రసూతి అరైకె & నగు మగు పథకం (కర్ణాటక)"
+    },
+    authority: {
+      en: "State Government (Department of Health & Family Welfare, Karnataka)",
+      kn: "ರಾಜ್ಯ ಸರ್ಕಾರ (ಆರೋಗ್ಯ ಮತ್ತು ಕುಟುಂಬ ಕಲ್ಯಾಣ ಇಲಾಖೆ, ಕರ್ನಾಟಕ)",
+      hi: "राज्य सरकार (स्वास्थ्य एवं परिवार कल्याण विभाग, कर्नाटक)",
+      ta: "மாநில அரசு (சுகாதாரத் துறை, கர்நாடகா)",
+      te: "రాష్ట్ర ప్రభుత్వం (ఆరోగ్య మరియు కుటుంబ సంక్షేమ శాఖ, కర్ణాటక)"
+    },
+    level: "State",
+    state: "Karnataka",
+    purpose: {
+      en: "Provides post-delivery financial incentives and dedicated 'Nagu Magu' ambulance transport for safe delivery and mother-newborn transit back home in Karnataka.",
+      kn: "ಸರ್ಕಾರಿ ಆಸ್ಪತ್ರೆಗಳಲ್ಲಿ ಸುರಕ್ಷಿತ ಹೆರಿಗೆ ಪ್ರೋತ್ಸಾಹಿಸಲು ನಗದು ಸಹಾಯ ಹಾಗೂ ಹೆರಿಗೆಯ ನಂತರ ತಾಯಿ-ಮಗುವನ್ನು ಉಚಿತವಾಗಿ ಮನೆಗೆ ತಲುಪಿಸಲು 'ನಗು ಮಗು' ವಾಹನ ಸೇವೆ.",
+      hi: "कर्नाटक के सरकारी अस्पतालों में सुरक्षित संस्थागत प्रसव के लिए वित्तीय सहायता और प्रसव के बाद घर तक मुफ्त 'नगु मगु' वाहन परिवहन सेवा।",
+      ta: "அரசு மருத்துவமனைகளில் பாதுகாப்பான பிரசவத்திற்கான நிதி உதவி மற்றும் பிரசவத்திற்குப் பின் தாயையும் சேயையும் வீட்டிற்கு அனுப்ப இலவச 'நகு மகு' வாகனம்.",
+      te: "ప్రభుత్వ ఆసుపత్రులలో సురక్షిత ప్రసవాలకు ఆర్థిక ప్రోత్సాహం మరియు ప్రసవానంతరం ఉచిత 'నగు మగు' అంబులెన్స్ ద్వారా ఇంటికి చేర్చే సేవ."
+    },
+    eligibility: {
+      en: "Pregnant women residing in Karnataka undergoing institutional deliveries in government health centers and Taluk/District hospitals (BPL, SC/ST, and rural mothers).",
+      kn: "ಕರ್ನಾಟಕದ ಸರ್ಕಾರಿ ಆಸ್ಪತ್ರೆಗಳಲ್ಲಿ ಹೆರಿಗೆ ಮಾಡಿಸುವ ಗರ್ಭಿಣಿಯರು (ವಿಶೇಷವಾಗಿ ಬಿಪಿಎಲ್ ಮತ್ತು ಪರಿಶಿಷ್ಟ ಜಾತಿ/ಪಂಗಡದ ತಾಯಂದಿರು).",
+      hi: "सरकारी अस्पतालों में प्रसव कराने वाली कर्नाटक की गर्भवती महिलाएं (बीपीएल एवं एससी/एसटी)।",
+      ta: "அரசு மருத்துவமனைகளில் பிரசவம் செய்து கொள்ளும் கர்நாடகாவின் BPL மற்றும் SC/ST கர்ப்பிணிகள்.",
+      te: "ప్రభుత్వ ఆసుపత్రులలో ప్రసవించే కర్ణాటక గర్భిణీలు (BPL, SC/ST వర్గాలు)."
+    },
+    benefits: {
+      en: "Financial assistance of ₹2,000 to ₹3,000 for post-delivery nutritional care, free baby kit, and 100% free home-drop transit in specialized Nagu Magu vehicles.",
+      kn: "₹2,000 ದಿಂದ ₹3,000 ವರೆಗೆ ಹೆರಿಗೆ ನಗದು ಸಹಾಯ, ಉಚಿತ ಬೇಬಿ ಕಿಟ್ ಹಾಗೂ ಉಚಿತ ನಗು ಮಗು ವಾಹನ ಸಾರಿಗೆ.",
+      hi: "₹2,000 से ₹3,000 की नकद सहायता, मुफ्त बेबी किट और सुरक्षित नगु मगु वाहन द्वारा घर वापसी।",
+      ta: "₹2,000 முதல் ₹3,000 வரை நிதி உதவி, இலவச குழந்தை பராமரிப்பு பெட்டகம் மற்றும் இலவச நகு மகு வாகனப் பயணம்.",
+      te: "₹2,000 నుండి ₹3,000 వరకు ఆర్థిక సహాయం, ఉచిత బేబీ కిట్ మరియు ఉచిత నగు మగు వాహన ప్రయాణం."
+    },
+    documents: {
+      en: "Thayi (MCP) Card, Karnataka BPL / Ration Card / SC-ST Certificate, Government Hospital Delivery Discharge Slip, Aadhaar Card, Bank Passbook.",
+      kn: "ತಾಯಿ ಕಾರ್ಡ್ (MCP), ಬಿಪಿಎಲ್ ಕಾರ್ಡ್, ಸರ್ಕಾರಿ ಆಸ್ಪತ್ರೆಯ ಡಿಸ್ಚಾರ್ಜ್ ಚೀಟಿ, ಆಧಾರ್ ಕಾರ್ಡ್, ಬ್ಯಾಂಕ್ ಪಾಸ್‌ಬುಕ್.",
+      hi: "थाई (MCP) कार्ड, बीपीएल कार्ड, अस्पताल डिस्चार्ज पर्ची, आधार कार्ड, बैंक पासबुक।",
+      ta: "தாய் அட்டை (MCP), BPL அட்டை, அரசு மருத்துவமனை விடுப்பு சான்றிதழ், ஆதார் அட்டை.",
+      te: "తల్లి కార్డు (MCP), బిపిఎల్ కార్డు, ఆసుపత్రి డిశ్చార్జ్ పత్రం, ఆధార్ కార్డు."
+    },
+    officialPortalUrl: "https://karnataka.gov.in",
+    website: "https://karnataka.gov.in",
+    sourceUrl: "https://karnataka.gov.in",
     lastVerified: "2026-08-12",
     isActive: true
   },

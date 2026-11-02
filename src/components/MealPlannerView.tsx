@@ -9,6 +9,7 @@ import {
 } from '../context/AppContext';
 import { PlannedMeal, FoodItemData, GlobalLocationState, PregnancyTrimester } from '../types';
 import { KAGGLE_PROCESSED_FOOD_DATABASE } from '../services/kaggle_food_pipeline';
+import { isMatchingState } from '../utils/state_food_filter';
 import { LocationNutritionEngine } from '../services/location_nutrition_engine';
 import { useLanguage, DualText, DualFoodName } from '../services/language_service';
 import {
@@ -102,12 +103,13 @@ export const MealPlannerView: React.FC = () => {
     userDietPref
   );
 
-  // Eligible foods for Quick Pick based on user diet preference
+  // Eligible foods for Quick Pick based on user state & diet preference
   const eligibleKaggleFoods = React.useMemo(() => {
+    const userState = userProfile?.state || globalLocation?.state || 'Karnataka';
     return KAGGLE_PROCESSED_FOOD_DATABASE.filter((f) =>
-      isFoodEligibleForDiet(f, userDietPref)
+      isMatchingState(f.state, userState) && isFoodEligibleForDiet(f, userDietPref)
     );
-  }, [userDietPref]);
+  }, [userDietPref, userProfile?.state, globalLocation?.state]);
 
   // Percentage calculations against RDA
   const calPercent = Math.min(100, Math.round((dayNutrition.calories / trimesterRdaTargets.calories) * 100));

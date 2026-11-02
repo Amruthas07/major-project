@@ -496,6 +496,202 @@ export const MULTILINGUAL_WELFARE_SCHEMES: Record<string, MultilingualSchemeData
     }
   },
 
+  // 4c. GRUHA LAKSHMI SCHEME (KARNATAKA)
+  'gruha-lakshmi': {
+    title: {
+      en: 'GRUHA LAKSHMI SCHEME (KARNATAKA)',
+      kn: 'ಗೃಹಲಕ್ಷ್ಮಿ ಯೋಜನೆ (ಕರ್ನಾಟಕ)',
+      hi: 'गृह लक्ष्मी योजना (कर्नाटक)',
+      ta: 'கிருஹ லக்ஷ்மி திட்டம் (கர்நாடகா)',
+      te: 'గృహలక్ష్మి పథకం (కర్ణాటక)',
+      ml: 'ഗൃഹലക്ഷ്മി യോജന (കർണാടക)'
+    },
+    shortName: {
+      en: 'Gruha Lakshmi Direct Cash Assistance',
+      kn: 'ಗೃಹಲಕ್ಷ್ಮಿ ನೇರ ನಗದು ವರ್ಗಾವಣೆ ಯೋಜನೆ',
+      hi: 'गृह लक्ष्मी प्रत्यक्ष नकद सहायता',
+      ta: 'கிருஹ லக்ஷ்மி நேரடி பண உதவி',
+      te: 'గృహలక్ష్మి ప్రత్యక్ష నగదు బదిలీ పథకం',
+      ml: 'ഗൃഹലക്ഷ്മി നേരിട്ടുള്ള ധനസഹായം'
+    },
+    description: {
+      en: 'Karnataka state flagship guarantee program granting ₹2,000 per month financial empowerment to woman head of family for nutritional and domestic welfare.',
+      kn: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರದ ಪ್ರಮುಖ ಗ್ಯಾರಂಟಿ ಯೋಜನೆ. ಕುಟುಂಬದ ಯಜಮಾನಿ ಮಹಿಳೆಗೆ ಪೌಷ್ಟಿಕಾಂಶ, ಆರೋಗ್ಯ ಮತ್ತು ಕೌಟುಂಬಿಕ ಯೋಗಕ್ಷೇಮಕ್ಕಾಗಿ ಪ್ರತಿ ತಿಂಗಳು ₹2,000 ನೇರ ಆರ್ಥಿಕ ಧನಸಹಾಯ.',
+      hi: 'कर्नाटक सरकार की प्रमुख गारंटी योजना जिसके तहत महिला मुखिया को पोषण और घरेलू कल्याण हेतु प्रतिमाह ₹2,000 की वित्तीय सहायता सीधे बैंक खाते में दी जाती है।',
+      ta: 'கர்நாடக அரசின் முதன்மை உத்தரவாத திட்டம். குடும்பத்தின் தலைவிக்கு ஊட்டச்சத்து மற்றும் குடும்ப நலனுக்காக மாதம் ₹2,000 நேரடி வங்கி பண உதவி.',
+      te: 'కర్ణాటక ప్రభుత్వ ప్రతిష్టాత్మక పథకం. కుటుంబ పెద్ద మహిళకు పోషకాహారం మరియు గృహ అవసరాల కోసం ప్రతి నెలా ₹2,000 నగదు సహాయం.',
+      ml: 'കർണാടക സർക്കാരിന്റെ പ്രമുഖ ഗ്യാരണ്ടി പദ്ധതി. കുടുംബത്തിലെ വനിതാ നാഥയ്ക്ക് പ്രതിമാസം ₹2,000 നേരിട്ടുള്ള ബാങ്ക് ധനസഹായം.'
+    },
+    eligibility: {
+      en: 'Women recognized as female head of household in Karnataka ration cards (Antyodaya, BPL, or APL). Excludes women or husbands paying GST or Income Tax.',
+      kn: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರದ ರೇಷನ್ ಕಾರ್ಡ್‌ನಲ್ಲಿ (ಅಂತ್ಯೋದಯ, BPL ಅಥವಾ APL) ಕುಟುಂಬದ ಯಜಮಾನಿ ಎಂದು ನಮೂದಾಗಿರುವ ಮಹಿಳೆಯರು (ಆದಾಯ ತೆರಿಗೆ ಅಥವಾ GST ಪಾವತಿದಾರರಿಗೆ ಅನ್ವಯಿಸುವುದಿಲ್ಲ).',
+      hi: 'कर्नाटक के राशन कार्ड (अंत्योदय, बीपीएल या एपीएल) में परिवार की महिला मुखिया के रूप में दर्ज महिलाएं (आयकर या जीएसटी दाताओं को छोड़कर)।',
+      ta: 'கர்நாடக ரேஷன் கார்டில் குடும்பத் தலைவியாக உள்ள பெண்கள் (வருமான வரி அல்லது ஜிஎஸ்டி செலுத்துவோர் தவிர).',
+      te: 'కర్ణాటక రేషన్ కార్డులలో కుటుంబ పెద్దగా నమోదైన మహిళలు (ఆదాయపు పన్ను లేదా జీఎస్టీ చెల్లించే వారు మినహా).',
+      ml: 'കർണാടക റേഷൻ കാർഡുകളിൽ കുടുംബനാഥയായി രജിസ്റ്റർ ചെയ്ത സ്ത്രീകൾ (ആദായനികുതി അല്ലെങ്കിൽ ജിഎസ്ടി അടയ്ക്കുന്നവർ ഒഴികെ).'
+    },
+    benefits: {
+      en: 'Guaranteed direct bank transfer (DBT) of ₹2,000 credited every month into the beneficiary’s Aadhaar-linked savings account.',
+      kn: 'ಪ್ರತಿ ತಿಂಗಳು ₹2,000 ನೇರ ಬ್ಯಾಂಕ್ ಜಮೆ (DBT). ಫಲಾನುಭವಿಯ ಆಧಾರ್ ಲಿಂಕ್ ಆದ ಉಳಿತಾಯ ಖಾತೆಗೆ ನೇರವಾಗಿ ಜಮೆಯಾಗುತ್ತದೆ.',
+      hi: 'प्रतिमाह ₹2,000 की प्रत्यक्ष लाभ अंतरण (DBT) राशि सीधे लाभार्थी के आधार-लिंक बैंक खाते में।',
+      ta: 'பயனாளியின் ஆதார் இணைக்கப்பட்ட வங்கிக் கணக்கில் ஒவ்வொரு மாதமும் ₹2,000 நேரடி பணப் பரிமாற்றம் (DBT).',
+      te: 'ప్రతి నెలా లబ్ధిదారుని ఆధార్‌తో లింక్ అయిన బ్యాంకు ఖాతాలో ₹2,000 నగదు జమ (DBT).',
+      ml: 'ഓരോ മാസവും ഗുണഭോക്താവിന്റെ ആധാർ ബന്ധിത ബാങ്ക് അക്കൗണ്ടിലേക്ക് ₹2,000 നേരിട്ട് ലഭിക്കുന്നു (DBT).'
+    },
+    cashAmountHighlight: {
+      en: '₹2,000 / month Direct DBT',
+      kn: 'ಪ್ರತಿ ತಿಂಗಳು ₹2,000 ನೇರ DBT',
+      hi: 'प्रतिमाह ₹2,000 प्रत्यक्ष DBT',
+      ta: 'மாதம் ₹2,000 நேரடி DBT',
+      te: 'నెలకు ₹2,000 ప్రత్యక్ష DBT',
+      ml: 'പ്രതിമാസം ₹2,000 നേരിട്ടുള്ള DBT'
+    },
+    documentsNeeded: {
+      en: [
+        'Karnataka Ration Card (BPL / APL / Antyodaya)',
+        'Aadhaar Card of Mother / Woman Head',
+        'Aadhaar-Seeded Bank Account Passbook',
+        'Aadhaar-Linked Mobile Number'
+      ],
+      kn: [
+        'ಕರ್ನಾಟಕ ರೇಷನ್ ಕಾರ್ಡ್ (BPL / APL / ಅಂತ್ಯೋದಯ)',
+        'ಕುಟುಂಬದ ಯಜಮಾನಿ ಮಹಿಳೆಯ ಆಧಾರ್ ಕಾರ್ಡ್',
+        'ಆಧಾರ್ ಲಿಂಕ್ ಆದ ಬ್ಯಾಂಕ್ ಖಾತೆ ಪಾಸ್‌ಬುಕ್',
+        'ಆಧಾರ್ ಲಿಂಕ್ ಆದ ಮೊಬೈಲ್ ಸಂಖ್ಯೆ'
+      ],
+      hi: [
+        'कर्नाटक राशन कार्ड (BPL / APL / अंत्योदय)',
+        'महिला मुखिया का आधार कार्ड',
+        'आधार-लिंक बैंक पासबुक',
+        'आधार-लिंक मोबाइल नंबर'
+      ],
+      ta: [
+        'கர்நாடகா ரேஷன் அட்டை (BPL / APL / அந்த்யோதயா)',
+        'குடும்பத் தலைவியின் ஆதார் அட்டை',
+        'ஆதார் இணைக்கப்பட்ட வங்கி கணக்கு புத்தகம்',
+        'ஆதார் இணைக்கப்பட்ட மொபைல் எண்'
+      ],
+      te: [
+        'కర్ణాటక రేషన్ కార్డు (BPL / APL / అంత్యోదయ)',
+        'మహిళా పెద్ద ఆధార్ కార్డు',
+        'ఆధార్ లింక్ అయిన బ్యాంక్ పాస్ బుక్',
+        'ఆధార్ లింక్ అయిన మొబైల్ నంబర్'
+      ],
+      ml: [
+        'കർണാടക റേഷൻ കാർഡ് (BPL / APL / അന്ത്യോദയ)',
+        'കുടുംബനാഥയുടെ ആധാർ കാർഡ്',
+        'ആധാർ ബന്ധിപ്പിച്ച ബാങ്ക് പാസ്സ്ബുക്ക്',
+        'ആധാർ ബന്ധിപ്പിച്ച മൊബൈൽ നമ്പർ'
+      ]
+    },
+    categoryLocalized: {
+      en: 'State Government',
+      kn: 'ರಾಜ್ಯ ಸರ್ಕಾರ (ಕರ್ನಾಟಕ)',
+      hi: 'राज्य सरकार (कर्नाटक)',
+      ta: 'மாநில அரசு (கர்நாடகா)',
+      te: 'రాష్ట్ర ప్రభుత్వం (కర్ణాటక)',
+      ml: 'സംസ്ഥാന സർക്കാർ (കർണാടക)'
+    }
+  },
+
+  // 4d. PRASUTI ARAIKE & NAGU MAGU (KARNATAKA)
+  'prasuti-araike-nagu-magu': {
+    title: {
+      en: 'PRASUTI ARAIKE & NAGU MAGU SCHEME (KARNATAKA)',
+      kn: 'ಪ್ರಸೂತಿ ಆರೈಕೆ ಮತ್ತು ನಗು ಮಗು ಯೋಜನೆ (ಕರ್ನಾಟಕ)',
+      hi: 'प्रसूति अराइके एवं नगु मगु योजना (कर्नाटक)',
+      ta: 'பிரசூதி அரைகே & நகு மகு திட்டம் (கர்நாடகா)',
+      te: 'ప్రసూతి అరైకె & నగు మగు పథకం (కర్ణాటక)',
+      ml: 'പ്രസൂതി അറൈകെ & നഗു മഗു യോജന (കർണാടക)'
+    },
+    shortName: {
+      en: 'Prasuti Araike & Nagu Magu Vehicle Support',
+      kn: 'ಪ್ರಸೂತಿ ಆರೈಕೆ ಧನಸಹಾಯ & ನಗು ಮಗು ಉಚಿತ ವಾಹನ ಸಾರಿಗೆ',
+      hi: 'प्रसूति अराइके सहायता एवं नगु मगु वाहन सुविधा',
+      ta: 'பிரசூதி அரைகே உதவி & நகு மகு இலவச வாகன சேவை',
+      te: 'ప్రసూతి అరైకె సహాయం & నగు మగు ఉచిత వాహన రవాణా',
+      ml: 'പ്രസൂതി അറൈകെ സഹായവും നഗു മഗു സൗജന്യ വാഹനവും'
+    },
+    description: {
+      en: 'Karnataka state delivery incentive and transport assistance scheme providing financial grants and specialized "Nagu Magu" vehicles for safe transport.',
+      kn: 'ಕರ್ನಾಟಕ ಸರ್ಕಾರದ ಸುರಕ್ಷಿತ ಹೆರಿಗೆ ಪ್ರೋತ್ಸಾಹ ಮತ್ತು ಉಚಿತ ವಾಹನ ಯೋಜನೆ. ಸರ್ಕಾರಿ ಆಸ್ಪತ್ರೆಗಳಲ್ಲಿ ಹೆರಿಗೆ ಮಾಡಿಸಿದ ಬಡ ತಾಯಂದಿರಿಗೆ ಆರ್ಥಿಕ ನೆರವು ಹಾಗೂ ನವಜಾತ ಶಿಶುವಿನೊಂದಿಗೆ ಮನೆಗೆ ಸುರಕ್ಷಿತವಾಗಿ ಮರಳಲು "ನಗು ಮಗು" ಉಚಿತ ವಾಹನ ವ್ಯವಸ್ಥೆ.',
+      hi: 'कर्नाटक सरकार की सुरक्षित प्रसव प्रोत्साहन एवं वाहन योजना। सरकारी अस्पतालों में प्रसव कराने वाली माताओं को वित्तीय अनुदान तथा प्रसव के बाद घर सुरक्षित लौटने हेतु विशेष "नगु मगु" वाहन की निःशुल्क सुविधा।',
+      ta: 'அரசு மருத்துவமனைகளில் பிரசவம் மேற்கொள்ளும் தாய்மார்களுக்கு நிதி உதவியும், பிரசவத்திற்குப் பிறகு குழந்தையுடன் வீடு திரும்ப "நகு மகு" இலவச வாகன சேவையும் வழங்கும் கர்நாடக திட்டம்.',
+      te: 'ప్రభుత్వ ఆసుపత్రులలో సురక్షిత ప్రసవాలను ప్రోత్సహించేందుకు ఆర్థిక సహాయం మరియు ప్రసవానంతరం శిశువుతో కలిసి ఇంటికి చేర్చేందుకు "నగు మగు" ఉచిత వాహన రవాణా పథకం.',
+      ml: 'സർക്കാർ ആശുപത്രികളിൽ പ്രസവിക്കുന്ന അമ്മമാർക്ക് ധനസഹായവും, പ്രസവശേഷം കുഞ്ഞുമൊത്ത് വീട്ടിലേക്ക് മടങ്ങാൻ "നഗു മഗു" സൗജന്യ വാഹന സൗകര്യവും നൽകുന്ന പദ്ധതി.'
+    },
+    eligibility: {
+      en: 'All pregnant women in Karnataka delivering in government hospitals, Community Health Centres (CHCs), or Taluk hospitals, with priority for BPL/SC/ST mothers.',
+      kn: 'ಕರ್ನಾಟಕದ ಸರ್ಕಾರಿ ಆಸ್ಪತ್ರೆಗಳು, ಸಮುದಾಯ ಆರೋಗ್ಯ ಕೇಂದ್ರಗಳು (CHC) ಅಥವಾ ತಾಲೂಕು ಆಸ್ಪತ್ರೆಗಳಲ್ಲಿ ಹೆರಿಗೆ ಮಾಡಿಸುವ ಎಲ್ಲಾ ಗರ್ಭಿಣಿಯರು (BPL, SC/ST ತಾಯಂದಿರಿಗೆ ಆದ್ಯತೆ).',
+      hi: 'कर्नाटक के सरकारी अस्पतालों, सीएचसी या तालुक अस्पतालों में प्रसव कराने वाली सभी गर्भवती महिलाएं (BPL, अनुसूचित जाति/जनजाति को प्राथमिकता)।',
+      ta: 'கர்நாடக அரசு மருத்துவமனைகள் அல்லது ஆரம்ப சுகாதார நிலையங்களில் பிரசவிக்கும் அனைத்து கர்ப்பிணிப் பெண்கள்.',
+      te: 'కర్ణాటక ప్రభుత్వ ఆసుపత్రులు, కమ్యూనిటీ హెల్త్ సెంటర్లలో ప్రసవించే గర్భిణీలు (BPL, ఎస్సీ/ఎస్టీలకు ప్రాధాన్యత).',
+      ml: 'കർണാടകയിലെ സർക്കാർ ആശുപത്രികളിൽ പ്രസവിക്കുന്ന എല്ലാ ഗർഭിണികളും.'
+    },
+    benefits: {
+      en: '₹2,000 to ₹3,000 cash assistance for post-delivery care + free baby kit + free dedicated Nagu Magu ambulance drop from hospital directly to the mother’s doorstep.',
+      kn: 'ಹೆರಿಗೆಯ ನಂತರದ ಆರೈಕೆಗೆ ₹2,000 ದಿಂದ ₹3,000 ನಗದು ನೆರವು + ಉಚಿತ ನವಜಾತ ಶಿಶು ಕಿಟ್ + ಆಸ್ಪತ್ರೆಯಿಂದ ಮನೆ ಬಾಗಿಲಿಗೆ "ನಗು ಮಗು" ವಾಹನದಲ್ಲಿ 100% ಉಚಿತ ಪ್ರಯಾಣ.',
+      hi: 'प्रसव पश्चात देखभाल हेतु ₹2,000 से ₹3,000 की नकद सहायता + निःशुल्क शिशु देखभाल किट + अस्पताल से घर तक विशेष "नगु मगु" एम्बुलेंस द्वारा निःशुल्क यात्रा।',
+      ta: 'பிரசவத்திற்குப் பின் பராமரிப்பிற்கு ₹2,000 - ₹3,000 உதவித்தொகை + இலவச குழந்தை கிட் + வீட்டிற்கு "நகு மகு" இலவச வாகனம்.',
+      te: 'ప్రసవానంతర సంరక్షణకు ₹2,000 నుండి ₹3,000 నగదు సహాయం + ఉచిత బేబీ కిట్ + ఇంటికి "నగు మగు" ఉచిత వాహన ప్రయాణం.',
+      ml: 'പ്രസവശേഷമുള്ള പരിചരണത്തിന് ₹2,000 മുതൽ ₹3,000 വരെ ധനസഹായം + സൗജന്യ ബേബി കിറ്റ് + "നഗു മഗു" സൗജന്യ യാത്രാ സൗകര്യം.'
+    },
+    cashAmountHighlight: {
+      en: '₹2,000-₹3,000 + Free Nagu Magu Drop',
+      kn: '₹2,000-₹3,000 + ನಗು ಮಗು ಉಚಿತ ವಾಹನ',
+      hi: '₹2,000-₹3,000 + नगु मगु निःशुल्क वाहन',
+      ta: '₹2,000-₹3,000 + நகு மகு இலவச வாகனம்',
+      te: '₹2,000-₹3,000 + నగు మగు ఉచిత వాహనం',
+      ml: '₹2,000-₹3,000 + നഗു മഗു സൗജന്യ വാഹനം'
+    },
+    documentsNeeded: {
+      en: [
+        'Thayi (MCP) Card',
+        'Karnataka BPL / SC-ST / Ration Card',
+        'Hospital Delivery Discharge Summary',
+        'Aadhaar Card & Bank Passbook'
+      ],
+      kn: [
+        'ತಾಯಿ ಕಾರ್ಡ್ (MCP Card)',
+        'ಕರ್ನಾಟಕ BPL / SC-ST ಪ್ರಮಾಣಪತ್ರ / ರೇಷನ್ ಕಾರ್ಡ್',
+        'ಆಸ್ಪತ್ರೆ ಹೆರಿಗೆ ಡಿಸ್ಚಾರ್ಜ್ ಪತ್ರ',
+        'ಆಧಾರ್ ಕಾರ್ಡ್ ಮತ್ತು ಬ್ಯಾಂಕ್ ಖಾತೆ ಪಾಸ್‌ಬುಕ್'
+      ],
+      hi: [
+        'थाई (MCP) कार्ड',
+        'कर्नाटक बीपीएल / एससी-एसटी / राशन कार्ड',
+        'अस्पताल प्रसव डिस्चार्ज सारांश',
+        'आधार कार्ड और बैंक पासबुक'
+      ],
+      ta: [
+        'தாயி (MCP) அட்டை',
+        'கர்நாடகா BPL / SC-ST / ரேஷன் கார்டு',
+        'மருத்துவமனை பிரசவ டிஸ்சார்ஜ் சான்றிதழ்',
+        'ஆதார் அட்டை மற்றும் வங்கி புத்தகம்'
+      ],
+      te: [
+        'తాయీ (MCP) కార్డు',
+        'కర్ణాటక BPL / SC-ST / రేషన్ కార్డు',
+        'ఆసుపత్రి డెలివరీ డిశ్చార్జ్ పత్రం',
+        'ఆధార్ కార్డు మరియు బ్యాంక్ పాస్ బుక్'
+      ],
+      ml: [
+        'തായി (MCP) കാർഡ്',
+        'കർണാടക ബി.പി.എൽ / റേഷൻ കാർഡ്',
+        'ആശുപത്രി ഡിസ്ചാർജ് സർട്ടിഫിക്കറ്റ്',
+        'ആധാർ കാർഡും ബാങ്ക് പാസ്സ്ബുക്കും'
+      ]
+    },
+    categoryLocalized: {
+      en: 'State Government',
+      kn: 'ರಾಜ್ಯ ಸರ್ಕಾರ (ಕರ್ನಾಟಕ)',
+      hi: 'राज्य सरकार (कर्नाटक)',
+      ta: 'மாநில அரசு (கர்நாடகா)',
+      te: 'రాష్ట్ర ప్రభుత్వం (కర్ణాటక)',
+      ml: 'സംസ്ഥാന സർക്കാർ (ಕರ್ನಾಟಕ)'
+    }
+  },
+
   // 5. JSSK
   'jssk': {
     title: {
@@ -1403,19 +1599,66 @@ export function getLocalizedWelfareScheme(scheme: WelfareScheme, langCode: strin
     'Government Photo ID (Aadhaar / Voter ID)': { kn: 'ಸರ್ಕಾರಿ ಗುರುತಿನ ಚೀಟಿ (ಆಧಾರ್ / ಮತದಾರರ ಗುರುತಿನ ಚೀಟಿ)', hi: 'सरकारी फोटो पहचान पत्र (आधार / वोटर आईडी)', ta: 'அரசு புகைப்பட அடையாள அட்டை (ஆதார் / வாக்காளர் அட்டை)', te: 'ప్రభుత్వ గుర్తింపు కార్డు (ఆధార్ / ఓటర్ ఐడీ)', ml: 'സർക്കാർ തിരിച്ചറിയൽ കാർഡ്' }
   };
 
-  const localizedDocs = pickArray(multi.documentsNeeded, scheme.documentsNeeded).map(doc => {
-    return COMMON_DOCS_TRANSLATIONS[doc]?.[langCode] || doc;
-  });
+  const rawDocs = (scheme as any).required_documents || (scheme as any).requiredDocuments || scheme.documentsNeeded || [];
+  const baseDocs = multi ? pickArray(multi.documentsNeeded, rawDocs) : rawDocs;
+  const localizedDocs = baseDocs.map((doc: string) => COMMON_DOCS_TRANSLATIONS[doc]?.[langCode] || doc);
+
+  const STATE_NAMES_MAP: Record<string, Record<string, string>> = {
+    'Karnataka': { kn: 'ಕರ್ನಾಟಕ', hi: 'कर्नाटक', ta: 'கர்நாடகா', te: 'కర్ణాటక', ml: 'കർണാടക' },
+    'Tamil Nadu': { kn: 'ತಮಿಳುನಾಡು', hi: 'तमिलनाडु', ta: 'தமிழ்நாடு', te: 'తమిళనాడు', ml: 'തമിഴ്നാട്' },
+    'Telangana': { kn: 'ತೆಲಂಗಾಣ', hi: 'तेलंगाना', ta: 'தெலுங்கானா', te: 'తెలంగాణ', ml: 'തെലങ്കാന' },
+    'Andhra Pradesh': { kn: 'ಆಂಧ್ರಪ್ರದೇಶ', hi: 'आंध्र प्रदेश', ta: 'ஆந்திரப் பிரதேசம்', te: 'ఆంధ్రప్రదేశ్', ml: 'ആന്ധ്രാപ്രദേശ്' },
+    'Kerala': { kn: 'ಕೇರಳ', hi: 'केरल', ta: 'கேரளா', te: 'കേരള', ml: 'കേരളം' },
+    'Maharashtra': { kn: 'ಮಹಾರಾಷ್ಟ್ರ', hi: 'महाराष्ट्र', ta: 'மகாராஷ்டிரா', te: 'మహారాష్ట్ర', ml: 'മഹാരാഷ്ട്ര' },
+    'Gujarat': { kn: 'ಗುಜರಾತ್', hi: 'गुजरात', ta: 'குஜராத்', te: 'గుజరాత్', ml: 'ഗുജറാത്ത്' },
+    'Uttar Pradesh': { kn: 'ಉತ್ತರ ಪ್ರದೇಶ', hi: 'उत्तर प्रदेश', ta: 'உத்தரப் பிரதேசம்', te: 'ఉత్తరప్రదేశ్', ml: 'ഉത്തർപ്രദേശ്' },
+    'West Bengal': { kn: 'ಪಶ್ಚಿಮ ಬಂಗಾಳ', hi: 'पश्चिम बंगाल', ta: 'மேற்கு வங்காளம்', te: 'పశ్చిమ బెంగాల్', ml: 'പശ്ചിമ ബംഗാൾ' }
+  };
+
+  const rawState = scheme.state || 'Karnataka';
+  const localizedState = STATE_NAMES_MAP[rawState]?.[langCode] || rawState;
+  const isCentral = scheme.category === 'Central Government' || (scheme as any).level === 'Central';
+
+  const localizedBadge = isCentral
+    ? (langCode === 'kn' ? 'ಕೇಂದ್ರ / ರಾಜ್ಯ ಆರೋಗ್ಯ ಯೋಜನೆ' :
+       langCode === 'hi' ? 'केंद्रीय / राज्य स्वास्थ्य योजना' :
+       langCode === 'ta' ? 'மத்திய / மாநில சுகாதாரத் திட்டம்' :
+       langCode === 'te' ? 'కేంద్ర / రాష్ట్ర ఆరోగ్య పథకం' :
+       langCode === 'ml' ? 'കേന്ദ്ര / സംസ്ഥാന ആരോഗ്യ പദ്ധതി' :
+       'CENTRAL / STATE HEALTH SCHEME')
+    : (langCode === 'kn' ? `${localizedState} ರಾಜ್ಯ ಯೋಜನೆ` :
+       langCode === 'hi' ? `${localizedState} राज्य योजना` :
+       langCode === 'ta' ? `${localizedState} மாநில திட்டம்` :
+       langCode === 'te' ? `${localizedState} రాష్ట్ర పథకం` :
+       langCode === 'ml' ? `${localizedState} സംസ്ഥാന പദ്ധതി` :
+       `${rawState.toUpperCase()} STATE SCHEME`);
+
+  const localizedTitle = multi ? pickString(multi.title, scheme.title) : scheme.title;
+  const localizedDesc = multi ? pickString(multi.description, scheme.description) : scheme.description;
+  const localizedElig = multi ? pickString(multi.eligibility, (scheme as any).eligibility_summary || scheme.eligibility) : ((scheme as any).eligibility_summary || scheme.eligibility);
+  const localizedBen = multi ? pickString(multi.benefits, (scheme as any).main_benefit || scheme.benefits) : ((scheme as any).main_benefit || scheme.benefits);
 
   return {
     ...scheme,
-    title: pickString(multi.title, scheme.title),
-    shortName: pickString(multi.shortName, scheme.shortName),
-    description: pickString(multi.description, scheme.description),
-    eligibility: pickString(multi.eligibility, scheme.eligibility),
-    benefits: pickString(multi.benefits, scheme.benefits),
+    title: localizedTitle,
+    shortName: multi ? pickString(multi.shortName, scheme.shortName) : scheme.shortName,
+    description: localizedDesc,
+    objective: localizedDesc,
+    eligibility: localizedElig,
+    eligibility_summary: localizedElig,
+    eligibilitySummary: localizedElig,
+    benefits: localizedBen,
+    main_benefit: localizedBen,
+    mainBenefit: localizedBen,
     cashAmountHighlight: localizedCash || undefined,
-    documentsNeeded: localizedDocs
+    cashAssistance: localizedCash || undefined,
+    benefit_tag: localizedCash || localizedBen,
+    documentsNeeded: localizedDocs,
+    requiredDocuments: localizedDocs,
+    required_documents: localizedDocs,
+    badge_label: localizedBadge,
+    badgeText: localizedBadge,
+    state: localizedState
   };
 }
 

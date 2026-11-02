@@ -9,6 +9,7 @@
 import { PROJECT_FOOD_DATASET, ProjectFoodDatasetItem } from './project_food_dataset';
 import { REGIONAL_DISHES_CATALOG } from './regional_dishes_catalog';
 import { regionalFoodDatabase } from './foodDatabase';
+import { REGIONAL_UPLOADED_FOOD_MAP, getRegionalUploadedDishImage } from './regional_uploaded_images_map';
 
 export type FoodImageSourceType = 
   | 'project-dataset' 
@@ -47,13 +48,15 @@ export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
     regionalAliases: ['ragi mudde', 'ragi kali', 'finger millet ball', 'ragimudde', 'ragi sangati', 'ragi balls'],
     state: 'Karnataka',
     region: 'South',
-    primaryUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ragi_Mudde_and_soppusaaru.jpg/800px-Ragi_Mudde_and_soppusaaru.jpg',
+    primaryUrl: '/assets/food_crops/karnataka_ragi_mudde.png',
     fallbacks: [
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ragi_Mudde_and_soppusaaru.jpg/800px-Ragi_Mudde_and_soppusaaru.jpg',
       'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/Ragi_Mudde.JPG/800px-Ragi_Mudde.JPG',
       'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/e/e0/Ragi_Mudde_and_soppusaaru.jpg/800px-Ragi_Mudde_and_soppusaaru.jpg&w=800&fit=cover&q=85'
     ],
-    imageSource: 'Wikimedia Commons (Karnataka Traditional Cuisine)',
-    imageLicense: 'CC BY-SA 4.0',
+    imageSource: 'Uploaded Regional Cuisine Collage Panel (Karnataka)',
+    imageSourceType: 'user-uploaded',
+    imageLicense: 'Uploaded Project Asset',
     archiveUrl: 'https://commons.wikimedia.org/wiki/File:Ragi_Mudde_and_soppusaaru.jpg',
     isVerified: true,
     dishDescription: 'Steamed dark finger millet dumpling ball served with traditional green leafy vegetable saaru.'
@@ -66,13 +69,15 @@ export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
     regionalAliases: ['akki roti', 'akki rotti', 'rice flour flatbread', 'chawal ki roti', 'sabbakki akki roti'],
     state: 'Karnataka',
     region: 'South',
-    primaryUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Akki_rotti_with_chutney.jpg/800px-Akki_rotti_with_chutney.jpg',
+    primaryUrl: '/assets/food_crops/karnataka_akki_roti.png',
     fallbacks: [
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/3/36/Akki_rotti_with_chutney.jpg/800px-Akki_rotti_with_chutney.jpg',
       'https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Akki_rotti.jpg/800px-Akki_rotti.jpg',
       'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/3/36/Akki_rotti_with_chutney.jpg/800px-Akki_rotti_with_chutney.jpg&w=800&fit=cover&q=85'
     ],
-    imageSource: 'Wikimedia Commons (Karnataka Traditional Breakfast)',
-    imageLicense: 'CC BY-SA 3.0',
+    imageSource: 'Uploaded Regional Cuisine Collage Panel (Karnataka)',
+    imageSourceType: 'user-uploaded',
+    imageLicense: 'Uploaded Project Asset',
     archiveUrl: 'https://commons.wikimedia.org/wiki/File:Akki_rotti_with_chutney.jpg',
     isVerified: true,
     dishDescription: 'Pan-roasted rice flour flatbread with fresh dill leaves, grated coconut, and spices.'
@@ -85,13 +90,15 @@ export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
     regionalAliases: ['ven pongal', 'khara pongal', 'ghee pongal', 'pongal', 'katte pongali'],
     state: 'Tamil Nadu',
     region: 'South',
-    primaryUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Ven_Pongal.jpg/800px-Ven_Pongal.jpg',
+    primaryUrl: '/assets/food_crops/tamilnadu_ven_pongal.png',
     fallbacks: [
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Ven_Pongal.jpg/800px-Ven_Pongal.jpg',
       'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?w=800&auto=format&fit=crop&q=80',
       'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Ven_Pongal.jpg/800px-Ven_Pongal.jpg&w=800&fit=cover&q=85'
     ],
-    imageSource: 'Wikimedia Commons (Tamil Nadu Culinary Heritage)',
-    imageLicense: 'CC BY-SA 3.0',
+    imageSource: 'Uploaded Regional Cuisine Collage Panel (Tamil Nadu)',
+    imageSourceType: 'user-uploaded',
+    imageLicense: 'Uploaded Project Asset',
     archiveUrl: 'https://commons.wikimedia.org/wiki/File:Ven_Pongal.jpg',
     isVerified: true,
     dishDescription: 'Soft rice and moong dal porridge tempered with black pepper, cumin, ginger, and cashews in cow ghee.'
@@ -104,13 +111,15 @@ export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
     regionalAliases: ['bisi bele bath', 'bisibelebath', 'bisi bele huliyanna', 'sambar sadam', 'sambar rice'],
     state: 'Karnataka',
     region: 'South',
-    primaryUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Bisi_Bele_Bath.jpg/800px-Bisi_Bele_Bath.jpg',
+    primaryUrl: '/assets/food_crops/karnataka_bisi_bele_bath.png',
     fallbacks: [
+      'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Bisi_Bele_Bath.jpg/800px-Bisi_Bele_Bath.jpg',
       'https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Bisi_Bele_Bath_Karnataka.jpg/800px-Bisi_Bele_Bath_Karnataka.jpg',
       'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/c/c5/Bisi_Bele_Bath.jpg/800px-Bisi_Bele_Bath.jpg&w=800&fit=cover&q=85'
     ],
-    imageSource: 'Wikimedia Commons (Mysore Royal Culinary Archive)',
-    imageLicense: 'CC BY-SA 4.0',
+    imageSource: 'Uploaded Regional Cuisine Collage Panel (Karnataka)',
+    imageSourceType: 'user-uploaded',
+    imageLicense: 'Uploaded Project Asset',
     archiveUrl: 'https://commons.wikimedia.org/wiki/File:Bisi_Bele_Bath.jpg',
     isVerified: true,
     dishDescription: 'Traditional spiced rice and toor dal dish cooked with vegetables, tamarind, and aromatic spices.'
@@ -123,13 +132,15 @@ export const VERIFIED_FOOD_IMAGE_REGISTRY: Record<string, FoodImageMetadata> = {
     regionalAliases: ['idli', 'idly', 'idli sambar', 'kanchipuram idli', 'steamed idli'],
     state: 'Tamil Nadu',
     region: 'South',
-    primaryUrl: '/food-dataset/idli_vada.jpg',
+    primaryUrl: '/assets/food_crops/tamilnadu_idli.png',
     fallbacks: [
+      '/food-dataset/idli_vada.jpg',
       'https://upload.wikimedia.org/wikipedia/commons/thumb/1/11/Idli_Sambar.JPG/800px-Idli_Sambar.JPG',
       'https://wsrv.nl/?url=upload.wikimedia.org/wikipedia/commons/thumb/1/11/Idli_Sambar.JPG/800px-Idli_Sambar.JPG&w=800&fit=cover&q=85'
     ],
-    imageSource: 'Project Food Dataset',
-    imageLicense: 'CC BY-SA 3.0',
+    imageSource: 'Uploaded Regional Cuisine Collage Panel (Tamil Nadu)',
+    imageSourceType: 'user-uploaded',
+    imageLicense: 'Uploaded Project Asset',
     archiveUrl: 'https://commons.wikimedia.org/wiki/File:Idli_Sambar.JPG',
     isVerified: true,
     dishDescription: 'Soft steamed fermented cakes of parboiled rice and black gram lentils served with vegetable sambar.'
@@ -472,6 +483,12 @@ for (const [key, item] of Object.entries(REGIONAL_DISHES_CATALOG)) {
   VERIFIED_FOOD_IMAGE_REGISTRY[item.dishId] = item;
 }
 
+// 3. Auto-populate items from REGIONAL_UPLOADED_FOOD_MAP (User-uploaded regional collages)
+for (const [key, item] of Object.entries(REGIONAL_UPLOADED_FOOD_MAP)) {
+  VERIFIED_FOOD_IMAGE_REGISTRY[key] = item;
+  VERIFIED_FOOD_IMAGE_REGISTRY[item.dishId] = item;
+}
+
 const INDIAN_STATE_PREFIX_REGEX = /^(Karnataka|Tamil Nadu|Kerala|Andhra Pradesh|Telangana|Maharashtra|Gujarat|Goa|Rajasthan|Punjab|Haryana|Uttar Pradesh|Delhi|Himachal Pradesh|Jammu & Kashmir|Uttarakhand|Bihar|Jharkhand|West Bengal|Odisha|Madhya Pradesh|Chhattisgarh|Assam|Meghalaya|Manipur|Tripura|Sikkim|Nagaland)\s+/i;
 
 /**
@@ -486,6 +503,12 @@ export function getVerifiedDishPhoto(
 ): FoodImageMetadata | null {
   if (!dishName || dishName.trim().length === 0) return null;
   
+  // 0. PRIORITY 1: Uploaded Regional Food Collages
+  const uploadedCrop = getRegionalUploadedDishImage(dishName, isVegetarian);
+  if (uploadedCrop) {
+    return uploadedCrop;
+  }
+
   const raw = dishName.trim().toLowerCase();
   const clean = raw.replace(INDIAN_STATE_PREFIX_REGEX, '').trim();
   const withoutParens = clean.replace(/[\(\[].*?[\)\]]/g, '').trim();

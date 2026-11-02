@@ -18,10 +18,11 @@ import { UserProfileModal } from './components/UserProfileModal';
 import { AddToPlanModal } from './components/AddToPlanModal';
 import { AuthModal } from './components/AuthModal';
 import { PregnancyProfileSetupModal } from './components/PregnancyProfileSetupModal';
-import { SmartReminderModal } from './components/SmartReminderModal';
 import { EmergencySosModal } from './components/EmergencySosModal';
 import { WaterReminderAlertNotification } from './components/WaterReminderAlertNotification';
 import { AiAssistantChatbot } from './components/AiAssistantChatbot';
+import { InspirationalBackground } from './components/InspirationalBackground';
+import { ExpectantMotherArt } from './components/ExpectantMotherArt';
 import { useAppContext } from './context/AppContext';
 import { voiceService } from './services/voice_service';
 
@@ -60,8 +61,6 @@ export default function App() {
     handleAuthSuccess,
     saveInitialProfileSetup,
     logout,
-    isSmartReminderModalOpen,
-    setIsSmartReminderModalOpen,
     isSosModalOpen,
     setIsSosModalOpen
   } = useAppContext();
@@ -71,7 +70,7 @@ export default function App() {
   // Automatically cancel all active voice speech whenever user switches navigation tabs or closes dialogs
   useEffect(() => {
     voiceService.stopSpeaking();
-  }, [activeTab, isProfileModalOpen, isAuthModalOpen, isProfileSetupModalOpen, isSmartReminderModalOpen, isSosModalOpen]);
+  }, [activeTab, isProfileModalOpen, isAuthModalOpen, isProfileSetupModalOpen, isSosModalOpen]);
 
   // Initial Auth Verification Loading Screen (Requirement 5: Show a loading screen while checking authentication status)
   if (isAuthChecking) {
@@ -92,47 +91,54 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#EFEFE9] text-[#223030] antialiased font-sans">
+    <div className="relative min-h-screen flex flex-col bg-[#EFEFE9] text-[#223030] antialiased font-sans overflow-x-hidden">
+      {/* Inspirational Sunrise Silhouette Background Layer (Fixed, low opacity, non-blocking) */}
+      <InspirationalBackground />
+
       {/* 1. Dark Earthy Clinical Header with Location Selector, Language Selector & Week Status */}
-      <Header
-        profile={userProfile}
-        globalLocation={globalLocation}
-        onUpdateLocation={setGlobalLocation}
-        onOpenProfile={() => setIsProfileModalOpen(true)}
-        onResetData={resetAllData}
-        currentUser={currentUser}
-        onOpenAuth={() => setIsAuthModalOpen(true)}
-        onLogout={logout}
-        onOpenSos={() => setIsSosModalOpen(true)}
-      />
+      <div className="relative z-10 flex flex-col flex-1">
+        <Header
+          profile={userProfile}
+          globalLocation={globalLocation}
+          onUpdateLocation={setGlobalLocation}
+          onOpenProfile={() => setIsProfileModalOpen(true)}
+          onResetData={resetAllData}
+          currentUser={currentUser}
+          onOpenAuth={() => setIsAuthModalOpen(true)}
+          onLogout={logout}
+          onOpenSos={() => setIsSosModalOpen(true)}
+        />
 
-      {/* 2. Top Horizontal 8-Tab Navigation Bar */}
-      <MainNavigation activeTab={activeTab} onSelectTab={(tab) => setActiveTab(tab)} />
+        {/* 2. Top Horizontal 8-Tab Navigation Bar */}
+        <MainNavigation activeTab={activeTab} onSelectTab={(tab) => setActiveTab(tab)} />
 
-      {/* 3. Primary Module Layout Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
-        {!isAuthenticated ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center max-w-lg mx-auto bg-white/70 backdrop-blur-xs p-8 rounded-3xl border border-[#959D90]/40 shadow-sm animate-in fade-in">
-            <div className="w-16 h-16 rounded-3xl bg-[#223030] text-[#BBA58F] border border-[#523D35] flex items-center justify-center mb-5 shadow-md">
-              <Baby className="w-8 h-8" />
+        {/* 3. Primary Module Layout Container */}
+        <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+          {!isAuthenticated ? (
+            <div className="flex flex-col items-center justify-center py-16 text-center max-w-xl mx-auto backdrop-blur-[15px] saturate-[180%] bg-white/70 p-8 sm:p-10 rounded-3xl border border-white/60 shadow-2xl animate-in fade-in relative overflow-hidden">
+              <div className="w-32 h-36 sm:w-40 sm:h-44 mb-3 relative flex items-center justify-center">
+                <ExpectantMotherArt className="w-full h-full object-contain filter drop-shadow-xl" />
+              </div>
+              <span className="px-3.5 py-1 rounded-full text-[10px] font-black bg-[#E8D9CD] text-[#523D35] border border-[#BBA58F]/40 uppercase tracking-wider mb-2">
+                Maternal Healthcare Portal
+              </span>
+              <h2 className="text-2xl font-black text-[#223030] tracking-tight">Welcome to PregNutri AI</h2>
+              <p className="text-xs text-[#523D35] font-semibold mt-1">
+                ಕ್ಲಾಸಿಕ್ ತಾಯಿಯ ಪೋಷಕಾಂಶ ಮತ್ತು ಸ್ಮಾರ್ಟ್ ದಿನಚರಿ ಒಡನಾಡಿ
+              </p>
+              <p className="text-xs text-[#523D35] mt-2.5 leading-relaxed max-w-md">
+                Sign in or create your maternal account to access personalized ICMR-NIN nutrition recommendations, regional meal plans, pregnancy tracking, and clinical reports.
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsAuthModalOpen(true)}
+                className="mt-6 px-7 py-3.5 rounded-2xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold transition shadow-lg hover:shadow-xl cursor-pointer flex items-center gap-2 transform hover:-translate-y-0.5 active:translate-y-0"
+              >
+                <Sparkles className="w-4 h-4 text-[#BBA58F]" />
+                <span>Sign In or Create Account</span>
+              </button>
             </div>
-            <span className="px-3 py-1 rounded-full text-[10px] font-bold bg-[#E8D9CD] text-[#523D35] border border-[#BBA58F]/40 uppercase tracking-wider mb-2">
-              Maternal Healthcare Portal
-            </span>
-            <h2 className="text-xl font-extrabold text-[#223030]">Welcome to PregNutri AI</h2>
-            <p className="text-xs text-[#523D35] mt-2.5 leading-relaxed">
-              Sign in or create your maternal account to access personalized ICMR-NIN nutrition recommendations, regional meal plans, pregnancy tracking, and clinical reports.
-            </p>
-            <button
-              type="button"
-              onClick={() => setIsAuthModalOpen(true)}
-              className="mt-6 px-6 py-3 rounded-2xl bg-[#223030] hover:bg-[#523D35] text-[#EFEFE9] text-xs font-bold transition shadow-md cursor-pointer flex items-center gap-2"
-            >
-              <Sparkles className="w-4 h-4 text-[#BBA58F]" />
-              <span>Sign In or Create Account</span>
-            </button>
-          </div>
-        ) : (
+          ) : (
           <>
             {activeTab === 'dashboard' && (
               <DashboardView
@@ -261,13 +267,7 @@ export default function App() {
         initialProfile={userProfile}
       />
 
-      {/* 9. Smart Maternal Reminders Modal (Water, Meals, Doctor Visits) */}
-      <SmartReminderModal
-        isOpen={isSmartReminderModalOpen}
-        onClose={() => setIsSmartReminderModalOpen(false)}
-      />
-
-      {/* 10. Emergency SOS Modal */}
+      {/* Emergency SOS Modal */}
       <EmergencySosModal
         isOpen={isSosModalOpen}
         onClose={() => setIsSosModalOpen(false)}
@@ -280,6 +280,7 @@ export default function App() {
 
       {/* 12. Floating AI Assistant Chatbot Panel & Persistent Launcher */}
       <AiAssistantChatbot />
+      </div>
     </div>
   );
 }

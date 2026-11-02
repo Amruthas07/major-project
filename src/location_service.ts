@@ -241,7 +241,7 @@ const nationalSchemes: any[] = [
         ta: "தாய்-சேய் பாதுகாப்பு (MCP) அட்டை, கணவன்-மனைவி ஆதಾರ್ அட்டை, வங்கி கணக்கு புத்தகம்.",
         te: "తల్లి మరియు శిశు సంరక్షణ (MCP) కార్డు, దంపతుల ఆధార్ కార్డు, బ్యాంక్ పాస్ బుక్."
       },
-      website: "https://wcd.nic.in/schemes/pradhan-mantri-matru-vandana-yojana",
+      website: "https://pmmvy.wcd.gov.in/",
       nearestOffice: {
         en: `Anganwadi Integrated Nutrition Centre, Ward No. 5, ${finalCity}, ${finalDistrict} District`,
         kn: `ಅಂಗನವಾಡಿ ಸಮಗ್ರ ಪೌಷ್ಟಿಕ ಕೇಂದ್ರ, ವಾರ್ಡ್ ನಂ. ೫, ${finalCity}, ${finalDistrict} ಜಿಲ್ಲೆ`,
@@ -338,7 +338,7 @@ const nationalSchemes: any[] = [
           ta: "ஆதார் அட்டை, தாய் அட்டை (MCP), உள்ளூர் குடியிருப்பு சான்றிதழ்.",
           te: "ఆధార్ కార్డు, తల్లి కార్డు (MCP), స్థానిక నివాస ధృవీకరణ పత్రం."
         },
-        website: "https://dwcd.karnataka.gov.in",
+        website: "https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/",
         nearestOffice: {
           en: `Local Anganwadi Sector Office, ${finalCity}, ${finalDistrict}`,
           kn: `ಸ್ಥಳೀಯ ಅಂಗನವಾಡಿ ವಲಯ ಕಚೇರಿ, ${finalCity}, ${finalDistrict} ಜಿಲ್ಲೆ`,

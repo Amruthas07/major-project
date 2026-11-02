@@ -1,11 +1,22 @@
 import { DayOfWeek } from '../context/AppContext';
-import { PregnancyTrimester } from '../types';
+import { PregnancyTrimester, MealReminderSettings } from '../types';
 
 /**
  * Standard Date and Time utility ensuring robust timezone handling.
- * Locked to India Standard Time ('Asia/Kolkata') as required for Indian Maternal Healthcare.
+ * Resolves to 'Asia/Kolkata' when user location is India / Indian State,
+ * or user's local device timezone for honest localized scheduling.
  */
-export function getUserTimeZone(): string {
+export function getUserTimeZone(userLocation?: string): string {
+  if (userLocation) {
+    const isIndia = /india|karnataka|tamil|kerala|andhra|telangana|puducherry|delhi|maharashtra|gujarat|mumbai|bangalore|bengaluru|chennai|hyderabad|mysuru/i.test(
+      userLocation
+    );
+    if (isIndia) return 'Asia/Kolkata';
+  }
+  try {
+    const deviceTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (deviceTz) return deviceTz;
+  } catch (e) {}
   return 'Asia/Kolkata';
 }
 
@@ -252,6 +263,170 @@ export function calculateNextWaterReminder(
     isEnabled: true,
     nextReminderTime: timeFormatted,
     isPast: targetTime < now
+  };
+}
+
+/**
+ * Parses a date (YYYY-MM-DD) and local hour/minute into a UTC timestamp
+ * in the target IANA time zone (default Asia/Kolkata).
+ */
+export function parseTimeInTimeZone(
+  dateStr: string,
+  hour: number,
+  minute: number,
+  timeZone: string = 'Asia/Kolkata'
+): number {
+  if (timeZone === 'Asia/Kolkata' || timeZone === 'Asia/Calcutta') {
+    return new Date(
+      `${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00+05:30`
+    ).getTime();
+  }
+  try {
+    const utcGuess = new Date(
+      `${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00Z`
+    );
+    const invDate = new Date(utcGuess.toLocaleString('en-US', { timeZone: 'UTC' }));
+    const locDate = new Date(utcGuess.toLocaleString('en-US', { timeZone }));
+    const diff = invDate.getTime() - locDate.getTime();
+    return utcGuess.getTime() + diff;
+  } catch (e) {
+    return new Date(
+      `${dateStr}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00`
+    ).getTime();
+  }
+}
+
+export interface UpcomingReminderInfo {
+  type: 'water' | 'meal' | 'doctor' | 'none';
+  label: string;
+  timeStr: string;
+  targetMs: number;
+  minutesRemaining: number;
+}
+
+/**
+ * Calculates the next upcoming reminder across hydration, 5 maternal meal intervals,
+ * and prenatal doctor appointments using the actual current date and time.
+ * Strictly ignores past scheduled times to prevent repeat alarms.
+ */
+export function calculateNextUpcomingReminder(
+  waterSettings?: { enabled?: boolean; intervalMinutes?: number },
+  mealSettings?: MealReminderSettings,
+  doctorVisit?: { date?: string; time?: string; reminderEnabled?: boolean; doctorName?: string },
+  lastWaterTimestamp?: number,
+  timeZone?: string
+): UpcomingReminderInfo {
+  const tz = timeZone || getUserTimeZone();
+  const now = Date.now();
+  const candidates: {
+    type: 'water' | 'meal' | 'doctor';
+    label: string;
+    targetMs: number;
+  }[] = [];
+
+  // 1. Water Reminder candidate
+  const isWaterEnabled = waterSettings?.enabled ?? true;
+  if (isWaterEnabled) {
+    const intervalMinutes = Math.max(15, waterSettings?.intervalMinutes || 60);
+    const intervalMs = intervalMinutes * 60 * 1000;
+    const baseTime = lastWaterTimestamp && lastWaterTimestamp <= now ? lastWaterTimestamp : now;
+    let targetWater = baseTime + intervalMs;
+    if (targetWater <= now) {
+      targetWater = now + intervalMs;
+    }
+    candidates.push({
+      type: 'water',
+      label: 'Water Intake',
+      targetMs: targetWater
+    });
+  }
+
+  // 2. Maternal Meals candidates (5 intervals)
+  const mealsConfig: { key: keyof MealReminderSettings; label: string; defaultTime: string }[] = [
+    { key: 'breakfast', label: 'Breakfast', defaultTime: '08:00' },
+    { key: 'morningSnack', label: 'Mid-Morning Snack', defaultTime: '10:30' },
+    { key: 'lunch', label: 'Lunch', defaultTime: '13:00' },
+    { key: 'eveningSnack', label: 'Evening Snack', defaultTime: '17:00' },
+    { key: 'dinner', label: 'Dinner', defaultTime: '20:00' }
+  ];
+
+  const todayStr = getLocalDateString(new Date(now), tz);
+
+  for (const m of mealsConfig) {
+    const setting = mealSettings?.[m.key];
+    const enabled = setting ? (setting as any).enabled !== false : true;
+    if (!enabled) continue;
+
+    const timeStr = (setting as any)?.time || m.defaultTime;
+    const [h, min] = timeStr.split(':').map((v: string) => parseInt(v, 10) || 0);
+
+    const todayTarget = parseTimeInTimeZone(todayStr, h, min, tz);
+    if (todayTarget > now) {
+      candidates.push({
+        type: 'meal',
+        label: m.label,
+        targetMs: todayTarget
+      });
+    } else {
+      // Scheduled time passed today -> target is tomorrow at same time
+      const tomorrow = new Date(now + 24 * 60 * 60 * 1000);
+      const tomorrowStr = getLocalDateString(tomorrow, tz);
+      const tomorrowTarget = parseTimeInTimeZone(tomorrowStr, h, min, tz);
+      candidates.push({
+        type: 'meal',
+        label: `${m.label} (Tomorrow)`,
+        targetMs: tomorrowTarget
+      });
+    }
+  }
+
+  // 3. Doctor Visit candidate
+  if (doctorVisit?.date && doctorVisit.reminderEnabled !== false) {
+    const docTimeStr = doctorVisit.time || '10:00';
+    const [dh, dmin] = docTimeStr.split(':').map((v: string) => parseInt(v, 10) || 0);
+    const appointmentMs = parseTimeInTimeZone(doctorVisit.date, dh, dmin, tz);
+    const noticeMs = appointmentMs - 24 * 60 * 60 * 1000;
+
+    if (appointmentMs > now) {
+      if (noticeMs > now) {
+        candidates.push({
+          type: 'doctor',
+          label: `Doctor Visit Notice (${doctorVisit.doctorName || 'Checkup'})`,
+          targetMs: noticeMs
+        });
+      } else {
+        candidates.push({
+          type: 'doctor',
+          label: `Doctor Appointment (${doctorVisit.doctorName || 'Checkup'})`,
+          targetMs: appointmentMs
+        });
+      }
+    }
+  }
+
+  // Filter only future candidates and sort by soonest
+  const future = candidates.filter((c) => c.targetMs > now).sort((a, b) => a.targetMs - b.targetMs);
+
+  if (future.length === 0) {
+    return {
+      type: 'none',
+      label: 'No upcoming reminders',
+      timeStr: '--:--',
+      targetMs: 0,
+      minutesRemaining: 0
+    };
+  }
+
+  const soonest = future[0];
+  const minutesRemaining = Math.max(1, Math.round((soonest.targetMs - now) / 60000));
+  const timeFormatted = getLocalTimeString(new Date(soonest.targetMs), tz);
+
+  return {
+    type: soonest.type,
+    label: soonest.label,
+    timeStr: timeFormatted,
+    targetMs: soonest.targetMs,
+    minutesRemaining
   };
 }
 

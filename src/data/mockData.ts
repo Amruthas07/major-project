@@ -341,257 +341,512 @@ export const GOVERNMENT_WELFARE_SCHEMES: WelfareScheme[] = [
     title: 'PRADHAN MANTRI MATRU VANDANA YOJANA (PMMVY)',
     shortName: 'PMMVY (Centrally Sponsored Scheme)',
     description: 'Provides financial compensation for wage loss during pregnancy to promote adequate rest, clinical care, and institutional deliveries.',
-    eligibility: 'All Pregnant Women and Lactating Mothers (PW&LM) registering their pregnancy at government health sub-centres or Anganwadis for 1st living child, plus special benefits for 2nd girl child.',
-    benefits: 'Direct cash transfer of ₹5,000 in two installments directly to Aadhaar-seeded bank accounts for nutritional support and antenatal care.',
-    cashAmountHighlight: '₹5,000 Cash Assistance',
+    objective: 'Direct cash assistance to compensate wage loss and ensure maternal rest, timely clinical ANC checkups, and infant vaccination.',
+    eligibility: 'All Pregnant Women and Lactating Mothers (PW&LM) registering their pregnancy at government health sub-centres or Anganwadis for 1st living child (₹5,000), plus ₹6,000 for 2nd child if a girl child.',
+    benefits: 'Direct cash transfer of ₹5,000 in two installments (₹3,000 on ANC registration/1st trimester + ₹2,000 on childbirth registration) directly to Aadhaar-seeded bank accounts.',
+    mainBenefit: '₹5,000 Direct Benefit Transfer (DBT) in 2 installments for 1st child, and ₹6,000 for 2nd girl child.',
+    cashAmountHighlight: '₹5,000 Cash DBT',
+    cashAssistance: '₹5,000 Cash DBT',
     documentsNeeded: [
       'Mother and Child Protection (MCP) Card',
       'Aadhaar Card of Mother & Husband',
       'Aadhaar-Linked Bank Passbook',
-      'Pregnancy Certificate / LMS Registration'
+      'Pregnancy Registration Certificate'
     ],
-    portalUrl: 'https://pmmvy.wcd.gov.in',
-    category: 'Central Government',
-    badgeColor: 'emerald'
-  },
-  {
-    id: 'jsy',
-    title: 'JANANI SURAKSHA YOJANA (JSY)',
-    shortName: 'JSY (Safe Motherhood Intervention)',
-    description: 'A national safe motherhood initiative under NHM aimed at reducing maternal and neonatal mortality by promoting institutional delivery among poor pregnant women.',
-    eligibility: 'All pregnant women delivering in public health institutions or accredited private hospitals, specifically targeting BPL, SC, ST, and low-performing states.',
-    benefits: 'Cash assistance of ₹1,400 for rural areas and ₹1,000 for urban mothers along with free transport via 102/108 ambulance.',
-    cashAmountHighlight: '₹1,400 / ₹1,000 at Delivery',
-    documentsNeeded: [
-      'MCP Registration Card',
-      'BPL / Ration Card or Low-Income Proof',
-      'Aadhaar Card',
-      'Hospital Discharge & Delivery Certificate'
+    requiredDocuments: [
+      'Mother and Child Protection (MCP) Card',
+      'Aadhaar Card of Mother & Husband',
+      'Aadhaar-Linked Bank Passbook',
+      'Pregnancy Registration Certificate'
     ],
-    portalUrl: 'https://nhm.gov.in',
+    portalUrl: 'https://pmmvy.wcd.gov.in/',
+    officialPortalUrl: 'https://pmmvy.wcd.gov.in/',
+    official_portal_url: 'https://pmmvy.wcd.gov.in/',
+    thumbnail_url: '/assets/icons/dbt_cash.png',
+    small_thumbnail_url: '/assets/icons/dbt_cash.png',
     category: 'Central Government',
-    badgeColor: 'indigo'
-  },
-  {
-    id: 'pmsma',
-    title: 'PRADHAN MANTRI SURAKSHIT MATRITVA ABHIYAN (PMSMA)',
-    shortName: 'PMSMA (9th of Every Month)',
-    description: 'Guarantees free, comprehensive, and quality antenatal checkups by Obstetricians/specialists on the 9th of every single month for all pregnant women in their 2nd and 3rd trimesters.',
-    eligibility: 'All pregnant women in 2nd and 3rd trimester visiting any Government Medical College, District Hospital, Community Health Centre (CHC), or PHC on the 9th.',
-    benefits: '100% Free clinical checkups, ultrasound scans, blood tests (Hb, Blood sugar, VDRL, HIV), urine protein analysis, and free Iron Folic Acid (IFA) & Calcium tablets.',
-    cashAmountHighlight: '100% Free Checkups & Scans',
-    documentsNeeded: [
-      'MCP Card (RCH ID)',
-      'Government Photo ID (Aadhaar / Voter ID)',
-      'Previous Sonography & Blood Test Reports'
-    ],
-    portalUrl: 'https://pmsma.nhp.gov.in',
-    category: 'Central Government',
-    badgeColor: 'blue'
+    badgeColor: 'emerald',
+    badgeText: '🇮🇳 Central + State Integrated Scheme',
+    badge_label: 'CENTRAL + STATE INTEGRATED SCHEME',
+    benefit_tag: '₹5,000 Direct Cash Transfer'
   },
   {
     id: 'mathru-poorna',
     title: 'MATHRU POORNA YOJANA (KARNATAKA)',
     shortName: 'Mathru Poorna Daily Nutrition Scheme',
-    description: 'Karnataka state government targeted nutrition program providing one full hot cooked nutritious meal daily at Anganwadis, iron syrup, and calcium.',
-    eligibility: 'All pregnant and lactating women residing in Karnataka registering at local Anganwadi centres across BBMP and rural districts.',
-    benefits: 'Daily hot nutritious meal (Rice, Sambar with greens, Boiled Egg/Sprouts, 200ml Milk) + Maternity kit containing ghee, dates, tonics, and baby kit.',
-    cashAmountHighlight: 'Daily Nutritious Meal + Kit',
+    description: 'Karnataka state flagship maternal nutrition program providing one full hot cooked nutritious meal daily at Anganwadis with milk, egg/sprouts, and iron supplements.',
+    objective: 'Hot nutritious meal + IFA + Milk/Eggs provided daily at Anganwadis to eradicate maternal malnutrition, low birth weight, and gestational anemia in Karnataka.',
+    eligibility: 'All pregnant and lactating women residing in Karnataka registered at local Anganwadi centres across all 31 districts including BBMP Bangalore.',
+    benefits: 'Daily hot cooked nutritious lunch (Rice, Sambar with local greens, Boiled Egg or Sprouted Gram, 200ml Fortified Milk) + IFA and Calcium tablets.',
+    mainBenefit: 'Free daily hot balanced lunch at Anganwadi + 200ml milk, boiled egg/sprouts, and prenatal micro-nutrients.',
+    cashAmountHighlight: 'Daily Nutritious Meal + Milk & Eggs',
+    cashAssistance: 'Daily Full Hot Meal + Milk/Eggs',
     documentsNeeded: [
       'Local Anganwadi Enrollment',
-      'MCP Card Registration Number',
-      'Karnataka Residence / Ration Card',
+      'Thayi (MCP) Card Registration Number',
+      'Karnataka Residence Proof / Ration Card',
       'Aadhaar Card'
     ],
-    portalUrl: 'https://wcd.karnataka.gov.in',
+    requiredDocuments: [
+      'Local Anganwadi Enrollment',
+      'Thayi (MCP) Card Registration Number',
+      'Karnataka Residence Proof / Ration Card',
+      'Aadhaar Card'
+    ],
+    portalUrl: 'https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/',
+    officialPortalUrl: 'https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/',
+    official_portal_url: 'https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/',
+    thumbnail_url: '/assets/icons/hot_meal.png',
+    small_thumbnail_url: '/assets/icons/hot_meal.png',
     category: 'State Government',
     state: 'Karnataka',
-    badgeColor: 'amber'
+    badgeColor: 'amber',
+    badgeText: '📍 Karnataka State Scheme',
+    badge_label: 'KARNATAKA STATE SCHEME',
+    benefit_tag: 'Daily Hot Cooked Meal + Milk & Eggs'
+  },
+  {
+    id: 'gruha-lakshmi',
+    title: 'GRUHA LAKSHMI SCHEME (KARNATAKA)',
+    shortName: 'Gruha Lakshmi Direct Cash Assistance',
+    description: 'Karnataka state flagship guarantee program granting ₹2,000 per month financial empowerment to woman head of family for nutritional and domestic welfare.',
+    objective: '₹2,000/month direct benefit transfer for female head of household to provide financial independence, maternal nourishment, and household food security.',
+    eligibility: 'Women recognized as female head of household in Karnataka ration cards (Antyodaya, BPL, or APL). Excludes women or husbands paying GST or Income Tax.',
+    benefits: 'Guaranteed direct bank transfer (DBT) of ₹2,000 credited every month into the beneficiary’s Aadhaar-linked savings account.',
+    mainBenefit: '₹2,000 per month recurring DBT direct into mother’s bank account for nutritional and household welfare.',
+    cashAmountHighlight: '₹2,000 / month Direct DBT',
+    cashAssistance: '₹2,000 / Month Direct DBT',
+    documentsNeeded: [
+      'Karnataka Ration Card (BPL / APL / Antyodaya)',
+      'Aadhaar Card of Mother / Woman Head',
+      'Aadhaar-Seeded Bank Account Passbook',
+      'Aadhaar-Linked Mobile Number'
+    ],
+    requiredDocuments: [
+      'Karnataka Ration Card (BPL / APL / Antyodaya)',
+      'Aadhaar Card of Mother / Woman Head',
+      'Aadhaar-Seeded Bank Account Passbook',
+      'Aadhaar-Linked Mobile Number'
+    ],
+    portalUrl: 'https://sevasindhuservices.karnataka.gov.in',
+    officialPortalUrl: 'https://sevasindhuservices.karnataka.gov.in',
+    official_portal_url: 'https://sevasindhuservices.karnataka.gov.in',
+    thumbnail_url: '/assets/icons/dbt_cash.png',
+    small_thumbnail_url: '/assets/icons/dbt_cash.png',
+    category: 'State Government',
+    state: 'Karnataka',
+    badgeColor: 'emerald',
+    badgeText: '📍 Karnataka State Scheme',
+    badge_label: 'KARNATAKA STATE SCHEME',
+    benefit_tag: '₹2,000 / Month Direct DBT'
+  },
+  {
+    id: 'prasuti-araike-nagu-magu',
+    title: 'PRASUTI ARAIKE & NAGU MAGU SCHEME (KARNATAKA)',
+    shortName: 'Prasuti Araike & Nagu Magu Vehicle Support',
+    description: 'Karnataka state delivery incentive and transport assistance scheme providing financial grants and specialized "Nagu Magu" vehicles for safe transport.',
+    objective: 'State delivery & transport assistance ensuring 100% institutional deliveries in government hospitals and free safe drop back to residence for mother & newborn.',
+    eligibility: 'All pregnant women in Karnataka delivering in government hospitals, Community Health Centres (CHCs), or Taluk hospitals, with priority for BPL/SC/ST mothers.',
+    benefits: '₹2,000 to ₹3,000 cash assistance for post-delivery care + free baby kit + free dedicated Nagu Magu ambulance drop from hospital directly to the mother’s doorstep.',
+    mainBenefit: 'Financial delivery grant (₹2,000-₹3,000) + free Nagu Magu vehicle drop home with newborn baby care kit.',
+    cashAmountHighlight: '₹2,000-₹3,000 + Free Nagu Magu Drop',
+    cashAssistance: '₹2,000-₹3,000 + Free Nagu Magu Drop',
+    documentsNeeded: [
+      'Thayi (MCP) Card',
+      'Karnataka BPL / SC-ST / Ration Card',
+      'Hospital Delivery Discharge Summary',
+      'Aadhaar Card & Bank Passbook'
+    ],
+    requiredDocuments: [
+      'Thayi (MCP) Card',
+      'Karnataka BPL / SC-ST / Ration Card',
+      'Hospital Delivery Discharge Summary',
+      'Aadhaar Card & Bank Passbook'
+    ],
+    portalUrl: 'https://karnataka.gov.in',
+    officialPortalUrl: 'https://karnataka.gov.in',
+    official_portal_url: 'https://karnataka.gov.in',
+    thumbnail_url: '/assets/icons/antenatal_care.png',
+    small_thumbnail_url: '/assets/icons/antenatal_care.png',
+    category: 'State Government',
+    state: 'Karnataka',
+    badgeColor: 'blue',
+    badgeText: '📍 Karnataka State Scheme',
+    badge_label: 'KARNATAKA STATE SCHEME',
+    benefit_tag: '₹2,000-₹3,000 + Free Nagu Magu Drop'
   },
   {
     id: 'thayi-bhagya',
-    title: 'THAYI BHAGYA SCHEME / KARNATAKA MATRU VANDANA',
+    title: 'THAYI BHAGYA SCHEME (KARNATAKA)',
     shortName: 'Thayi Bhagya Institutional Delivery Scheme',
     description: 'Karnataka state safe delivery scheme providing free institutional maternal care, emergency obstetric transport, and delivery care in accredited healthcare facilities.',
+    objective: 'Promote zero out-of-pocket expenses for safe hospital deliveries, including normal deliveries and emergency C-sections for vulnerable mothers.',
     eligibility: 'Pregnant women residing in Karnataka holding BPL/SC/ST ration card delivering in recognized health centres or empanelled private hospitals.',
     benefits: '100% Free delivery services (including emergency C-sections), newborn care kit, and financial transport assistance under Thayi Bhagya.',
+    mainBenefit: '100% Free hospital delivery care (including C-sections) + baby care kit.',
     cashAmountHighlight: 'Free Delivery Care & Kit',
+    cashAssistance: 'Free Delivery Care & Kit',
     documentsNeeded: [
       'Thayi Card (Mother & Child Protection Card)',
       'Karnataka BPL / Antyodaya Ration Card',
       'Aadhaar Card',
       'Hospital Admission Referral'
     ],
-    portalUrl: 'https://hfw.karnataka.gov.in',
+    requiredDocuments: [
+      'Thayi Card (Mother & Child Protection Card)',
+      'Karnataka BPL / Antyodaya Ration Card',
+      'Aadhaar Card',
+      'Hospital Admission Referral'
+    ],
+    portalUrl: 'https://karnataka.gov.in',
+    officialPortalUrl: 'https://karnataka.gov.in',
+    official_portal_url: 'https://karnataka.gov.in',
+    thumbnail_url: '/assets/icons/antenatal_care.png',
+    small_thumbnail_url: '/assets/icons/antenatal_care.png',
     category: 'State Government',
     state: 'Karnataka',
-    badgeColor: 'emerald'
+    badgeColor: 'emerald',
+    badgeText: '📍 Karnataka State Scheme',
+    badge_label: 'KARNATAKA STATE SCHEME',
+    benefit_tag: 'Free Hospital Delivery & Baby Kit'
   },
   {
-    id: 'muthulakshmi-reddy',
-    title: 'DR. MUTHULAKSHMI REDDY MATERNITY BENEFIT SCHEME (TAMIL NADU)',
-    shortName: 'MRMBS & Amma Maternity Nutrition Kit',
-    description: 'Tamil Nadu flagship maternal welfare scheme providing financial assistance of ₹18,000 in 5 installments and two Amma Maternity Nutrition Kits.',
-    eligibility: 'All pregnant women below poverty line (BPL) in Tamil Nadu completing ANC checkups and delivering in government medical institutions.',
-    benefits: '₹14,000 cash in bank installments + ₹4,000 worth 2 Amma Maternity Nutrition Kits containing Iron tonic, Nutrition Health Mix powder, Dates, Pure A2 Ghee, and Souvenir kit.',
-    cashAmountHighlight: '₹18,000 Financial + Kit Package',
+    id: 'jsy',
+    title: 'JANANI SURAKSHA YOJANA (JSY)',
+    shortName: 'JSY (Safe Motherhood Intervention)',
+    description: 'A national safe motherhood initiative under NHM aimed at reducing maternal and neonatal mortality by promoting institutional delivery among poor pregnant women.',
+    objective: 'Encourage safe institutional deliveries in public health centres and accredited hospitals to dramatically reduce maternal mortality.',
+    eligibility: 'All pregnant women delivering in public health institutions or accredited private hospitals, specifically targeting BPL, SC, ST mothers.',
+    benefits: 'Cash assistance of ₹1,400 for rural areas and ₹1,000 for urban mothers along with free transport via 102/108 ambulance.',
+    mainBenefit: '₹1,400 (Rural) / ₹1,000 (Urban) cash assistance post-delivery.',
+    cashAmountHighlight: '₹1,400 / ₹1,000 at Delivery',
+    cashAssistance: '₹1,400 / ₹1,000 at Delivery',
     documentsNeeded: [
-      'PICME (Pregnancy and Infant Cohort Monitoring and Evaluation) RCH ID',
+      'MCP Registration Card',
+      'BPL / Ration Card or Low-Income Proof',
       'Aadhaar Card',
-      'Tamil Nadu Ration Card',
-      'Bank Account Passbook (Aadhaar linked)'
+      'Hospital Discharge & Delivery Certificate'
     ],
-    portalUrl: 'https://picme.tn.gov.in',
-    category: 'State Government',
-    state: 'Tamil Nadu',
-    badgeColor: 'emerald'
+    requiredDocuments: [
+      'MCP Registration Card',
+      'BPL / Ration Card or Low-Income Proof',
+      'Aadhaar Card',
+      'Hospital Discharge & Delivery Certificate'
+    ],
+    portalUrl: 'https://nhm.gov.in',
+    officialPortalUrl: 'https://nhm.gov.in',
+    official_portal_url: 'https://nhm.gov.in',
+    thumbnail_url: '/assets/icons/dbt_cash.png',
+    small_thumbnail_url: '/assets/icons/dbt_cash.png',
+    category: 'Central Government',
+    badgeColor: 'indigo',
+    badgeText: '🇮🇳 Central Government Scheme',
+    badge_label: 'CENTRAL GOVERNMENT SCHEME',
+    benefit_tag: '₹1,400 (Rural) / ₹1,000 (Urban) DBT'
   },
   {
-    id: 'kcr-nutrition-kit',
-    title: 'KCR NUTRITION KIT & MATERNITY BENEFIT (TELANGANA)',
-    shortName: 'KCR Kit & KCR Nutrition Scheme',
-    description: 'Telangana maternal welfare initiative aimed at curbing maternal anemia and malnutrition with dedicated nutritional provisions and financial aid.',
-    eligibility: 'Pregnant women residing in Telangana attending government health centers for antenatal checkups in 2nd and 3rd trimesters.',
-    benefits: '₹12,000 for baby boy / ₹13,000 for baby girl + Nutrition kit containing Pure Ghee, Nutrition Mix powder, Medjool Dates, Iron-fortified tonic, and mother-baby care kit.',
-    cashAmountHighlight: '₹13,000 + Nutrition Kits',
+    id: 'pmsma',
+    title: 'PRADHAN MANTRI SURAKSHIT MATRITVA ABHIYAN (PMSMA)',
+    shortName: 'PMSMA (9th of Every Month)',
+    description: 'Guarantees free, comprehensive, and quality antenatal checkups by Obstetricians/specialists on the 9th of every single month for all pregnant women in their 2nd and 3rd trimesters.',
+    objective: 'Provide assured, comprehensive, and quality antenatal care by specialists on fixed day (9th of every month) for high-risk pregnancy screening.',
+    eligibility: 'All pregnant women in 2nd and 3rd trimester visiting any Government Medical College, District Hospital, Community Health Centre (CHC), or PHC on the 9th.',
+    benefits: '100% Free clinical checkups, ultrasound scans, blood tests (Hb, Blood sugar, VDRL, HIV), urine protein analysis, and free Iron Folic Acid (IFA) & Calcium tablets.',
+    mainBenefit: '100% Free comprehensive clinical checkups, ultrasound scans, and blood diagnostics on the 9th of every month.',
+    cashAmountHighlight: '100% Free Checkups & Scans',
+    cashAssistance: '100% Free Checkups & Scans',
     documentsNeeded: [
-      'KCR Kit Registration Number / MCP ID',
-      'Telangana Food Security / Ration Card',
-      'Aadhaar Card of Mother',
-      'Hospital ANC Checkup Card'
+      'MCP Card (RCH ID)',
+      'Government Photo ID (Aadhaar / Voter ID)',
+      'Previous Sonography & Blood Test Reports'
     ],
-    portalUrl: 'https://kcrkit.telangana.gov.in',
-    category: 'State Government',
-    state: 'Telangana',
-    badgeColor: 'indigo'
-  },
-  {
-    id: 'ysr-sampoorna',
-    title: 'YSR SAMPOORNA POSHANA (ANDHRA PRADESH)',
-    shortName: 'YSR Maternal Nutrition & Diet Scheme',
-    description: 'Andhra Pradesh state nutrition program providing enriched hot cooked meals, take-home nutrition kits, and micro-nutrient snacks through Anganwadis.',
-    eligibility: 'All pregnant and lactating women registered in rural, urban, and tribal Anganwadi centers in Andhra Pradesh.',
-    benefits: 'Daily hot meal, 25 days of take-home nutrition mix, 200ml milk, 1 boiled egg daily, peanut chikki, and free IFA tablets.',
-    cashAmountHighlight: 'Daily Full Meal + Monthly THR',
-    documentsNeeded: [
-      'YSR Seva Card / MCP Registration',
-      'AP Rice Card / Ration Card',
-      'Aadhaar Card'
+    requiredDocuments: [
+      'MCP Card (RCH ID)',
+      'Government Photo ID (Aadhaar / Voter ID)',
+      'Previous Sonography & Blood Test Reports'
     ],
-    portalUrl: 'https://wdcw.ap.gov.in',
-    category: 'State Government',
-    state: 'Andhra Pradesh',
-    badgeColor: 'blue'
+    portalUrl: 'https://pmsma.mohfw.gov.in/',
+    officialPortalUrl: 'https://pmsma.mohfw.gov.in/',
+    official_portal_url: 'https://pmsma.mohfw.gov.in/',
+    thumbnail_url: '/assets/icons/antenatal_care.png',
+    small_thumbnail_url: '/assets/icons/antenatal_care.png',
+    category: 'Central Government',
+    badgeColor: 'blue',
+    badgeText: '🇮🇳 Central Government Scheme',
+    badge_label: 'CENTRAL GOVERNMENT SCHEME',
+    benefit_tag: '100% Free Checkups & Scans (9th of Month)'
   },
   {
     id: 'jssk',
     title: 'JANANI SHISHU SURAKSHA KARYAKRAM (JSSK)',
     shortName: 'JSSK (100% Zero Out-of-Pocket Expense)',
     description: 'National safe delivery entitlement guaranteeing absolutely zero expense for drugs, consumables, diet during stay, blood transfusions, diagnostics, and transport for mother and newborn.',
-    eligibility: 'All pregnant women accessing public health facilities (PHCs, CHCs, District Hospitals, Medical Colleges) across all Indian States.',
-    benefits: 'Completely free C-section and normal deliveries, free diagnostic blood/ultrasound tests, free inpatient meals, and free 108/102 home drop transport.',
-    cashAmountHighlight: '100% Zero Expense Entitlement',
+    objective: 'Ensure free and accessible maternal and newborn healthcare for every family.',
+    eligibility: 'All pregnant women and sick newborns receiving care at government health facilities across India and Karnataka.',
+    eligibility_summary: 'All pregnant women and sick newborns receiving care at government health facilities across India and Karnataka.',
+    benefits: 'Free delivery and C-section, medicines, diagnostics, blood, diet, and transport support as per scheme guidelines.',
+    mainBenefit: 'Free delivery and C-section, medicines, diagnostics, blood, diet, and transport support as per scheme guidelines.',
+    main_benefit: 'Free delivery and C-section, medicines, diagnostics, blood, diet, and transport support as per scheme guidelines.',
+    cashAmountHighlight: '100% Free Healthcare & Delivery',
+    cashAssistance: '100% Free Healthcare & Delivery',
     documentsNeeded: [
-      'MCP Registration Card',
-      'Any Government Photo ID'
+      'MCP (Mother and Child Protection) Card',
+      'Any valid government photo ID, if available.'
     ],
-    portalUrl: 'https://nhm.gov.in',
+    requiredDocuments: [
+      'MCP (Mother and Child Protection) Card',
+      'Any valid government photo ID, if available.'
+    ],
+    required_documents: [
+      'MCP (Mother and Child Protection) Card',
+      'Any valid government photo ID, if available.'
+    ],
+    portalUrl: 'https://nhm.gov.in/index1.php?lang=1&level=2&sublinkid=824&lid=223',
+    officialPortalUrl: 'https://nhm.gov.in/index1.php?lang=1&level=2&sublinkid=824&lid=223',
+    official_portal_url: 'https://nhm.gov.in/index1.php?lang=1&level=2&sublinkid=824&lid=223',
+    thumbnail_url: '/assets/icons/medical_glove_icon.png',
+    small_thumbnail_url: '/assets/icons/medical_glove_icon.png',
     category: 'Central Government',
-    badgeColor: 'emerald'
+    badgeColor: 'emerald',
+    badgeText: '🇮🇳 Central / State Health Scheme',
+    badge_label: 'CENTRAL / STATE HEALTH SCHEME',
+    benefit_tag: '100% Free Healthcare & Delivery'
+  },
+  {
+    id: 'muthulakshmi-reddy',
+    title: 'DR. MUTHULAKSHMI REDDY MATERNITY BENEFIT SCHEME (TAMIL NADU)',
+    shortName: 'MRMBS & Amma Maternity Nutrition Kit',
+    description: 'Tamil Nadu flagship maternal welfare scheme providing financial assistance of ₹18,000 in 5 installments and two Amma Maternity Nutrition Kits.',
+    objective: 'Provide wage compensation and rich nutrition kits to poor pregnant mothers across Tamil Nadu.',
+    eligibility: 'All pregnant women below poverty line (BPL) in Tamil Nadu completing ANC checkups and delivering in government medical institutions. PICME registration required.',
+    benefits: '₹14,000 cash in bank installments + ₹4,000 worth 2 Amma Maternity Nutrition Kits containing Iron tonic, Nutrition Health Mix powder, Dates, Pure A2 Ghee, and Souvenir kit.',
+    mainBenefit: '₹18,000 total package (₹14,000 cash DBT + 2 Amma Nutrition Kits worth ₹4,000).',
+    cashAmountHighlight: '₹18,000 Financial + Kit Package',
+    cashAssistance: '₹18,000 Financial + Kit Package',
+    documentsNeeded: [
+      'PICME (Pregnancy and Infant Cohort Monitoring and Evaluation) RCH ID',
+      'Aadhaar Card',
+      'Tamil Nadu Ration Card',
+      'Bank Account Passbook (Aadhaar linked)'
+    ],
+    requiredDocuments: [
+      'PICME (Pregnancy and Infant Cohort Monitoring and Evaluation) RCH ID',
+      'Aadhaar Card',
+      'Tamil Nadu Ration Card',
+      'Bank Account Passbook (Aadhaar linked)'
+    ],
+    portalUrl: 'https://picme.tn.gov.in',
+    officialPortalUrl: 'https://picme.tn.gov.in',
+    category: 'State Government',
+    state: 'Tamil Nadu',
+    badgeColor: 'emerald',
+    badgeText: '📍 Tamil Nadu State Scheme'
+  },
+  {
+    id: 'kcr-nutrition-kit',
+    title: 'KCR NUTRITION KIT & MATERNITY BENEFIT (TELANGANA)',
+    shortName: 'KCR Kit & KCR Nutrition Scheme',
+    description: 'Telangana maternal welfare initiative aimed at curbing maternal anemia and malnutrition with dedicated nutritional provisions and financial aid.',
+    objective: 'Provide cash incentive and 16 essential newborn care items to encourage institutional deliveries in Telangana.',
+    eligibility: 'Pregnant women residing in Telangana attending government health centers for antenatal checkups in 2nd and 3rd trimesters.',
+    benefits: '₹12,000 for baby boy / ₹13,000 for baby girl + Nutrition kit containing Pure Ghee, Nutrition Mix powder, Medjool Dates, Iron-fortified tonic, and mother-baby care kit.',
+    mainBenefit: '₹12,000-₹13,000 cash in 4 instalments + 16-item newborn and mother nutrition kit.',
+    cashAmountHighlight: '₹13,000 + Nutrition Kits',
+    cashAssistance: '₹13,000 + Nutrition Kits',
+    documentsNeeded: [
+      'KCR Kit Registration Number / MCP ID',
+      'Telangana Food Security / Ration Card',
+      'Aadhaar Card of Mother',
+      'Hospital ANC Checkup Card'
+    ],
+    requiredDocuments: [
+      'KCR Kit Registration Number / MCP ID',
+      'Telangana Food Security / Ration Card',
+      'Aadhaar Card of Mother',
+      'Hospital ANC Checkup Card'
+    ],
+    portalUrl: 'https://kcrkit.telangana.gov.in',
+    officialPortalUrl: 'https://kcrkit.telangana.gov.in',
+    category: 'State Government',
+    state: 'Telangana',
+    badgeColor: 'indigo',
+    badgeText: '📍 Telangana State Scheme'
+  },
+  {
+    id: 'ysr-sampoorna',
+    title: 'YSR SAMPOORNA POSHANA (ANDHRA PRADESH)',
+    shortName: 'YSR Maternal Nutrition & Diet Scheme',
+    description: 'Andhra Pradesh state nutrition program providing enriched hot cooked meals, take-home nutrition kits, and micro-nutrient snacks through Anganwadis.',
+    objective: 'Combat anemia and malnutrition in pregnant women, lactating mothers, and children across Andhra Pradesh.',
+    eligibility: 'All pregnant and lactating women registered in rural, urban, and tribal Anganwadi centers in Andhra Pradesh.',
+    benefits: 'Daily hot meal, 25 days of take-home nutrition mix, 200ml milk, 1 boiled egg daily, peanut chikki, and free IFA tablets.',
+    mainBenefit: 'Free hot meal + 25-day Take Home Ration (THR), 200ml milk, boiled eggs, and nutrition powder.',
+    cashAmountHighlight: 'Daily Full Meal + Monthly THR',
+    cashAssistance: 'Daily Full Meal + Monthly THR',
+    documentsNeeded: [
+      'YSR Seva Card / MCP Registration',
+      'AP Rice Card / Ration Card',
+      'Aadhaar Card'
+    ],
+    requiredDocuments: [
+      'YSR Seva Card / MCP Registration',
+      'AP Rice Card / Ration Card',
+      'Aadhaar Card'
+    ],
+    portalUrl: 'https://wdcw.ap.gov.in',
+    officialPortalUrl: 'https://wdcw.ap.gov.in',
+    category: 'State Government',
+    state: 'Andhra Pradesh',
+    badgeColor: 'blue',
+    badgeText: '📍 Andhra Pradesh State Scheme'
   },
   {
     id: 'kerala-janani-smrithi',
     title: 'JANANI SMRITHI & AARDRAM MATERNAL INITIATIVE (KERALA)',
     shortName: 'Kerala Maternal Safe Delivery & Care',
     description: 'Kerala comprehensive maternity scheme providing nutritional support, free institutional care at Aardram Family Health Centres, and financial aid.',
+    objective: 'Ensure zero neonatal mortality and free clinical scans, tests, and care across Kerala.',
     eligibility: 'All pregnant women registered in Kerala public health network through Anganwadis and Taluk hospitals.',
     benefits: 'Direct financial assistance of ₹2,000 for nutritional supplements, free delivery services, and complete postpartum follow-ups with ASHA workers.',
+    mainBenefit: '₹2,000 nutritional grant + cashless clinical diagnostics and delivery in Family Health Centres.',
     cashAmountHighlight: '₹2,000 Nutrition Grant + Free ANC',
+    cashAssistance: '₹2,000 Nutrition Grant + Free ANC',
     documentsNeeded: [
       'MCP Registration Card',
       'Kerala Ration Card',
       'Aadhaar Card',
       'Bank Account Passbook'
     ],
+    requiredDocuments: [
+      'MCP Registration Card',
+      'Kerala Ration Card',
+      'Aadhaar Card',
+      'Bank Account Passbook'
+    ],
     portalUrl: 'https://dhs.kerala.gov.in',
+    officialPortalUrl: 'https://dhs.kerala.gov.in',
     category: 'State Government',
     state: 'Kerala',
-    badgeColor: 'emerald'
+    badgeColor: 'emerald',
+    badgeText: '📍 Kerala State Scheme'
   },
   {
     id: 'maharashtra-matrutva-anudan',
     title: 'MATRUTVA ANUDAN YOJANA & MANODHARYA (MAHARASHTRA)',
     shortName: 'Maharashtra Maternal Nutrition Benefit',
     description: 'State government initiative providing financial assistance and nutritional support to pregnant women in rural and tribal districts of Maharashtra.',
+    objective: 'Provide cash grant to combat maternal weight loss and anemia in Maharashtra tribal and rural tehsils.',
     eligibility: 'Pregnant women residing in Maharashtra delivering in government hospitals, with prioritized coverage for rural and tribal tehsils.',
     benefits: '₹4,000 direct benefit transfer in 2 phases for nutrition, plus free iron-folic acid kits and post-delivery maternal monitoring.',
+    mainBenefit: '₹4,000 direct cash assistance in 2 phases for prenatal and postnatal nutrition.',
     cashAmountHighlight: '₹4,000 Financial Grant + Kit',
+    cashAssistance: '₹4,000 Financial Grant + Kit',
     documentsNeeded: [
       'Mother and Child Protection (MCP) Card',
       'Maharashtra Domicile / Ration Card',
       'Aadhaar Card',
       'Bank Account Details'
     ],
+    requiredDocuments: [
+      'Mother and Child Protection (MCP) Card',
+      'Maharashtra Domicile / Ration Card',
+      'Aadhaar Card',
+      'Bank Account Details'
+    ],
     portalUrl: 'https://arogya.maharashtra.gov.in',
+    officialPortalUrl: 'https://arogya.maharashtra.gov.in',
     category: 'State Government',
     state: 'Maharashtra',
-    badgeColor: 'amber'
+    badgeColor: 'amber',
+    badgeText: '📍 Maharashtra State Scheme'
   },
   {
     id: 'gujarat-kpsy',
     title: 'KASTURBA POSHAN SAHAY YOJANA - KPSY (GUJARAT)',
     shortName: 'KPSY Maternal Nutrition Scheme',
     description: 'Gujarat state welfare scheme providing cash incentives in 3 trimesters to ensure adequate maternal rest, nutrition, and institutional delivery.',
+    objective: 'Provide cash support in 3 trimesters for maternal nutrition and infant health.',
     eligibility: 'All BPL pregnant women in Gujarat who register their pregnancy early and complete mandatory ANC checkups.',
     benefits: 'Total assistance of ₹6,000 distributed in three installments across trimesters and post-delivery infant immunization.',
+    mainBenefit: '₹6,000 total financial aid distributed across 3 trimesters and delivery.',
     cashAmountHighlight: '₹6,000 Total Financial Support',
+    cashAssistance: '₹6,000 Total Financial Support',
     documentsNeeded: [
       'Mamta Card / MCP Card',
       'BPL Card / Gujarat Ration Card',
       'Aadhaar Card',
       'Bank Passbook'
     ],
+    requiredDocuments: [
+      'Mamta Card / MCP Card',
+      'BPL Card / Gujarat Ration Card',
+      'Aadhaar Card',
+      'Bank Passbook'
+    ],
     portalUrl: 'https://gujhealth.gujarat.gov.in',
+    officialPortalUrl: 'https://gujhealth.gujarat.gov.in',
     category: 'State Government',
     state: 'Gujarat',
-    badgeColor: 'indigo'
+    badgeColor: 'indigo',
+    badgeText: '📍 Gujarat State Scheme'
   },
   {
     id: 'up-kanya-sumangala',
     title: 'MUKHYAMANTRI KANYA SUMANGALA & JANANI SHISHU (UTTAR PRADESH)',
     shortName: 'UP Maternal & Child Safety Scheme',
     description: 'Uttar Pradesh dedicated maternal health and girl child support program offering institutional delivery financial aid and nutritional encouragement.',
+    objective: 'Support pregnant mothers and financial grant for girl child birth in UP.',
     eligibility: 'Permanent residents of Uttar Pradesh delivering in public health institutions with family income within state thresholds.',
     benefits: '₹1,400 JSY rural assistance + ₹2,000 initial grant upon birth under Kanya Sumangala for girl child + free ambulance drop.',
+    mainBenefit: '₹3,400+ combined delivery and newborn girl child incentive.',
     cashAmountHighlight: '₹3,400+ Delivery & Girl Child Aid',
+    cashAssistance: '₹3,400+ Delivery & Girl Child Aid',
     documentsNeeded: [
       'MCP Registration Card',
       'UP Niwas Praman Patra / Ration Card',
       'Aadhaar Card',
       'Bank Account Details'
     ],
+    requiredDocuments: [
+      'MCP Registration Card',
+      'UP Niwas Praman Patra / Ration Card',
+      'Aadhaar Card',
+      'Bank Account Details'
+    ],
     portalUrl: 'https://mksy.up.gov.in',
+    officialPortalUrl: 'https://mksy.up.gov.in',
     category: 'State Government',
     state: 'Uttar Pradesh',
-    badgeColor: 'blue'
+    badgeColor: 'blue',
+    badgeText: '📍 Uttar Pradesh State Scheme'
   },
   {
     id: 'wb-matri-maa',
     title: 'MATRI MAA MATERNAL HEALTH INITIATIVE (WEST BENGAL)',
     shortName: 'West Bengal Maternal Care Scheme',
     description: 'Comprehensive state program ensuring 100% institutional deliveries, free maternal diagnostic checkups, and nutritional take-home rations.',
+    objective: 'Promote 100% institutional deliveries and free diagnostic care in West Bengal.',
     eligibility: 'All pregnant mothers in West Bengal registered at Sub-Centres, BPHCs, and District Hospitals.',
     benefits: 'Free nutritional kits, complete diagnostic waiver, dedicated Matriyaan vehicle transport to hospital, and post-delivery assistance.',
+    mainBenefit: 'Free nutritional kits, complete diagnostic waiver, and free Matriyaan ambulance.',
     cashAmountHighlight: 'Free Transport + Nutrition Support',
+    cashAssistance: 'Free Transport + Nutrition Support',
     documentsNeeded: [
       'Swasthya Sathi Card / MCP Card',
       'West Bengal Digital Ration Card',
       'Aadhaar Card'
     ],
+    requiredDocuments: [
+      'Swasthya Sathi Card / MCP Card',
+      'West Bengal Digital Ration Card',
+      'Aadhaar Card'
+    ],
     portalUrl: 'https://wbhealth.gov.in',
+    officialPortalUrl: 'https://wbhealth.gov.in',
     category: 'State Government',
     state: 'West Bengal',
-    badgeColor: 'emerald'
+    badgeColor: 'emerald',
+    badgeText: '📍 West Bengal State Scheme'
   }
 ];
 

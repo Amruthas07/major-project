@@ -3,6 +3,9 @@ import path from 'path';
 import fs from 'fs';
 import dotenv from 'dotenv';
 import { GoogleGenAI, Type } from '@google/genai';
+import { KAGGLE_PROCESSED_FOOD_DATABASE } from './src/services/kaggle_food_pipeline';
+import { isMatchingState, normalizeStateName, toStructuredRecommendation, StructuredFoodRecommendation } from './src/utils/state_food_filter';
+import { GOVERNMENT_WELFARE_SCHEMES } from './src/data/mockData';
 
 dotenv.config();
 
@@ -157,15 +160,33 @@ You MUST write your entire answer in ${targetLanguageName}.
 - If English is requested, write in English.
 Do NOT mix unrequested scripts.
 
-CLINICAL & NUTRITIONAL GUIDELINES:
-1. Ground your recommendations in the mother's current trimester (${trimester}):
-   - 1st Trimester: Folic acid, Vitamin B6, hydration, combating nausea, light easily digestible foods.
-   - 2nd Trimester: Rapid fetal skeletal & blood volume expansion. High Iron (spinach, beetroot, lentils, dates), Calcium (ragi/finger millet, curd, paneer), protein, Vitamin C for iron absorption.
-   - 3rd Trimester: Brain & lung development, DHA, Omega-3, fiber to prevent constipation, sustained energy, adequate fluid intake (2.5-3L).
-2. Recommend local and traditional foods from ${state} (e.g. millets like Ragi, Jowar, Bajra, indigenous greens, pulses, seasonal fruits).
-3. Respect her diet preference (${diet}). Never suggest non-veg if Vegetarian.
-4. Food Safety: Clearly warn against unsafe foods (unripe/semi-ripe papaya, excess pineapple in T1, unpasteurized milk, undercooked eggs/meat, high-mercury fish, excess caffeine).
-5. Government Schemes: If asked, explain welfare programs in ${state} (Pradhan Mantri Matru Vandana Yojana - PMMVY, Janani Suraksha Yojana - JSY, Poshan Abhiyaan, and state schemes like Mathru Poorna / Muthulakshmi Reddy).
+CLINICAL & NUTRITIONAL GUIDELINES & CORE MANDATORY FILTERING RULES:
+1. STRICT LOCATION/REGION MATCHING:
+   - Check the mother's selected state: "${state}".
+   - ONLY suggest authentic regional recipes, traditional dishes, and foods native to ${state}.
+   - Example for Karnataka: dishes like Bisi Bele Bath, Ragi Mudde, Jolada Roti, Mysore Rasam, Davanagere Benne Dosa, Akki Roti, Kosambari. NEVER suggest dishes tagged with Andhra Pradesh, Tamil Nadu, Kerala, or other states unless explicitly requested by the user.
+2. STRICT DIETARY PREFERENCE MATCHING:
+   - Check dietary preference: "${diet}".
+   - If preference is Vegetarian ("Veg"): Output ONLY 100% Vegetarian dishes. Strictly exclude meat, poultry, fish, seafood, and eggs.
+   - If preference is Non-Vegetarian ("Non-Veg"): Include BOTH traditional non-vegetarian dishes (e.g. Nati Koli Saaru, Fish Curry, Mutton Saaru) AND vegetarian options, ensuring all options conform to pregnancy safety guidelines (fully cooked meats/fish, pasteurized dairy).
+3. PREGNANCY SAFETY & NUTRITION:
+   - Tailor all recommendations to the mother's current trimester (${trimester}):
+     - 1st Trimester: Folic acid, Vitamin B6, hydration, combating nausea, light easily digestible foods.
+     - 2nd Trimester: Rapid fetal skeletal & blood volume expansion. High Iron (spinach, beetroot, lentils, dates), Calcium (ragi/finger millet, curd, paneer), protein, Vitamin C for iron absorption.
+     - 3rd Trimester: Brain & lung development, DHA, Omega-3, fiber to prevent constipation, sustained energy, adequate fluid intake (2.5-3L).
+   - Highlighting key nutrients required (Iron, Folic Acid, Calcium, Protein, Fibre).
+   - Food Safety: Clearly warn against unsafe foods (unripe/semi-ripe papaya, excess pineapple in T1, unpasteurized dairy, raw sprouts, undercooked eggs/meat, high-mercury fish, excess caffeine).
+4. STRUCTURED DATA & CLINICAL ADVICE:
+   - When suggesting specific dishes or recipes, provide authentic local name + English name, confirm it is native to ${state}, specify whether VEGETARIAN or NON-VEGETARIAN, trimester suitability, and key maternal health benefits.
+5. Government Schemes & Welfare Benefits:
+   - Access the mother's state: "${state}".
+   - ONLY explain welfare schemes applicable to ${state} and Central schemes.
+   - For Karnataka:
+     * Mathru Poorna Yojana (Hot nutritious meal + IFA + Milk/Eggs at Anganwadi)
+     * Gruha Lakshmi Scheme (₹2,000/month for female head of household)
+     * Prasuti Araike & Nagu Magu (State delivery & transport assistance)
+     * Integrated Central + State Schemes like PMMVY (Pradhan Mantri Matru Vandana Yojana - ₹5,000 DBT cash incentive)
+   - NEVER suggest or describe schemes specific to other states (e.g. NEVER mention Dr. Muthulakshmi Reddy Maternity Benefit Scheme from Tamil Nadu, or KCR Kit from Telangana, or YSR from Andhra Pradesh to a Karnataka mother).
 6. Medical Safety Disclaimer: Remind the mother gently that this is nutritional guidance, not an emergency medical diagnosis. For severe symptoms (vaginal bleeding, severe abdominal cramps, blurred vision, sudden swelling, or reduced fetal movement), advise immediate hospital care or using the app's Emergency SOS.
 `;
 
@@ -204,6 +225,314 @@ CLINICAL & NUTRITIONAL GUIDELINES:
 
     const fallbackText = fallbacks[language] || fallbacks.en;
     res.json({ text: fallbackText });
+  }
+});
+
+// 2b. Clinical Nutrition Recommendations API (Strict Location, Diet & Trimester Matching)
+app.post('/api/recommend-foods', (req, res) => {
+  try {
+    const { state, diet_preference, dietPreference, trimester, category, limit } = req.body;
+    const targetState = state || 'Karnataka';
+    const rawDiet = (diet_preference || dietPreference || 'Vegetarian').toLowerCase();
+    const isVegOnly = rawDiet.includes('veg') && !rawDiet.includes('non');
+    const targetTrimester = trimester || '2nd Trimester';
+    const maxItems = Number(limit) || 12;
+
+    // 1. STRICT LOCATION/REGION MATCHING:
+    // Only suggest authentic regional recipes and foods native to target state
+    let matched = KAGGLE_PROCESSED_FOOD_DATABASE.filter(item => {
+      // Must strictly match state
+      if (!isMatchingState(item.state, targetState)) {
+        return false;
+      }
+
+      // 2. STRICT DIETARY PREFERENCE MATCHING:
+      // Veg: ONLY 100% Vegetarian dishes (exclude meat, poultry, fish, seafood, and eggs).
+      // Non-Veg: Include BOTH traditional non-vegetarian dishes AND vegetarian options.
+      if (isVegOnly && !item.isVegetarian) {
+        return false;
+      }
+
+      // Category filter if specified
+      if (category && category !== 'All' && item.category !== category) {
+        return false;
+      }
+
+      // Pregnancy Safety Filter: Avoid harmful items
+      if (item.safetyLevel === 'Avoid') {
+        return false;
+      }
+
+      return true;
+    });
+
+    // 3. PREGNANCY SAFETY & TRIMESTER PRIORITIZATION:
+    matched.sort((a, b) => {
+      const aSuit = (a.trimesterSuitability || a.trimesterRecommended || '').toLowerCase();
+      const bSuit = (b.trimesterSuitability || b.trimesterRecommended || '').toLowerCase();
+      const tKey = targetTrimester.toLowerCase().slice(0, 3);
+      const aMatches = aSuit.includes(tKey) || aSuit.includes('all');
+      const bMatches = bSuit.includes(tKey) || bSuit.includes('all');
+      if (aMatches && !bMatches) return -1;
+      if (!aMatches && bMatches) return 1;
+      return 0;
+    });
+
+    // 4. DATA RESPONSE STRUCTURE:
+    // Formats strictly as requested:
+    // dish_name, state, diet_type, trimester_suitability, benefits, image_prompt, image_url
+    const recommendations: StructuredFoodRecommendation[] = matched
+      .slice(0, maxItems)
+      .map(item => toStructuredRecommendation(item, targetState));
+
+    res.json({
+      success: true,
+      state: normalizeStateName(targetState),
+      diet_type: isVegOnly ? 'VEGETARIAN' : 'NON-VEGETARIAN',
+      trimester: targetTrimester,
+      count: recommendations.length,
+      recommendations
+    });
+  } catch (err: any) {
+    console.error('Recommend Foods API Error:', err);
+    res.status(500).json({ error: 'Failed to generate clinical food recommendations' });
+  }
+});
+
+// Helper function to resolve dynamic relevant scheme category, icons, and image
+function getSchemeMetadata(s: any): { category: string; image_category: string; badge_icon: string; fallback_image: string; thumbnail_url: string } {
+  const titleLower = (s.title || '').toLowerCase();
+  const idLower = (s.id || s.scheme_id || '').toLowerCase();
+
+  // 1. Food / Nutritional Schemes (e.g., Mathru Poorna Yojana)
+  if (
+    idLower.includes('mathru') ||
+    idLower.includes('poorna') ||
+    idLower.includes('poshan') ||
+    idLower.includes('meal') ||
+    titleLower.includes('poorna') ||
+    titleLower.includes('poshan') ||
+    titleLower.includes('nutrition') ||
+    titleLower.includes('sampoorna')
+  ) {
+    return {
+      category: 'Nutritional Meal',
+      image_category: 'food',
+      badge_icon: '🍲',
+      fallback_image: '/assets/images/default_food_scheme.webp',
+      thumbnail_url: '/assets/icons/hot_meal.png'
+    };
+  }
+
+  // 2. Healthcare / Maternity Schemes (e.g., Prasuti Araike & Nagu Magu, Thayi Bhagya, PMSMA)
+  if (
+    idLower.includes('prasuti') ||
+    idLower.includes('araike') ||
+    idLower.includes('nagu') ||
+    idLower.includes('thayi') ||
+    idLower.includes('pmsma') ||
+    idLower.includes('jssk') ||
+    idLower.includes('smrithi') ||
+    idLower.includes('aardram') ||
+    titleLower.includes('prasuti') ||
+    titleLower.includes('araike') ||
+    titleLower.includes('nagu magu') ||
+    titleLower.includes('thayi bhagya') ||
+    titleLower.includes('surakshit') ||
+    titleLower.includes('karyakram') ||
+    titleLower.includes('hospital')
+  ) {
+    return {
+      category: 'Maternity Healthcare',
+      image_category: 'maternity_care',
+      badge_icon: '🏥',
+      fallback_image: '/assets/images/default_mother_care.webp',
+      thumbnail_url: '/assets/icons/antenatal_care.png'
+    };
+  }
+
+  // 3. Financial Cash Benefit Schemes (e.g., Gruha Lakshmi Scheme, PMMVY, JSY)
+  return {
+    category: 'Financial Assistance',
+    image_category: 'money',
+    badge_icon: '💰',
+    fallback_image: '/assets/images/default_money_scheme.webp',
+    thumbnail_url: '/assets/icons/dbt_cash.png'
+  };
+}
+
+// Helper to format scheme according to the exact JSON output structure
+function formatSchemePayload(s: any, targetState: string) {
+  const meta = getSchemeMetadata(s);
+  const rawId = (s.scheme_id || s.id || '').toLowerCase().replace(/[^a-z0-9]/g, '_');
+  const isCentral = s.category === 'Central Government' || (s.badgeText || '').includes('Central') || (s.level === 'Central');
+  const stateName = s.state || normalizeStateName(targetState);
+  let badgeLabel = s.badge_label || s.badgeText || (isCentral ? 'CENTRAL / STATE HEALTH SCHEME' : `${stateName.toUpperCase()} STATE SCHEME`);
+  let benefitTag = s.benefit_tag || s.cashAssistance || s.cashAmountHighlight || s.benefit_summary || s.mainBenefit || 'Direct Maternal Support';
+
+  // Strict URL mapping for active portal endpoints (no dead links):
+  let officialPortal = s.official_portal_url || s.officialPortalUrl || s.portalUrl;
+  let smallThumbnail = s.small_thumbnail_url || s.thumbnail_url || meta.thumbnail_url;
+
+  if (rawId.includes('gruha') || rawId.includes('lakshmi')) {
+    officialPortal = 'https://sevasindhuservices.karnataka.gov.in';
+    smallThumbnail = '/assets/icons/dbt_cash.png';
+  } else if (rawId.includes('mathru') || rawId.includes('poorna')) {
+    officialPortal = 'https://yuvakanaja.in/healthfamily-welfare-dept-en/matru-poorna-scheme/';
+    smallThumbnail = '/assets/icons/hot_meal.png';
+  } else if (rawId.includes('pmmvy')) {
+    officialPortal = 'https://pmmvy.wcd.gov.in/';
+    smallThumbnail = '/assets/icons/dbt_cash.png';
+  } else if (rawId.includes('jssk')) {
+    officialPortal = 'https://nhm.gov.in/index1.php?lang=1&level=2&sublinkid=824&lid=223';
+    smallThumbnail = '/assets/icons/medical_glove_icon.png';
+    badgeLabel = 'CENTRAL / STATE HEALTH SCHEME';
+    benefitTag = '100% Free Healthcare & Delivery';
+  } else if (rawId.includes('pmsma')) {
+    officialPortal = 'https://pmsma.mohfw.gov.in/';
+    smallThumbnail = '/assets/icons/antenatal_care.png';
+  } else if (!officialPortal || officialPortal.includes('hfw.karnataka.gov.in') || officialPortal.includes('dwcd.karnataka.gov.in')) {
+    officialPortal = 'https://karnataka.gov.in';
+  }
+
+  const objective = s.objective || s.description || 'Ensure free and accessible maternal and newborn healthcare for every family.';
+  const eligibilitySummary = s.eligibility_summary || s.eligibility || 'All pregnant women and sick newborns receiving care at government health facilities across India and Karnataka.';
+  const mainBenefit = s.main_benefit || s.mainBenefit || s.benefits || 'Free delivery and C-section, medicines, diagnostics, blood, diet, and transport support as per scheme guidelines.';
+  const requiredDocs = s.required_documents || s.requiredDocuments || s.documentsNeeded || [
+    'MCP (Mother and Child Protection) Card',
+    'Any valid government photo ID, if available.'
+  ];
+
+  return {
+    scheme_id: rawId,
+    title: s.title,
+    state: stateName,
+    badge_label: badgeLabel,
+    benefit_tag: benefitTag,
+    official_portal_url: officialPortal,
+    small_thumbnail_url: smallThumbnail,
+    thumbnail_url: smallThumbnail,
+    objective: objective,
+    eligibility_summary: eligibilitySummary,
+    main_benefit: mainBenefit,
+    required_documents: requiredDocs,
+    // Backward compatibility aliases
+    id: s.id || rawId,
+    scheme_or_food_name: s.scheme_or_food_name || `${s.title} (${stateName})`,
+    category: meta.category,
+    image_category: meta.image_category,
+    image_url: smallThumbnail,
+    badge_icon: meta.badge_icon,
+    benefit_summary: benefitTag,
+    badge_text: badgeLabel,
+    cash_assistance: benefitTag,
+    eligibility: eligibilitySummary,
+    benefits: mainBenefit
+  };
+}
+
+// 2c. Government Welfare Schemes API (Strict State Scheme Filtering & Exact JSON Structure)
+app.post('/api/schemes', (req, res) => {
+  try {
+    const { state, user_state } = req.body;
+    const targetState = user_state || state || 'Karnataka';
+
+    const stateFiltered = GOVERNMENT_WELFARE_SCHEMES.filter(s => {
+      if (s.category === 'Central Government') return true;
+      return isMatchingState(s.state, targetState);
+    });
+
+    const responsePayload = stateFiltered.map(s => formatSchemePayload(s, targetState));
+
+    res.json({
+      success: true,
+      state: normalizeStateName(targetState),
+      count: responsePayload.length,
+      schemes: responsePayload
+    });
+  } catch (err: any) {
+    console.error('Schemes API Error:', err);
+    res.status(500).json({ error: 'Failed to retrieve welfare schemes' });
+  }
+});
+
+// 2d. Maternal Welfare & Nutrition AI Engine (Strict Location, Diet & Exact JSON Response Format)
+app.all('/api/maternal-engine', (req, res) => {
+  try {
+    const body = req.method === 'POST' ? req.body : req.query;
+    const targetState = body.user_state || body.state || 'Karnataka';
+    const rawDiet = (body.user_diet || body.diet_preference || body.diet || 'Veg').toLowerCase();
+    const isVegOnly = rawDiet.includes('veg') && !rawDiet.includes('non');
+    const queryType = (body.type || 'all').toLowerCase(); // 'schemes', 'foods', or 'all'
+
+    const results: any[] = [];
+
+    // 1. Process Schemes if requested
+    if (queryType === 'schemes' || queryType === 'all') {
+      const stateFilteredSchemes = GOVERNMENT_WELFARE_SCHEMES.filter(s => {
+        if (s.category === 'Central Government') return true;
+        return isMatchingState(s.state, targetState);
+      });
+
+      for (const s of stateFilteredSchemes) {
+        results.push(formatSchemePayload(s, targetState));
+      }
+    }
+
+    // 2. Process Foods if requested
+    if (queryType === 'foods' || queryType === 'all') {
+      const stateFilteredFoods = KAGGLE_PROCESSED_FOOD_DATABASE.filter(item => {
+        if (!isMatchingState(item.state, targetState)) return false;
+        if (isVegOnly && !item.isVegetarian) return false;
+        if (item.safetyLevel === 'Avoid') return false;
+        return true;
+      });
+
+      for (const item of stateFilteredFoods) {
+        const isVeg = Boolean(item.isVegetarian);
+        const dishName = item.regionalName ? `${item.name} (${item.regionalName})` : item.name;
+        const dishImg = item.imageUrl || item.image || '/assets/food_crops/karnataka_ragi_mudde.png';
+        const benefit = item.maternalBenefits || `Traditional ${targetState} pregnancy dish rich in minerals and macro-nutrients.`;
+
+        results.push({
+          scheme_id: (item.id || item.name).toLowerCase().replace(/[^a-z0-9]/g, '_'),
+          title: dishName,
+          state: normalizeStateName(targetState),
+          badge_label: `${normalizeStateName(targetState).toUpperCase()} REGIONAL DISH`,
+          benefit_tag: isVeg ? '100% Vegetarian' : 'Non-Vegetarian Pregnancy Safe',
+          official_portal_url: '/dashboard',
+          small_thumbnail_url: dishImg,
+          thumbnail_url: dishImg,
+          objective: benefit,
+          eligibility_summary: `Suitable for ${item.trimesterSuitability || 'All Trimesters'} of pregnancy.`,
+          main_benefit: benefit,
+          required_documents: [],
+          // Backward compatibility
+          scheme_or_food_name: dishName,
+          diet_type: isVeg ? 'Veg' : 'Non-Veg',
+          category: item.category || 'Nutritional Meal',
+          image_url: dishImg,
+          badge_icon: isVeg ? '🌿' : '🍗',
+          benefit_summary: benefit
+        });
+      }
+    }
+
+    // If single item requested (e.g. body.single == true or limit == 1)
+    if (body.single === true || body.single === 'true' || body.limit === 1 || body.limit === '1') {
+      return res.json(results[0] || null);
+    }
+
+    res.json({
+      success: true,
+      user_state: normalizeStateName(targetState),
+      user_diet: isVegOnly ? 'Veg' : 'Non-Veg',
+      count: results.length,
+      data: results
+    });
+  } catch (err: any) {
+    console.error('Maternal Engine Error:', err);
+    res.status(500).json({ error: 'Failed to process maternal engine request' });
   }
 });
 
@@ -1331,6 +1660,9 @@ app.get('/api/food-image', async (req, res) => {
 
 async function setupServer() {
   const isDev = process.env.NODE_ENV === 'development' || (!process.env.NODE_ENV && !fs.existsSync(path.join(process.cwd(), 'dist', 'index.html')));
+
+  // Serve static files from public directory
+  app.use(express.static(path.join(process.cwd(), 'public')));
 
   if (isDev) {
     // Mount Vite dev server middleware in development

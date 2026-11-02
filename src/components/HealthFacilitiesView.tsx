@@ -341,15 +341,15 @@ export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
                       </div>
                     )}
 
-                    {/* Card Actions: [ 📞 Call ] [ ➤ Directions ] */}
+                    {/* Card Actions: [ 📞 Call 108 ] [ ➤ Directions ] */}
                     <div className="flex items-center space-x-2 pt-1">
                       <a
-                        href={`tel:${fac.phone ? fac.phone.replace(/[^0-9+]/g, '') : '108'}`}
+                        href="tel:108"
                         onClick={(e) => e.stopPropagation()}
                         className="flex-1 py-2 rounded-xl bg-[#523D35] hover:bg-[#223030] text-[#E8D9CD] text-xs font-bold flex items-center justify-center gap-1.5 transition shadow-2xs cursor-pointer"
                       >
                         <Phone className="w-3.5 h-3.5" />
-                        <DualText textKey="action.callHospital" fallback="Call" className="text-[#E8D9CD] font-bold" miniClassName="text-[10px] text-[#BBA58F]" />
+                        <DualText textKey="action.callHospital" fallback="Call 108" className="text-[#E8D9CD] font-bold" miniClassName="text-[10px] text-[#BBA58F]" />
                       </a>
                       <a
                         href={`https://www.google.com/maps/dir/?api=1&origin=${userCoords.latitude},${userCoords.longitude}&destination=${fac.lat},${fac.lng}`}
@@ -483,11 +483,11 @@ export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
             {/* Quick Action Direct Buttons */}
             <div className="flex items-center gap-3 self-start shrink-0">
               <a
-                href={`tel:${activeFacility.phone ? activeFacility.phone.replace(/[^0-9+]/g, '') : '108'}`}
+                href="tel:108"
                 className="px-5 py-3 rounded-2xl bg-[#523D35] hover:bg-[#223030] text-[#E8D9CD] text-xs sm:text-sm font-bold flex items-center gap-2 transition shadow-xs cursor-pointer"
               >
                 <Phone className="w-4 h-4" />
-                <span>Direct Call</span>
+                <span>Call Emergency (108)</span>
               </a>
               <a
                 href={`https://www.google.com/maps/dir/?api=1&origin=${userCoords.latitude},${userCoords.longitude}&destination=${activeFacility.lat},${activeFacility.lng}`}
@@ -579,18 +579,14 @@ export const HealthFacilitiesView: React.FC<HealthFacilitiesViewProps> = ({
           )}
 
           {/* Contact Details & In-Charge Footer */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-2 border-t border-[#959D90]/30 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-[#959D90]/30 text-xs">
             <div>
               <span className="text-[11px] text-[#523D35] font-bold block">{t('facility.superintendent', 'Doctor / Superintendent:')}</span>
               <span className="font-bold text-[#223030]">{activeFacility.doctorInCharge || 'Medical Superintendent'}</span>
             </div>
             <div>
-              <span className="text-[11px] text-[#523D35] font-bold block">{t('facility.officialPhone', 'Official Telephone:')}</span>
-              <span className="font-bold text-[#223030]">{activeFacility.phone}</span>
-            </div>
-            <div>
               <span className="text-[11px] text-[#523D35] font-bold block">{t('facility.emergencyHotline', 'Emergency Hotline:')}</span>
-              <span className="font-bold text-[#523D35]">{activeFacility.emergencyPhone || '108 / 102'}</span>
+              <span className="font-bold text-[#523D35]">{activeFacility.emergencyPhone || '112 / 108 / 102'}</span>
             </div>
           </div>
         </div>

@@ -40,7 +40,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 8,
     iron: 3.2,
     calcium: 65,
-    imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/karnataka_bisi_bele_bath.png',
     recipe: {
       en: 'Spicy lentil and rice dish cooked with vegetables and aromatic spices.',
       kn: 'ತರಕಾರಿಗಳು ಮತ್ತು ಪರಿಮಳಯುಕ್ತ ಮಸಾಲೆಗಳೊಂದಿಗೆ ಬೇಯಿಸಿದ ಮಸೂರ ಮತ್ತು ಅಕ್ಕಿ ಭಕ್ಷ್ಯ.',
@@ -62,7 +62,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 11,
     iron: 4.8,
     calcium: 344,
-    imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/karnataka_ragi_mudde.png',
     recipe: {
       en: 'Traditional finger millet ball served with calcium-rich fresh green leafy greens curry.',
       kn: 'ಕ್ಯಾಲ್ಸಿಯಂ ಸಮೃದ್ಧ ತಾಜಾ ಹಸಿರು ಸೊಪ್ಪಿನ ಸಾರಿನೊಂದಿಗೆ ಸಾಂಪ್ರದಾಯಿಕ ರಾಗಿ ಮುದ್ದೆ.',
@@ -110,7 +110,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 3,
     iron: 2.8,
     calcium: 72,
-    imageUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/kerala_fish_curry.png',
     recipe: {
       en: 'Tangy and spicy fish cooked in coconut milk and kudampuli (Garcinia cambogia).',
       kn: 'ತೆಂಗಿನ ಹಾಲಿನಲ್ಲಿ ಬೇಯಿಸಿದ ಮೀನು ಮತ್ತು ಕುಡಂಪುಳಿ.',
@@ -132,7 +132,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 9,
     iron: 2.9,
     calcium: 110,
-    imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/kerala_avial.png',
     recipe: {
       en: 'Wholesome medley of local vegetables steamed with coconut, cumin, and seasoned with cold-pressed coconut oil.',
       kn: 'ತೆಂಗಿನಕಾಯಿ, ಜೀರಿಗೆ ಮತ್ತು ಕೊಬ್ಬರಿ ಎಣ್ಣೆಯಿಂದ ತಯಾರಿಸಿದ ತರಕಾರಿಗಳ ಅವಿಯಲ್.',
@@ -158,7 +158,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 7,
     iron: 3.4,
     calcium: 88,
-    imageUrl: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/tamilnadu_idli.png',
     recipe: {
       en: 'Steamed spiced rice-lentil cake enriched with cumin and pepper, served with iron-packed moringa sambar.',
       kn: 'ಜೀರಿಗೆ ಮತ್ತು ಮೆಣಸಿನಿಂದ ಮಸಾಲೆ ಮಾಡಿದ ಇಡ್ಲಿ ಮತ್ತು ಕಬ್ಬಿಣಾಂಶ ಭರಿತ ನುಗ್ಗೆಕಾಯಿ ಸಾಂಬಾರ್.',
@@ -206,7 +206,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 8,
     iron: 5.6,
     calcium: 120,
-    imageUrl: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/andhra_gongura_pachadi.png',
     recipe: {
       en: 'Tangy red sorrel leaves cooked with toor dal, garlic, and mild green chillies for natural folic acid and iron.',
       kn: 'ತೊಗರಿ ಬೇಳೆ, ಬೆಳ್ಳುಳ್ಳಿ ಮತ್ತು ಪುಂಡಿ ಪಲ್ಲೆಯೊಂದಿಗೆ ತಯಾರಿಸಿದ ಕಬ್ಬಿಣಾಂಶ ಭರಿತ ಪಪ್ಪು.',
@@ -228,7 +228,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 2,
     iron: 2.6,
     calcium: 95,
-    imageUrl: 'https://images.unsplash.com/photo-1559847844-5315695dadae?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/andhra_royyala_iguru.png',
     recipe: {
       en: 'Fresh coastal prawns cooked in a rich onion-tomato paste with mild coriander and curry leaves.',
       kn: 'ಈರುಳ್ಳಿ-ಟೊಮೆಟೊ ಮತ್ತು ಕರಿಬೇವಿನೊಂದಿಗೆ ಮೃದುವಾಗಿ ಬೇಯಿಸಿದ ತಾಜಾ ಸೀಗಡಿ ಸಾರು.',
@@ -254,7 +254,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 10,
     iron: 4.4,
     calcium: 160,
-    imageUrl: 'https://images.unsplash.com/photo-1626074353765-517a681e40be?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/karnataka_jolada_roti.png',
     recipe: {
       en: 'Gluten-free sorghum flatbread paired with iron-dense spinach and yellow lentil stew.',
       kn: 'ಕಬ್ಬಿಣಾಂಶ ಭರಿತ ಪಾಲಕ್ ಸೊಪ್ಪಿನ ಬೇಳೆಯೊಂದಿಗೆ ಪೌಷ್ಟಿಕ ಜೋಳದ ರೊಟ್ಟಿ.',
@@ -276,7 +276,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 2,
     iron: 4.2,
     calcium: 40,
-    imageUrl: 'https://images.unsplash.com/photo-1545247181-516773ca83f3?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/puducherry_mutton_curry.png',
     recipe: {
       en: 'Slow-cooked tender lean mutton rich in bioavailable heme iron, infused with poppy seeds and dry coconut.',
       kn: 'ಗಸಗಸೆ ಮತ್ತು ಒಣ ಕೊಬ್ಬರಿಯೊಂದಿಗೆ ಹದವಾಗಿ ಬೇಯಿಸಿದ ಪೌಷ್ಟಿಕ ಮಟನ್ ಸಾರು.',
@@ -302,7 +302,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 8,
     iron: 2.5,
     calcium: 90,
-    imageUrl: 'https://images.unsplash.com/photo-1540420773420-3366772f4999?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/puducherry_ratatouille.png',
     recipe: {
       en: 'Delicate Indo-French spiced vegetable stew cooked with coconut milk, carrots, beans, and fresh herbs.',
       kn: 'ಕ್ಯಾರೆಟ್, ಬೀನ್ಸ್ ಮತ್ತು ಗಿಡಮೂಲಿಕೆಗಳೊಂದಿಗೆ ತೆಂಗಿನ ಹಾಲಿನಲ್ಲಿ ಬೇಯಿಸಿದ ಇಂಡೋ-ಫ್ರೆಂಚ್ ತರಕಾರಿ ಭಕ್ಷ್ಯ.',
@@ -324,7 +324,7 @@ export const regionalFoodDatabase: RegionalFoodItem[] = [
     fibre: 2,
     iron: 2.7,
     calcium: 68,
-    imageUrl: 'https://images.unsplash.com/photo-1519708227418-c8fd9a32b7a2?auto=format&fit=crop&w=600&q=80',
+    imageUrl: '/assets/food_crops/puducherry_fish_curry.png',
     recipe: {
       en: 'Pan-seared coastal sea fish delicately cooked in fresh coconut cream with mild fennel and shallots.',
       kn: 'ತಾಜಾ ತೆಂಗಿನ ಕೆನೆ ಮತ್ತು ಸಣ್ಣ ಈರುಳ್ಳಿಯೊಂದಿಗೆ ಹದವಾಗಿ ಬೇಯಿಸಿದ ಕರಾವಳಿ ಮೀನು.',

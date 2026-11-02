@@ -207,6 +207,15 @@ export const auth = {
       return result;
     } catch (err: any) {
       console.warn("[Firebase Auth] signInWithPopup encountered:", err.code, err.message);
+      // Gracefully handle user cancellation or popup closing without raising an unhandled error
+      if (err.code === 'auth/popup-closed-by-user' || err.code === 'auth/cancelled-popup-request') {
+        console.info("[Firebase Auth] Google Sign-In popup was closed or cancelled by the user.");
+        return {
+          cancelled: true,
+          user: null,
+          message: 'Sign-in window was closed. Please click "Continue with Google" to try again, or use Email / Demo Profile.'
+        } as any;
+      }
       // Fallback to signInWithRedirect if popup is blocked by the browser
       if (err.code === 'auth/popup-blocked') {
         console.log("[Firebase Auth] Popup blocked by browser. Initiating signInWithRedirect fallback...");

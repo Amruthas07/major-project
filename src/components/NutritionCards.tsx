@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from '../i18n/translations';
-import { Sparkles, ShieldCheck } from 'lucide-react';
+import { Sparkles, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 export interface NutritionData {
   calories: number;
@@ -28,6 +28,7 @@ export interface NutritionCardsProps {
 
 export default function NutritionCards({ nutritionData, targets, lang = 'en' }: NutritionCardsProps) {
   const { t } = useTranslation(lang);
+  const [showVisualReference, setShowVisualReference] = useState(false);
 
   const cards = [
     {
@@ -38,6 +39,7 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
       target: targets?.calories || 2050,
       unit: 'kcal',
       icon3d: '⚡',
+      image: '/assets/aistudio/nutrient_calories.png',
       color: 'from-amber-500 via-orange-500 to-amber-600',
       badgeBg: 'bg-gradient-to-br from-amber-400 via-orange-500 to-amber-600 text-white shadow-amber-500/30'
     },
@@ -49,6 +51,7 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
       target: targets?.protein || 80,
       unit: 'g',
       icon3d: '🥛',
+      image: '/assets/aistudio/nutrient_protein.png',
       color: 'from-emerald-500 via-teal-500 to-emerald-600',
       badgeBg: 'bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600 text-white shadow-emerald-500/30'
     },
@@ -60,6 +63,7 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
       target: targets?.carbs || 250,
       unit: 'g',
       icon3d: '🌾',
+      image: '/assets/aistudio/nutrient_carbs.png',
       color: 'from-blue-500 via-indigo-500 to-blue-600',
       badgeBg: 'bg-gradient-to-br from-blue-400 via-indigo-500 to-blue-600 text-white shadow-blue-500/30'
     },
@@ -71,6 +75,7 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
       target: targets?.fibre || 30,
       unit: 'g',
       icon3d: '🥗',
+      image: '/assets/aistudio/nutrient_fibre.png',
       color: 'from-green-600 via-emerald-600 to-teal-700',
       badgeBg: 'bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700 text-white shadow-green-500/30'
     },
@@ -82,6 +87,7 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
       target: targets?.iron || 27,
       unit: 'mg',
       icon3d: '🩸',
+      image: '/assets/aistudio/nutrient_iron.png',
       color: 'from-rose-500 via-red-500 to-rose-600',
       badgeBg: 'bg-gradient-to-br from-rose-400 via-red-500 to-rose-600 text-white shadow-rose-500/30'
     },
@@ -93,6 +99,7 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
       target: targets?.calcium || 1000,
       unit: 'mg',
       icon3d: '🦴',
+      image: '/assets/aistudio/nutrient_calcium.png',
       color: 'from-purple-500 via-violet-500 to-purple-600',
       badgeBg: 'bg-gradient-to-br from-purple-400 via-violet-500 to-purple-600 text-white shadow-purple-500/30'
     },
@@ -114,11 +121,38 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
             {t('calculatedFromMeals')}
           </p>
         </div>
-        <div className="flex items-center gap-2 text-xs font-bold text-[#523D35]">
-          <ShieldCheck className="w-4 h-4 text-[#523D35]" />
-          <span>ICMR-NIN Maternal Guidelines</span>
+        <div className="flex items-center gap-3 text-xs font-bold text-[#523D35]">
+          <button
+            type="button"
+            onClick={() => setShowVisualReference((prev) => !prev)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 hover:bg-white border border-[#959D90]/40 text-[#523D35] text-xs font-semibold shadow-2xs transition cursor-pointer"
+          >
+            {showVisualReference ? <EyeOff className="w-3.5 h-3.5 text-[#523D35]" /> : <Eye className="w-3.5 h-3.5 text-[#523D35]" />}
+            <span>{showVisualReference ? 'Hide Visual Guide' : 'Visual Guide'}</span>
+          </button>
+          <div className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-[#523D35]">
+            <ShieldCheck className="w-4 h-4 text-[#523D35]" />
+            <span>ICMR-NIN Guidelines</span>
+          </div>
         </div>
       </div>
+
+      {/* Visual Reference Guide from Uploaded Dashboard Image */}
+      {showVisualReference && (
+        <div className="mb-6 rounded-2xl overflow-hidden border border-[#959D90]/40 bg-white p-3 shadow-sm animate-in fade-in duration-200">
+          <div className="flex items-center justify-between mb-2 px-1">
+            <span className="text-xs font-extrabold text-[#523D35] uppercase tracking-wider">
+              ICMR-NIN Daily Nutrition Reference Dashboard
+            </span>
+            <span className="text-[11px] text-[#959D90]">Reference Guide</span>
+          </div>
+          <img
+            src="/assets/aistudio/image_5b0c25da.png"
+            alt="ICMR-NIN Maternal Nutrition Target Reference"
+            className="w-full h-auto rounded-xl object-contain max-h-[300px] border border-[#959D90]/20"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         {cards.map((item) => {
@@ -130,14 +164,20 @@ export default function NutritionCards({ nutritionData, targets, lang = 'en' }: 
               key={item.key}
               className="relative overflow-hidden rounded-2xl p-5 bg-white border border-[#BBA58F]/40 shadow-xs hover:shadow-md hover:border-[#523D35] transition-all group"
             >
-              {/* 3D Visual Floating Badge with soft lighting */}
+              {/* Visual illustration from uploaded nutrition dashboard */}
               <div
-                className={`absolute top-4 right-4 w-12 h-12 rounded-2xl shadow-md flex items-center justify-center text-2xl transform group-hover:rotate-6 group-hover:scale-110 transition-transform cursor-pointer border border-white/60 ${item.badgeBg}`}
+                className="absolute top-3.5 right-3.5 w-14 h-10 rounded-xl shadow-xs overflow-hidden border border-[#959D90]/35 bg-white/95 p-1 flex items-center justify-center transform group-hover:scale-105 transition-transform"
+                title={`${item.label} Target`}
               >
-                {item.icon3d}
+                <img
+                  src={item.image}
+                  alt={`${item.label} illustration`}
+                  className="w-full h-full object-contain"
+                  loading="lazy"
+                />
               </div>
 
-              <div className="pr-14">
+              <div className="pr-16">
                 <span className="text-xs font-black uppercase tracking-wider text-[#523D35] block">
                   {item.label}
                 </span>

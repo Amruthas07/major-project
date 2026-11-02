@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { KaggleFoodItem, GlobalLocationState, PlannedMeal } from '../types';
 import { KAGGLE_PROCESSED_FOOD_DATABASE, kagglePipeline } from '../services/kaggle_food_pipeline';
+import { isMatchingState, normalizeStateName } from '../utils/state_food_filter';
 import { CURATED_REGIONAL_RECIPES } from '../data/regional_recipes_db';
 import { useLanguage, DualText, DualFoodName, FoodSubtitle, DualIngredient } from '../services/language_service';
 import { useAppContext } from '../context/AppContext';
@@ -374,7 +375,12 @@ export const FoodDatabaseView: React.FC = () => {
   const filteredAndRankedFoods = useMemo(() => {
     let list = [...KAGGLE_PROCESSED_FOOD_DATABASE];
 
-    // Strict Diet Preference filtering:
+    // 1. Strict State-Based Food Isolation (Data-Processing Level):
+    // Read state from userProfile (source of truth) or globalLocation
+    const userActiveState = userProfile?.state || globalLocation?.state || 'Karnataka';
+    list = list.filter((item) => isMatchingState(item.state, userActiveState));
+
+    // 2. Strict Diet Preference filtering:
     // The user selects diet preference once inside Edit Profile.
     // Food Database automatically respects that saved preference.
     const userDiet = normalizeDietPreference(userProfile?.dietPreference);
@@ -780,7 +786,33 @@ export const FoodDatabaseView: React.FC = () => {
       </div>
 
       {/* 3. Food Grid with Dual-Language Names & Add to Plan Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+      {filteredAndRankedFoods.length === 0 ? (
+        <div className="bg-[#EFEFE9] border border-[#959D90]/50 rounded-3xl p-10 text-center space-y-4">
+          <div className="w-16 h-16 bg-[#523D35]/10 text-[#523D35] rounded-full flex items-center justify-center mx-auto">
+            <Utensils className="w-8 h-8 text-[#523D35]" />
+          </div>
+          <h3 className="text-xl font-bold text-[#223030]">
+            No verified foods found for {userProfile?.state || globalLocation?.state || 'your state'} matching your criteria
+          </h3>
+          <p className="text-sm text-[#523D35] max-w-md mx-auto">
+            Strict regional isolation is active to guarantee only native dishes for {userProfile?.state || globalLocation?.state || 'your state'} are displayed. Try adjusting search filters or category.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setSearchQuery('');
+              setSelectedCategory('All');
+              setSelectedSafety('All');
+              setSelectedTrimesterFilter('All');
+            }}
+            className="px-5 py-2.5 bg-[#523D35] text-[#E8D9CD] rounded-2xl font-bold text-sm hover:bg-[#3D2C26] transition shadow-xs cursor-pointer inline-flex items-center gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            <span>Reset Search & Filters</span>
+          </button>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
         {filteredAndRankedFoods.map((food) => {
           const isAvoid = food.safetyLevel === 'Avoid';
           const isModeration = food.safetyLevel === 'Safe in Moderation';
@@ -947,6 +979,7 @@ export const FoodDatabaseView: React.FC = () => {
           );
         })}
       </div>
+      )}
 
       {/* 4. Complete Food Details & Real Recipe Inspection Modal */}
       {activeModalFood && (() => {

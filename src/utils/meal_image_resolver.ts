@@ -1,6 +1,7 @@
 import { MaternalArtType } from '../components/Maternal3DArt';
 import { PROJECT_FOOD_DATASET } from '../data/project_food_dataset';
 import { VERIFIED_FOOD_IMAGE_REGISTRY } from '../data/food_image_registry';
+import { getRegionalUploadedDishImage } from '../data/regional_uploaded_images_map';
 
 export interface ResolvedMealVisual {
   imageUrl?: string;
@@ -21,6 +22,18 @@ export function resolveMealVisual(
 ): ResolvedMealVisual {
   const cleanName = dishName.toLowerCase().trim();
   const cleanCategory = category.toLowerCase().trim();
+
+  // 0. Check verified uploaded regional dishes first
+  const uploadedCrop = getRegionalUploadedDishImage(foodId || dishName);
+  if (uploadedCrop && uploadedCrop.primaryUrl) {
+    return {
+      imageUrl: uploadedCrop.primaryUrl,
+      artType: getCategoryArtType(category),
+      altText: uploadedCrop.exactDishName,
+      sourceType: 'photograph',
+      isVegetarian: uploadedCrop.isVegetarian
+    };
+  }
 
   // 1. Check exact match in PROJECT_FOOD_DATASET
   const projectItem = PROJECT_FOOD_DATASET.find(p => {

@@ -22,6 +22,7 @@ import { StateData } from '../data/india_geographic_hierarchy';
 import { useLanguage } from '../services/language_service';
 import { getFirebaseErrorMessage } from '../firebase';
 import { Maternal3DArt } from './Maternal3DArt';
+import { ExpectantMotherArt } from './ExpectantMotherArt';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -255,9 +256,15 @@ export const AuthModal: React.FC<AuthModalProps> = ({
         return;
       }
 
-      if (!res.success || !res.user) {
-        setErrorMsg(res.message || 'Google sign-in could not be completed. Please try again.');
+      if ((res as any)?.cancelled) {
         setIsGoogleLoading(false);
+        setInfoNotice('Sign-in window was closed. Click "Continue with Google" to try again, or sign in with Email / Demo Profile.');
+        return;
+      }
+
+      if (!res.success || !res.user) {
+        setIsGoogleLoading(false);
+        setErrorMsg(res.message || 'Google sign-in could not be completed. Please try again.');
         return;
       }
 
@@ -268,6 +275,11 @@ export const AuthModal: React.FC<AuthModalProps> = ({
       }, 350);
     } catch (err: any) {
       setIsGoogleLoading(false);
+      if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+        console.info('[Google Sign-In] Popup closed by user');
+        setInfoNotice('Sign-in window was closed. Click "Continue with Google" to try again, or sign in with Email / Demo Profile.');
+        return;
+      }
       console.error('[Google Sign-In Error]', err);
       const code = err?.code ? ` (${err.code})` : '';
       const msg = getFirebaseErrorMessage(err);
@@ -347,68 +359,84 @@ export const AuthModal: React.FC<AuthModalProps> = ({
   const trimesterBadge = getTrimesterBadge(regPregnancyMonth);
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#223030]/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
-      <div className="bg-[#EFEFE9] rounded-3xl max-w-lg md:max-w-4xl lg:max-w-5xl w-full shadow-2xl border border-[#523D35]/30 overflow-hidden text-[#223030] my-6 animate-in fade-in zoom-in-95 grid grid-cols-1 md:grid-cols-12">
-        {/* Left Side: 3D Maternal Health Hero Panel (Desktop & Tablet) */}
-        <div className="md:col-span-5 bg-gradient-to-b from-[#223030] via-[#2A3E3B] to-[#1E2E2C] text-[#EFEFE9] p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-[#523D35]">
+    <div className="fixed inset-0 z-50 bg-[#223030]/65 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+      {/* Soft warm living room photographic background layer from image_8.png */}
+      <div
+        className="fixed inset-0 pointer-events-none opacity-20 -z-10"
+        style={{
+          backgroundImage: 'url(/assets/aistudio/auth_left_side.png)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      />
+      <div className="backdrop-blur-[15px] saturate-[180%] bg-white/50 rounded-3xl max-w-lg md:max-w-4xl lg:max-w-5xl w-full shadow-2xl border border-white/60 overflow-hidden text-[#223030] my-6 animate-in fade-in zoom-in-95 grid grid-cols-1 md:grid-cols-12">
+        {/* Left Side: Expectant Mother Hero Panel (Happy & Expectant Waiting concept) */}
+        <div className="md:col-span-5 bg-gradient-to-b from-[#1C2C2B] via-[#243B38] to-[#182625] text-[#EFEFE9] p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-white/20">
+          {/* Subtle Ambient Golden Glow Behind Mother */}
+          <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-400/15 rounded-full blur-3xl pointer-events-none" />
+
           {/* Brand Header */}
           <div className="relative z-10">
             <div className="flex items-center space-x-3 mb-2">
-              <div className="w-10 h-10 rounded-2xl bg-[#523D35] border border-[#BBA58F]/40 flex items-center justify-center font-black text-xl text-[#EFEFE9] shadow-inner">
+              <div className="w-10 h-10 rounded-2xl bg-[#523D35] border border-amber-200/40 flex items-center justify-center font-black text-xl text-[#EFEFE9] shadow-inner">
                 P
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
                   <span className="font-extrabold text-lg tracking-tight">
-                    PregNutri <span className="text-[#BBA58F]">AI</span>
+                    PregNutri <span className="text-amber-300">AI</span>
                   </span>
-                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#523D35] text-[#E8D9CD] border border-[#BBA58F]/30 uppercase tracking-wider">
+                  <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#523D35] text-amber-100 border border-amber-200/30 uppercase tracking-wider">
                     Maternal Care
                   </span>
                 </div>
-                <p className="text-[11px] text-[#E8D9CD]">{t('auth.loginSubtitle', 'AI-Powered Maternal Healthcare & Nutrition Support')}</p>
+                <p className="text-[11px] text-teal-100 font-medium">{t('auth.loginSubtitle', 'AI-Powered Maternal Healthcare & Nutrition Support')}</p>
               </div>
             </div>
           </div>
 
-          {/* Center 3D Pregnant Mother Illustration */}
-          <div className="my-4 sm:my-6 flex flex-col items-center justify-center relative z-10">
-            <div className="relative w-44 sm:w-56 aspect-square flex items-center justify-center">
-              <div className="absolute inset-0 bg-[#4A7C75]/20 rounded-full blur-2xl transform scale-110" />
-              <Maternal3DArt
-                type="pregnant-mother"
-                className="w-full h-full relative z-10 filter drop-shadow-2xl"
-                alt="3D Pregnant Mother Cradling Belly"
+          {/* Center: "HAPPY & EXPECTANT waiting" Photographic Showcase */}
+          <div className="my-3 sm:my-4 flex flex-col items-center justify-center relative z-10">
+            <div className="relative w-44 sm:w-52 aspect-[3/4] rounded-3xl overflow-hidden shadow-2xl border-2 border-white/30 flex items-center justify-center bg-[#223030]">
+              <img
+                src="/assets/aistudio/expectant_mother_clean.png"
+                alt="Joyful expectant South Asian pregnant woman smiling warmly at her bump"
+                className="w-full h-full object-cover object-top filter brightness-105"
               />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1C2C2B]/85 via-transparent to-transparent pointer-events-none" />
+              <div className="absolute bottom-3 left-2 right-2 text-center text-[#EFEFE9] text-xs font-bold drop-shadow-md">
+                Nurturing Mother &amp; Baby
+              </div>
             </div>
 
-            <div className="mt-3 text-center">
-              <h2 className="text-sm sm:text-base font-extrabold text-[#EFEFE9] tracking-tight">
-                Nurturing Mother & Baby
-              </h2>
-              <p className="text-xs text-[#E8D9CD]/90 mt-1 max-w-xs leading-relaxed">
+            <div className="mt-2 text-center max-w-xs">
+              {/* Canonical Kannada Tagline */}
+              <p className="text-xs font-bold text-amber-200 mt-0.5">
+                ಕ್ಲಾಸಿಕ್ ತಾಯಿಯ ಪೋಷಕಾಂಶ ಮತ್ತು ಸ್ಮಾರ್ಟ್ ದಿನಚರಿ ಒಡನಾಡಿ
+              </p>
+              <p className="text-[11px] text-teal-100/90 mt-1 leading-relaxed">
                 Personalized Indian regional nutrition, meal timing, and trimester wellness guided by ICMR-NIN standards.
               </p>
             </div>
           </div>
 
           {/* Maternal Healthcare Trust Badges */}
-          <div className="pt-3 border-t border-[#523D35]/80 space-y-2 text-xs text-[#E8D9CD] relative z-10">
+          <div className="pt-3 border-t border-teal-800/60 space-y-2 text-xs text-teal-100 relative z-10">
             <div className="flex items-center gap-2">
-              <ShieldCheck className="w-4 h-4 text-[#BBA58F] shrink-0" />
-              <span className="font-medium">ICMR-NIN 2020 Maternal Standard</span>
+              <ShieldCheck className="w-4 h-4 text-amber-300 shrink-0" />
+              <span className="font-medium text-teal-50">ICMR-NIN 2020 Maternal Standard</span>
             </div>
             <div className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-[#BBA58F] shrink-0" />
-              <span className="font-medium">Karnataka, TN, Kerala, AP & Telangana Meals</span>
+              <Sparkles className="w-4 h-4 text-amber-300 shrink-0" />
+              <span className="font-medium text-teal-50">Karnataka, TN, Kerala, AP &amp; Telangana Meals</span>
             </div>
           </div>
         </div>
 
-        {/* Right Side: Authentication Forms */}
-        <div className="md:col-span-7 flex flex-col bg-[#EFEFE9]">
+        {/* Right Side: Authentication Forms with Glassmorphism */}
+        <div className="md:col-span-7 flex flex-col bg-white/50 backdrop-blur-[15px] saturate-[180%]">
           {/* Top Header Banner for Mobile & Close Button */}
-          <div className="p-4 sm:p-5 flex items-center justify-between border-b border-[#959D90]/30 bg-[#E8D9CD]/40">
+          <div className="p-4 sm:p-5 flex items-center justify-between border-b border-white/60 bg-white/40 backdrop-blur-md">
             <div className="md:hidden flex items-center gap-2.5">
               <div className="w-8 h-8 rounded-xl bg-[#223030] text-[#EFEFE9] flex items-center justify-center font-bold text-sm">
                 P
@@ -426,7 +454,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="p-1.5 rounded-xl bg-[#E8D9CD] hover:bg-[#BBA58F]/40 text-[#223030] transition cursor-pointer border border-[#959D90]/40 ml-auto"
+                className="p-1.5 rounded-xl bg-white/80 hover:bg-white text-[#223030] transition cursor-pointer border border-[#959D90]/40 ml-auto shadow-xs"
                 title="Close Dialog"
               >
                 <X className="w-4 h-4" />
@@ -435,13 +463,13 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           </div>
 
           {/* Tab Switcher */}
-          <div className="grid grid-cols-2 p-1.5 bg-[#E8D9CD] border-b border-[#959D90]/40">
+          <div className="grid grid-cols-2 p-1.5 bg-white/40 backdrop-blur-md border-b border-white/60">
             <button
               type="button"
               onClick={() => handleSwitchTab('login')}
               className={`py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 activeTab === 'login' || activeTab === 'forgot'
-                  ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
+                  ? 'bg-[#223030] text-[#EFEFE9] shadow-sm'
                   : 'text-[#523D35] hover:text-[#223030]'
               }`}
             >
@@ -452,7 +480,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               onClick={() => handleSwitchTab('signup')}
               className={`py-2 text-xs font-bold rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 ${
                 activeTab === 'signup'
-                  ? 'bg-[#223030] text-[#EFEFE9] shadow-xs'
+                  ? 'bg-[#223030] text-[#EFEFE9] shadow-sm'
                   : 'text-[#523D35] hover:text-[#223030]'
               }`}
             >
@@ -527,6 +555,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* ============================================================== */}
           {activeTab === 'login' && (
             <div className="space-y-4">
+              <div className="mb-1">
+                <h2 className="text-xl sm:text-2xl font-black text-[#223030] tracking-tight">{t('auth.signIn', 'Sign In')}</h2>
+                <p className="text-xs text-[#523D35] font-bold mt-0.5">ಲಾಗಿನ್ ಮಾಡಿ</p>
+              </div>
               <form onSubmit={handleEmailLogin} className="space-y-3.5">
                 {/* Email Address */}
                 <div>
@@ -608,7 +640,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-[#959D90]/40"></div>
                 </div>
-                <span className="relative bg-[#EFEFE9] px-3 text-xs uppercase font-extrabold text-[#523D35] tracking-wider">
+                <span className="relative bg-white/90 px-3.5 py-0.5 text-xs uppercase font-black text-[#523D35] tracking-wider rounded-full border border-white/80 shadow-xs">
                   OR
                 </span>
               </div>
@@ -680,6 +712,10 @@ export const AuthModal: React.FC<AuthModalProps> = ({
           {/* ============================================================== */}
           {activeTab === 'signup' && (
             <div className="space-y-4">
+              <div className="mb-1">
+                <h2 className="text-xl sm:text-2xl font-black text-[#223030] tracking-tight">Create Account</h2>
+                <p className="text-xs text-[#523D35] font-bold mt-0.5">ಖಾತೆ ರಚಿಸಿ</p>
+              </div>
               <form onSubmit={handleEmailSignUp} className="space-y-4">
                 {/* 1. Full Name */}
                 <div>
@@ -858,7 +894,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 </div>
 
                 {/* 5. Terms & Privacy Acceptance */}
-                <div className="p-3 bg-[#E8D9CD] rounded-xl border border-[#959D90]/40 text-xs">
+                <div className="p-3 bg-white/60 backdrop-blur-sm rounded-xl border border-white/80 text-xs">
                   <label className="flex items-start gap-2.5 cursor-pointer">
                     <input
                       type="checkbox"
@@ -898,7 +934,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
                 <div className="absolute inset-0 flex items-center">
                   <div className="w-full border-t border-[#959D90]/40"></div>
                 </div>
-                <span className="relative bg-[#EFEFE9] px-3 text-xs uppercase font-extrabold text-[#523D35] tracking-wider">
+                <span className="relative bg-white/90 px-3.5 py-0.5 text-xs uppercase font-black text-[#523D35] tracking-wider rounded-full border border-white/80 shadow-xs">
                   OR
                 </span>
               </div>

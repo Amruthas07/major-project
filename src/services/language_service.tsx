@@ -2040,6 +2040,15 @@ export const INGREDIENT_TRANSLATIONS: Record<string, Record<string, string>> = {
     as: 'পনীৰ'
   },
 
+  'header.preview': {
+    en: 'PREVIEW',
+    kn: 'ಪೂರ್ವವೀಕ್ಷಣೆ',
+    hi: 'पूर्वावलोकन',
+    ta: 'முன்னோட்டம்',
+    te: 'ప్రివ్యూ',
+    ml: 'പ്രിവ്യൂ'
+  },
+
   // =========================================================================
   // WELFARE SCHEMES PAGE TRANSLATIONS
   // =========================================================================
@@ -2066,6 +2075,54 @@ export const INGREDIENT_TRANSLATIONS: Record<string, Record<string, string>> = {
     ta: 'மகளிர் மற்றும் குழந்தைகள் மேம்பாட்டு அமைச்சகம் (MoWCD) & NHM',
     te: 'మహిళా మరియు శిశు అభివృద్ధి మంత్రిత్వ శాఖ (MoWCD) & NHM',
     ml: 'വനിതാ-ശിശു വികസന മന്ത്രാലയവും (MoWCD) എൻ.എച്ച്.എമ്മും'
+  },
+  'schemes.allApplicable': {
+    en: 'All Applicable Schemes',
+    kn: 'ಎಲ್ಲಾ ಅನ್ವಯವಾಗುವ ಯೋಜನೆಗಳು',
+    hi: 'सभी लागू योजनाएं',
+    ta: 'அனைத்து பொருந்தக்கூடிய திட்டங்கள்',
+    te: 'అన్ని వర్తించే పథకాలు',
+    ml: 'എല്ലാ ബാധകമായ പദ്ധതികളും'
+  },
+  'schemes.officialPortal': {
+    en: 'Official Portal',
+    kn: 'ಅಧಿಕೃತ ಪೋರ್ಟಲ್',
+    hi: 'आधिकारिक पोर्टल',
+    ta: 'அதிகாரப்பூர்வ தளம்',
+    te: 'అధికారిక పోర్టల్',
+    ml: 'ഔദ്യോഗിക പോർട്ടൽ'
+  },
+  'schemes.keyBenefits': {
+    en: 'KEY BENEFITS',
+    kn: 'ಮುಖ್ಯ ಸೌಲಭ್ಯಗಳು',
+    hi: 'प्रमुख लाभ',
+    ta: 'முக்கிய பலன்கள்',
+    te: 'ప్రధాన ప్రయోజనాలు',
+    ml: 'പ്രധാന ആനുകൂല്യങ്ങൾ'
+  },
+  'schemes.requiredDocuments': {
+    en: 'REQUIRED DOCUMENTS',
+    kn: 'ಅಗತ್ಯ ದಾಖಲೆಗಳು',
+    hi: 'आवश्यक दस्तावेज',
+    ta: 'தேவையான ஆவணங்கள்',
+    te: 'అవసరమైన పత్రాలు',
+    ml: 'ആവശ್ಯമായ രേഖകൾ'
+  },
+  'schemes.centralStateBadge': {
+    en: 'CENTRAL / STATE HEALTH SCHEME',
+    kn: 'ಕೇಂದ್ರ / ರಾಜ್ಯ ಆರೋಗ್ಯ ಯೋಜನೆ',
+    hi: 'केंद्रीय / राज्य स्वास्थ्य योजना',
+    ta: 'மத்திய / மாநில சுகாதார திட்டம்',
+    te: 'కేంద్ర / రాష్ట్ర ఆరోగ్య పథకం',
+    ml: 'കേന്ദ്ര / സംസ്ഥാന ആരോഗ്യ പദ്ധതി'
+  },
+  'schemes.stateSchemeBadge': {
+    en: 'STATE SCHEME',
+    kn: 'ರಾಜ್ಯ ಯೋಜನೆ',
+    hi: 'राज्य योजना',
+    ta: 'மாநில திட்டம்',
+    te: 'రాష్ట్ర పథకం',
+    ml: 'സംസ്ഥാന പദ്ധതി'
   },
   'schemes.allSchemes': {
     en: 'All Schemes',
@@ -4364,6 +4421,9 @@ export const INGREDIENT_TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
+// Merge embedded UI translations from INGREDIENT_TRANSLATIONS into UI_TRANSLATIONS
+Object.assign(UI_TRANSLATIONS, INGREDIENT_TRANSLATIONS);
+
 // Comprehensive Food Name Translations across all 13 supported languages
 export const FOOD_NAME_TRANSLATIONS: Record<string, Record<string, string>> = {
   ...COMPREHENSIVE_FOOD_TRANSLATIONS,
@@ -6042,7 +6102,10 @@ class LanguageServiceImpl {
     if (centralTranslations?.[langCode]?.[key]) {
       return centralTranslations[langCode][key];
     }
-    const entry = UI_TRANSLATIONS[key];
+    if (fallback && centralTranslations?.[langCode]?.[fallback]) {
+      return centralTranslations[langCode][fallback];
+    }
+    const entry = UI_TRANSLATIONS[key] || (INGREDIENT_TRANSLATIONS as any)?.[key] || (fallback ? UI_TRANSLATIONS[fallback] : undefined);
     if (entry && entry[langCode]) {
       return entry[langCode];
     }

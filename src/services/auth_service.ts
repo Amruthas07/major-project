@@ -736,7 +736,7 @@ class AuthService {
     dietPreference?: 'Vegetarian' | 'Non-Vegetarian' | 'vegetarian' | 'non-vegetarian';
     pregnancyMonth?: number;
     weeksPregnant?: number;
-  }): Promise<{ success: boolean; user?: AuthUser; isNewUser?: boolean; redirecting?: boolean; message?: string }> {
+  }): Promise<{ success: boolean; user?: AuthUser; isNewUser?: boolean; redirecting?: boolean; cancelled?: boolean; message?: string }> {
     if (!hasRealFirebase) {
       return {
         success: false,
@@ -746,6 +746,15 @@ class AuthService {
 
     try {
       const res = await auth.signInWithGoogle();
+
+      if ((res as any)?.cancelled) {
+        return {
+          success: false,
+          cancelled: true,
+          message: (res as any).message || 'Google sign-in window was closed. Please click "Continue with Google" to try again.'
+        };
+      }
+
       if (!res || !res.user) {
         // Redirect flow was initiated because popup was blocked
         return {
@@ -757,6 +766,14 @@ class AuthService {
 
       return await this.processFirebaseUser(res.user, options);
     } catch (err: any) {
+      if (err?.code === 'auth/popup-closed-by-user' || err?.code === 'auth/cancelled-popup-request') {
+        console.info('[Google Sign-In] Popup was closed by user.');
+        return {
+          success: false,
+          cancelled: true,
+          message: 'Google sign-in window was closed. Please click "Continue with Google" to try again, or use Email / Demo Profile.'
+        };
+      }
       console.error('[Google Sign-In Error]', err);
       return { success: false, message: getFirebaseErrorMessage(err) };
     }

@@ -16,6 +16,7 @@ import {
 import { GlobalLocationState, OrderProduct } from '../types';
 import { CURATED_REGIONAL_RECIPES } from '../data/regional_recipes_db';
 import { KAGGLE_PROCESSED_FOOD_DATABASE } from '../services/kaggle_food_pipeline';
+import { isMatchingState } from '../utils/state_food_filter';
 import { FoodSubtitle } from '../services/language_service';
 
 interface OrderDeliveryViewProps {
@@ -236,8 +237,8 @@ export const OrderDeliveryView: React.FC<OrderDeliveryViewProps> = ({
       }
     });
 
-    return list;
-  }, []);
+    return list.filter(item => isMatchingState(item.state, locationState));
+  }, [locationState]);
 
   // Filtered Prepared Dishes
   const filteredPreparedDishes = useMemo(() => {

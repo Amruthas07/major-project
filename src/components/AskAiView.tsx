@@ -188,6 +188,34 @@ Folate (Vitamin B9) is vital for neural tube defect prevention and red blood cel
 4. **Hydration Strategy:** Sip Tender Coconut Water or cold water between meals, rather than drinking large quantities with meals.`;
     }
 
+    if (q.includes('scheme') || q.includes('yojana') || q.includes('benefit') || q.includes('government')) {
+      if (activeState.toLowerCase().includes('karnataka')) {
+        return `📋 **Maternal Healthcare & Welfare Schemes for Karnataka Mothers:**
+
+1. **Mathru Poorna Yojana (Karnataka State):**
+   • Provides one full hot cooked nutritious meal daily at local Anganwadi centres (Rice, Dal/Sambar, Green Vegetables, 200ml Milk, Boiled Egg/Sprouted Gram, and IFA tablets).
+
+2. **Gruha Lakshmi Scheme (Karnataka State):**
+   • Direct monthly financial benefit transfer of **₹2,000/month** into the Aadhaar-seeded bank account of the woman head of the family.
+
+3. **Prasuti Araike & Nagu Magu (Karnataka State):**
+   • Post-delivery financial grant (₹2,000 – ₹3,000) for safe institutional deliveries in government hospitals plus free transport back home with newborn in dedicated **Nagu Magu** vehicles.
+
+4. **Pradhan Mantri Matru Vandana Yojana (PMMVY - Integrated Central Scheme):**
+   • Direct Benefit Transfer of **₹5,000** in 2 instalments for 1st child, and **₹6,000** for 2nd girl child to compensate wage loss and ensure clinical care.
+
+💡 *To apply, carry your Thayi (MCP) Card, Aadhaar Card, and Bank Passbook to your nearest Anganwadi or Primary Health Centre (PHC).*`;
+      } else {
+        return `📋 **Applicable Maternal Welfare Schemes in ${activeState}:**
+
+• **Pradhan Mantri Matru Vandana Yojana (PMMVY):** Direct Benefit Transfer of ₹5,000 for wage loss compensation & nutrition.
+• **Janani Suraksha Yojana (JSY):** Cash assistance (₹1,400 Rural / ₹1,000 Urban) for institutional delivery in public hospitals.
+• **POSHAN Abhiyaan / Anganwadi THR:** Supplementary nutrition rations and growth monitoring.
+
+Visit your nearest local Anganwadi or PHC with your MCP Card and Aadhaar to register for free benefits.`;
+      }
+    }
+
     if (q.includes('breakfast') || q.includes('regional')) {
       return `🌅 **Nutritious Pregnancy Breakfast Recommendations for ${activeState}:**
 

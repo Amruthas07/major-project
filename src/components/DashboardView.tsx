@@ -37,6 +37,7 @@ import { WeightRecord, KaggleFoodItem } from '../types';
 import { normalizeDietPreference } from '../utils/diet_preference';
 import { checkFoodAllergies } from '../utils/allergy_checker';
 import { KAGGLE_PROCESSED_FOOD_DATABASE } from '../services/kaggle_food_pipeline';
+import { isMatchingState } from '../utils/state_food_filter';
 import { VerifiedFoodImage } from './VerifiedFoodImage';
 import NutritionCards from './NutritionCards';
 import WaterTracker from './WaterTracker';
@@ -62,6 +63,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
     waterReminderSettings,
     updateWaterReminder,
     triggerTestWaterReminder,
+    nextUpcomingReminder,
     weightRecords,
     addWeightRecord,
     updateDoctorVisit,
@@ -142,17 +144,19 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
   const recommendedFoods = useMemo<KaggleFoodItem[]>(() => {
     const isVeg = normalizeDietPreference(userProfile.dietPreference) === 'vegetarian';
     const userAllergies = userProfile.allergies || [];
-    const userState = (globalLocation.state || userProfile.state || 'Karnataka').toLowerCase();
-    const userRegion = (globalLocation.region || 'South India').toLowerCase();
+    const userState = userProfile.state || globalLocation.state || 'Karnataka';
 
     return KAGGLE_PROCESSED_FOOD_DATABASE.filter((item) => {
-      // 1. Must be safe for pregnancy
+      // 1. Strict State-Based Isolation: ONLY dishes native to user's state
+      if (!isMatchingState(item.state, userState)) return false;
+
+      // 2. Must be safe for pregnancy
       if (item.safetyLevel !== 'Safe') return false;
 
-      // 2. Strict diet preference match
+      // 3. Strict diet preference match (Veg: 100% vegetarian; Non-Veg: both veg & non-veg allowed)
       if (isVeg && !item.isVegetarian) return false;
 
-      // 3. Exclude any foods containing user allergens
+      // 4. Exclude any foods containing user allergens
       if (userAllergies.length > 0) {
         const { hasAllergy } = checkFoodAllergies(item, userAllergies);
         if (hasAllergy) return false;
@@ -160,16 +164,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
 
       return true;
     })
-      .sort((a, b) => {
-        // Prioritize dishes matching the user's home state or region
-        const aStateMatch = a.state && a.state.toLowerCase() === userState ? 2 : 0;
-        const bStateMatch = b.state && b.state.toLowerCase() === userState ? 2 : 0;
-        const aRegionMatch = a.region && a.region.toLowerCase() === userRegion ? 1 : 0;
-        const bRegionMatch = b.region && b.region.toLowerCase() === userRegion ? 1 : 0;
-        return bStateMatch + bRegionMatch - (aStateMatch + aRegionMatch);
-      })
       .slice(0, 4);
-  }, [userProfile.dietPreference, userProfile.allergies, globalLocation.state, globalLocation.region]);
+  }, [userProfile.dietPreference, userProfile.allergies, userProfile.state, globalLocation.state]);
 
   // Doctor visit details
   const activeDoctorVisit = userProfile.nextDoctorVisit || {
@@ -227,22 +223,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
   return (
     <div className="space-y-6 animate-in fade-in duration-300 max-w-7xl mx-auto">
       {/* ======================================================== */}
-      {/* 1. WELCOME HEADER (Polished 3D Maternal Artwork)         */}
+      {/* 1. WELCOME HEADER (Natural Maternal Hero Scene)         */}
       {/* ======================================================== */}
-      <div className="bg-gradient-to-r from-[#223030] via-[#283C38] to-[#1E2E2C] border border-[#523D35] rounded-3xl p-6 sm:p-7 text-[#EFEFE9] shadow-md flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="space-y-2.5 max-w-2xl relative z-10">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#523D35] text-[#E8D9CD] text-xs font-semibold border border-[#BBA58F]/30 shadow-xs">
-            <Sparkles className="w-3.5 h-3.5 text-[#BBA58F]" />
+      <div className="bg-gradient-to-br from-[#F5F8F6] via-[#EEF5F2] to-[#E5ECE9] border border-[#959D90]/35 rounded-3xl p-5 sm:p-7 text-[#223030] shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="space-y-3 max-w-xl relative z-10">
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#2E4A43] text-[#F4F8F6] text-xs font-semibold shadow-xs">
+            <Sparkles className="w-3.5 h-3.5 text-[#A3C9BE]" />
             <span>
               {t('common.week', 'Week')} {userProfile.weeksPregnant} • {t(selectedTrimester === '1st Trimester' ? 'trimester.1st' : selectedTrimester === '2nd Trimester' ? 'trimester.2nd' : 'trimester.3rd', selectedTrimester)} • {formatLocalizedWeekday(selectedDay, currentLanguageCode, false)}
             </span>
           </div>
 
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#EFEFE9]">
+          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#1F2F2B]">
             {greeting}, {userProfile.name ? userProfile.name.split(' ')[0] : 'Mother'} 🙏
           </h1>
 
-          <p className="text-xs sm:text-sm text-[#E8D9CD]/90 max-w-xl leading-relaxed">
+          <p className="text-xs sm:text-sm text-[#465A54] max-w-lg leading-relaxed">
             {t('dashboard.welcomeSubtitle', 'Here is your nutrition summary for today. Track meals, stay hydrated, and reach your maternal wellness goals.')}
           </p>
 
@@ -250,21 +246,22 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
             <button
               type="button"
               onClick={() => setIsLogWeightModalOpen(true)}
-              className="px-4 py-2.5 rounded-xl bg-[#E8D9CD] hover:bg-[#BBA58F] text-[#223030] text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
+              className="px-4 py-2.5 rounded-xl bg-[#2E4A43] hover:bg-[#203731] text-white text-xs font-bold flex items-center gap-2 transition cursor-pointer shadow-xs active:scale-95"
             >
-              <Scale className="w-3.5 h-3.5 text-[#523D35]" />
+              <Scale className="w-3.5 h-3.5 text-[#A3C9BE]" />
               <span>{t('dashboard.logWeight', 'Log Weight')}</span>
             </button>
           </div>
         </div>
 
-        {/* 3D Maternal Health Visual Badge */}
-        <div className="hidden sm:flex items-center justify-center shrink-0 relative z-10">
-          <div className="w-32 h-32 sm:w-36 sm:h-36 rounded-full bg-[#523D35]/30 border border-[#BBA58F]/30 p-2 flex items-center justify-center shadow-inner group">
-            <Maternal3DArt
-              type="pregnant-mother"
-              className="w-full h-full object-contain filter drop-shadow-xl transform group-hover:scale-105 transition-transform duration-300"
-              alt="3D Maternal Wellness"
+        {/* PregNutri AI Main Hero Banner (Regional Nutrition, Maternal Health, Government Schemes) */}
+        <div className="w-full lg:w-[480px] xl:w-[520px] shrink-0 relative z-10">
+          <div className="relative rounded-2xl overflow-hidden border border-[#959D90]/30 shadow-md bg-white group">
+            <img
+              src="/assets/aistudio/image_d414d922.png"
+              alt="PregNutri AI - South Indian Regional Food Nutrition, Maternal Health, and Government Schemes"
+              className="w-full h-auto object-cover object-[center_49%] aspect-[2.7/1] max-h-[220px] sm:max-h-[250px] transition-transform duration-500 group-hover:scale-[1.01]"
+              loading="eager"
             />
           </div>
         </div>
@@ -274,10 +271,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
       {/* 1.5 PREGNANCY & WELLNESS OVERVIEW (3D Cards & Progress)  */}
       {/* ======================================================== */}
       <div className="bg-[#EFEFE9] border border-[#959D90]/40 rounded-3xl p-5 sm:p-6 shadow-xs grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
-        {/* Left: 3D Mother & Baby Artwork with Week Progress */}
+        {/* Left: Mother & Baby Portrait with Week Progress */}
         <div className="md:col-span-4 flex items-center gap-4 bg-white/80 p-4 rounded-2xl border border-[#959D90]/30 shadow-2xs">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#E8D9CD] p-1 shrink-0 flex items-center justify-center border border-[#BBA58F]/40 shadow-xs">
-            <Maternal3DArt type="mother-and-baby" className="w-full h-full object-contain" alt="Mother and Baby Care" />
+          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-[#E8D9CD] p-1 shrink-0 flex items-center justify-center border border-[#BBA58F]/40 shadow-xs overflow-hidden">
+            <img
+              src="/assets/aistudio/image_e5d39059.png"
+              alt="Maternal Journey - Expectant Mother"
+              className="w-full h-full object-cover object-center rounded-xl"
+              loading="eager"
+            />
           </div>
           <div>
             <span className="text-[10px] uppercase tracking-wider font-extrabold text-[#523D35] block">Maternal Journey</span>
@@ -467,59 +469,23 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ onNavigateTab, onO
               </button>
             </div>
 
-            {/* Compact Reminder Settings */}
+            {/* Automatic Reminder Status & Next Schedule Indicator */}
             <div className="pt-2 border-t border-[#959D90]/30 flex items-center justify-between text-xs gap-2 flex-wrap">
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => updateWaterReminder({ enabled: !waterReminderSettings.enabled })}
-                  className={`px-3 py-1 rounded-full text-xs font-bold transition cursor-pointer flex items-center gap-1.5 ${
-                    waterReminderSettings.enabled ? 'bg-emerald-800 text-white' : 'bg-[#959D90] text-[#223030]'
-                  }`}
-                >
-                  {waterReminderSettings.enabled ? (
-                    <>
-                      <Bell className="w-3 h-3" />
-                      <span>{t('reminder.on', 'Reminder ON')}</span>
-                    </>
-                  ) : (
-                    <span>{t('reminder.off', 'Reminder OFF')}</span>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => updateWaterReminder({ soundEnabled: !waterReminderSettings.soundEnabled })}
-                  className="px-2.5 py-1 rounded-lg text-xs font-semibold bg-white border border-[#959D90]/40 text-[#223030] hover:bg-[#E8D9CD] transition cursor-pointer flex items-center gap-1"
-                >
-                  {waterReminderSettings.soundEnabled ? (
-                    <>
-                      <Volume2 className="w-3 h-3 text-emerald-700" />
-                      <span>{t('reminder.soundOn', 'Sound ON')}</span>
-                    </>
-                  ) : (
-                    <>
-                      <VolumeX className="w-3 h-3 text-[#959D90]" />
-                      <span>{t('reminder.soundOff', 'Sound OFF')}</span>
-                    </>
-                  )}
-                </button>
+              <div className="flex items-center gap-2 text-xs font-semibold text-[#523D35]">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300 text-[11px] font-bold">
+                  <Bell className="w-3 h-3 text-emerald-700" />
+                  <span>Automatic Reminders Active</span>
+                </div>
+                {nextUpcomingReminder && nextUpcomingReminder.type !== 'none' && (
+                  <span className="text-[11px] text-[#523D35] font-medium">
+                    Next: <strong className="font-bold text-[#223030]">{nextUpcomingReminder.label}</strong> ({nextUpcomingReminder.timeStr})
+                  </span>
+                )}
               </div>
 
-              <div className="flex items-center gap-3">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await triggerTestWaterReminder();
-                  }}
-                  className="text-[11px] font-bold text-[#523D35] hover:text-[#223030] hover:underline cursor-pointer"
-                >
-                  {t('reminder.testAlert', 'Test Alert')}
-                </button>
-                <span className="text-[10px] text-[#523D35] font-medium">
-                  {t('dashboard.amnioticFluid', 'Amniotic fluid & maternal hydration')}
-                </span>
-              </div>
+              <span className="text-[10px] text-[#523D35] font-medium">
+                {t('dashboard.amnioticFluid', 'Amniotic fluid & maternal hydration')}
+              </span>
             </div>
           </div>
         </div>

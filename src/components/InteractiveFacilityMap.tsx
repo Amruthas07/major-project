@@ -209,7 +209,7 @@ export const InteractiveFacilityMap: React.FC<InteractiveFacilityMapProps> = ({
             </p>
             ${fac.doctorInCharge ? `<p style="font-size: 10px; color: #475569; margin: 0 0 6px 0;"><strong>Doctor:</strong> ${fac.doctorInCharge}</p>` : ''}
             <div style="display: flex; gap: 6px; margin-top: 8px;">
-              ${cleanPhone ? `<a href="tel:${cleanPhone}" style="flex: 1; text-align: center; background: #059669; color: white; padding: 5px 8px; border-radius: 8px; font-weight: 700; font-size: 11px; text-decoration: none;">📞 Call</a>` : ''}
+              <a href="tel:108" style="flex: 1; text-align: center; background: #059669; color: white; padding: 5px 8px; border-radius: 8px; font-weight: 700; font-size: 11px; text-decoration: none;">📞 Call 108</a>
               <a href="https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${fac.lat},${fac.lng}" target="_blank" rel="noreferrer" style="flex: 1; text-align: center; background: #0f172a; color: white; padding: 5px 8px; border-radius: 8px; font-weight: 700; font-size: 11px; text-decoration: none;">➤ Directions</a>
             </div>
           </div>

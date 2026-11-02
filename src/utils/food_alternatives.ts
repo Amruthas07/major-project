@@ -1,5 +1,6 @@
 import { KaggleFoodItem, GlobalLocationState, PregnancyTrimester, UserProfile } from '../types';
 import { checkFoodAllergies } from './allergy_checker';
+import { isMatchingState } from './state_food_filter';
 
 export interface FoodAlternativeResult {
   food: KaggleFoodItem;
@@ -69,7 +70,13 @@ export function findFoodAlternatives(
       continue;
     }
 
-    // 5. Score calculation based on:
+    // 5. Strict Regional Isolation: Only authentic dishes matching user's state
+    const targetState = location?.state || userProfile.state || 'Karnataka';
+    if (!isMatchingState(candidate.state, targetState)) {
+      continue;
+    }
+
+    // 6. Score calculation based on:
     // - Category similarity
     // - Micronutrient match (Iron, Calcium, Folate, Protein)
     // - Local regional relevance

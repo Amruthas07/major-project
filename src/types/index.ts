@@ -268,17 +268,40 @@ export type { LoggedMealRecord, ConfirmedMealItem } from '../nutrition_engine';
 
 export interface WelfareScheme {
   id: string;
+  scheme_id?: string;
   title: string;
+  scheme_or_food_name?: string;
   shortName: string;
   description: string;
+  objective?: string;
   eligibility: string;
+  eligibility_summary?: string;
+  eligibilitySummary?: string;
   benefits: string;
+  mainBenefit?: string;
+  main_benefit?: string;
+  benefit_summary?: string;
+  benefit_tag?: string;
   cashAmountHighlight?: string;
+  cashAssistance?: string;
   documentsNeeded: string[];
+  requiredDocuments?: string[];
+  required_documents?: string[];
   portalUrl: string;
-  category: 'Central Government' | 'State Government' | 'Nutrition Program';
+  officialPortalUrl?: string;
+  official_portal_url?: string;
+  category: 'Financial Assistance' | 'Nutritional Meal' | 'Maternity Healthcare' | 'Central Government' | 'State Government' | 'Nutrition Program' | string;
+  image_category?: 'food' | 'money' | 'cash_benefit' | 'maternity_care' | string;
+  badge_icon?: string;
   state?: string;
   badgeColor?: string;
+  badgeText?: string;
+  badge_label?: string;
+  imageUrl?: string;
+  image_url?: string;
+  thumbnail_url?: string;
+  small_thumbnail_url?: string;
+  diet_type?: 'Veg' | 'Non-Veg';
 }
 
 export type FacilityTypeCategory =

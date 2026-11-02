@@ -17,6 +17,9 @@ import {
   MapPin
 } from 'lucide-react';
 
+import { SchemeCard } from './SchemeCard';
+import { isMatchingState } from '../utils/state_food_filter';
+
 interface WelfareSchemesViewProps {
   schemes: WelfareScheme[];
   globalLocation?: GlobalLocationState;
@@ -32,39 +35,45 @@ export const WelfareSchemesView: React.FC<WelfareSchemesViewProps> = ({ schemes,
   const STATE_NAMES_LOCALIZED: Record<string, Record<string, string>> = {
     'Karnataka': { kn: 'ಕರ್ನಾಟಕ', hi: 'कर्नाटक', ta: 'கர்நாடகா', te: 'కర్ణాటక', ml: 'കർണാടക' },
     'Tamil Nadu': { kn: 'ತಮಿಳುನಾಡು', hi: 'तमिलनाडु', ta: 'தமிழ்நாடு', te: 'తమిళనాడు', ml: 'തമിഴ്നാട്' },
-    'Maharashtra': { kn: 'ಮಹಾರಾಷ್ಟ್ರ', hi: 'महाराष्ट्र', ta: 'மகாராஷ்டிரா', te: 'మహారాష్ట్ర', ml: 'മഹാരാഷ്ട്ര' },
+    'Maharashtra': { kn: 'ಮಹಾರಾಷ್ಟ್ರ', hi: 'महाराष्ट्र', ta: 'மகாராஷ்டிரா', te: 'ಮಹಾರಾష్ట్ర', ml: 'മഹാരാഷ്ട്ര' },
     'Kerala': { kn: 'ಕೇರಳ', hi: 'केरल', ta: 'கேரளா', te: 'కేరళ', ml: 'കേരളം' },
     'Andhra Pradesh': { kn: 'ಆಂಧ್ರಪ್ರದೇಶ', hi: 'आंध्र प्रदेश', ta: 'ஆந்திரப் பிரதேசம்', te: 'ఆంధ్రప్రదేశ్', ml: 'ആന്ധ്രാപ്രദേശ്' },
     'Telangana': { kn: 'ತೆಲಂಗಾಣ', hi: 'तेलंगाना', ta: 'தெலுங்கானா', te: 'తెలంగాణ', ml: 'തെലങ്കാന' },
     'Gujarat': { kn: 'ಗುಜರಾತ್', hi: 'गुजरात', ta: 'குஜராத்', te: 'గుజరాత్', ml: 'ഗുജറാത്ത്' },
-    'Uttar Pradesh': { kn: 'ಉತ್ತರ ಪ್ರದೇಶ', hi: 'उत्तर प्रदेश', ta: 'உத்தரப் பிரதேசம்', te: 'ఉత్తరప్రదేశ్', ml: 'உത്തർപ്രദേശ്' },
+    'Uttar Pradesh': { kn: 'ಉತ್ತರ ಪ್ರದೇಶ', hi: 'उत्तर प्रदेश', ta: 'உத்தரப் பிரதேசம்', te: 'ఉత్తరప్రదేశ్', ml: 'ഉത്തർപ്രദേശ്' },
     'West Bengal': { kn: 'ಪಶ್ಚಿಮ ಬಂಗಾಳ', hi: 'पश्चिम बंगाल', ta: 'மேற்கு வங்காளம்', te: 'పశ్చిమ బెంగాల్', ml: 'പശ്ചിമ ബംഗാൾ' }
   };
+  const CITY_NAMES_LOCALIZED: Record<string, Record<string, string>> = {
+    'Mysuru': { kn: 'ಮೈಸೂರು', hi: 'मैसूरु', ta: 'மைசூரு', te: 'మైసూరు', ml: 'മൈസൂരു' },
+    'Mysore': { kn: 'ಮೈಸೂರು', hi: 'मैसूर', ta: 'மைசூர்', te: 'మైసూర్', ml: 'മൈസൂർ' },
+    'Bengaluru': { kn: 'ಬೆಂಗಳೂರು', hi: 'बेंगलुरु', ta: 'பெங்களூரு', te: 'బెంగళూరు', ml: 'ബെംഗളൂരു' },
+    'Bangalore': { kn: 'ಬೆಂಗಳೂರು', hi: 'बेंगलुरु', ta: 'பெங்களூரு', te: 'బెంగళూరు', ml: 'ബെംഗളൂരു' },
+    'Hullahalli': { kn: 'ಹುಲ್ಲಹಳ್ಳಿ', hi: 'हुल्लाहल्ली', ta: 'ஹுல்லஹள்ளி', te: 'హుల్లహళ్ళి', ml: 'ഹുല്ലഹള്ളി' },
+    'Nanjangud': { kn: 'ನಂಜನಗೂಡು', hi: 'नंजनगुड़', ta: 'நஞ்சன்கூடு', te: 'నంజనగూడు', ml: 'നഞ്ചൻഗുഡ്' },
+    'Hunsur': { kn: 'ಹುಣಸೂರು', hi: 'हुणसूर', ta: 'ஹுன்சூர்', te: 'హున్సూర్', ml: 'ഹുൻസൂർ' },
+    'Mandya': { kn: 'ಮಂಡ್ಯ', hi: 'मंड्या', ta: 'மண்டியா', te: 'మండ్య', ml: 'മാണ്ഡ്യ' },
+    'Hassan': { kn: 'ಹಾಸನ', hi: 'हासन', ta: 'ஹாசன்', te: 'హాసన్', ml: 'ഹാസൻ' },
+    'Chennai': { kn: 'ಚೆನ್ನೈ', hi: 'चेन्नई', ta: 'சென்னை', te: 'చెన్నై', ml: 'ചെന്നൈ' },
+    'Hyderabad': { kn: 'ಹೈದರಾಬಾದ್', hi: 'हैदराबाद', ta: 'ஹைதராபாத்', te: 'హైదరాబాద్', ml: 'ഹൈദരാബാദ്' },
+    'Mumbai': { kn: 'ಮುಂಬೈ', hi: 'मुंबई', ta: 'மும்பை', te: 'ముంబై', ml: 'മുംബൈ' },
+    'Thiruvananthapuram': { kn: 'ತಿರುವನಂತಪುರಂ', hi: 'तिरुवनंतपुरम', ta: 'திருவனந்தபுரம்', te: 'తిరువనంతపురం', ml: 'തിരുവനന്തപുരം' },
+    'Kochi': { kn: 'ಕೊಚ್ಚಿ', hi: 'कोच्चि', ta: 'கொச்சி', te: 'కొచ్చి', ml: 'കൊച്ചി' }
+  };
   const localizedState = STATE_NAMES_LOCALIZED[activeState]?.[activeLang] || activeState;
+  const localizedCity = CITY_NAMES_LOCALIZED[activeCity]?.[activeLang] || activeCity;
 
   const [activeCategory, setActiveCategory] = useState<'all-applicable' | 'central' | 'my-state'>('all-applicable');
 
   const categories = [
     { id: 'all-applicable' as const, label: t('schemes.allApplicable', 'All Applicable Schemes') },
     { id: 'central' as const, label: t('schemes.centralSchemes', '🇮🇳 Central Schemes') },
-    { id: 'my-state' as const, label: `📍 ${localizedState} ${t('schemes.stateSchemes', 'Schemes')}` }
+    { id: 'my-state' as const, label: `📍 ${localizedState} ${t('schemes.stateSchemes', 'ಯೋಜನೆಗಳು')}` }
   ];
 
+  // Strict state isolation check: only match when scheme.state matches user's active state
   const isForCurrentState = (s: WelfareScheme) => {
     if (s.category !== 'State Government') return false;
-    const stateLower = activeState.toLowerCase();
-    const sState = (s.state || '').toLowerCase();
-    if (sState && sState.includes(stateLower)) return true;
-    const titleLower = s.title.toLowerCase();
-    const eligLower = s.eligibility.toLowerCase();
-    const descLower = (s.description || '').toLowerCase();
-    const shortLower = (s.shortName || '').toLowerCase();
-    return (
-      titleLower.includes(stateLower) ||
-      eligLower.includes(stateLower) ||
-      descLower.includes(stateLower) ||
-      shortLower.includes(stateLower)
-    );
+    return isMatchingState(s.state, activeState);
   };
 
   const filteredSchemes = schemes.filter((s) => {
@@ -91,7 +100,7 @@ export const WelfareSchemesView: React.FC<WelfareSchemesViewProps> = ({ schemes,
               </div>
               <div className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#223030] text-[#EFEFE9] text-xs font-semibold">
                 <MapPin className="w-3 h-3 text-[#BBA58F]" />
-                <span>{t('common.state', 'State')}: {localizedState} ({activeCity})</span>
+                <span>{t('common.state', 'State')}: {localizedState} ({localizedCity})</span>
               </div>
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#223030] tracking-tight flex items-center gap-2">
@@ -122,98 +131,15 @@ export const WelfareSchemesView: React.FC<WelfareSchemesViewProps> = ({ schemes,
         </div>
       </div>
 
-      {/* Simplified, Practical Welfare Scheme Cards */}
-      <div className="space-y-5">
+      {/* Welfare Scheme Cards with Verified Image Attachments */}
+      <div className="space-y-6">
         {filteredSchemes.map((rawScheme) => {
           const scheme = getLocalizedWelfareScheme(rawScheme, activeLang);
-          const isCentral = rawScheme.category === 'Central Government';
-          const badgeText = isCentral
-            ? t('schemes.centralGovtBadge', '🇮🇳 Central Government Scheme')
-            : `📍 ${localizedState} ${t('schemes.stateGovtBadge', 'State Government Scheme')}`;
-
           return (
-            <div
+            <SchemeCard
               key={scheme.id}
-              className="bg-[#EFEFE9] rounded-3xl border border-[#959D90]/50 shadow-xs overflow-hidden transition-all duration-200"
-            >
-              {/* Scheme Header: Name, Badge & Official Link */}
-              <div className="bg-[#223030] text-[#EFEFE9] px-6 py-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-[#959D90]/30">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-full bg-[#523D35] text-[#E8D9CD] text-[11px] font-bold">
-                      {badgeText}
-                    </span>
-                    {scheme.cashAmountHighlight && (
-                      <span className="px-2.5 py-0.5 rounded-full bg-[#BBA58F] text-[#223030] text-[11px] font-extrabold">
-                        💰 {scheme.cashAmountHighlight}
-                      </span>
-                    )}
-                  </div>
-                  <h3 className="text-base sm:text-lg font-extrabold tracking-tight text-[#EFEFE9]">
-                    {scheme.title}
-                  </h3>
-                </div>
-
-                {scheme.portalUrl && (
-                  <a
-                    href={scheme.portalUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-[#523D35] hover:bg-[#BBA58F] hover:text-[#223030] text-[#E8D9CD] text-xs font-bold transition shadow-xs self-start sm:self-center cursor-pointer shrink-0"
-                  >
-                    <ExternalLink className="w-3.5 h-3.5" />
-                    <span>{t('schemes.applyPortal', 'Official Portal ↗')}</span>
-                  </a>
-                )}
-              </div>
-
-              {/* One Short Objective */}
-              <div className="px-6 py-3 bg-[#E8D9CD]/50 border-b border-[#959D90]/30 text-xs text-[#523D35] font-medium leading-relaxed">
-                <strong className="text-[#223030] font-bold">{t('schemes.objective', 'Objective')}: </strong>
-                {scheme.description}
-              </div>
-
-              {/* 3-Part Practical Details Grid */}
-              <div className="p-6 grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
-                {/* 1. Eligibility Summary */}
-                <div className="bg-[#E8D9CD] p-4 rounded-2xl border border-[#959D90]/30 space-y-1.5">
-                  <span className="font-bold text-[#223030] block uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <Shield className="w-3.5 h-3.5 text-[#523D35]" />
-                    <span>{t('schemes.eligibility', 'Eligibility Summary')}</span>
-                  </span>
-                  <p className="text-[#523D35] leading-relaxed">
-                    {scheme.eligibility}
-                  </p>
-                </div>
-
-                {/* 2. Main Benefit */}
-                <div className="bg-[#E8D9CD] p-4 rounded-2xl border border-[#959D90]/30 space-y-1.5">
-                  <span className="font-bold text-[#223030] block uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <CreditCard className="w-3.5 h-3.5 text-[#523D35]" />
-                    <span>{t('schemes.benefits', 'Main Benefit')}</span>
-                  </span>
-                  <p className="text-[#523D35] leading-relaxed">
-                    {scheme.benefits}
-                  </p>
-                </div>
-
-                {/* 3. Required Documents */}
-                <div className="bg-[#E8D9CD] p-4 rounded-2xl border border-[#959D90]/30 space-y-1.5">
-                  <span className="font-bold text-[#223030] block uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    <FileText className="w-3.5 h-3.5 text-[#523D35]" />
-                    <span>{t('schemes.documents', 'Required Documents')}</span>
-                  </span>
-                  <ul className="space-y-1 text-[#523D35]">
-                    {scheme.documentsNeeded.map((doc, idx) => (
-                      <li key={idx} className="flex items-start gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-[#223030] shrink-0 mt-0.5" />
-                        <span>{doc}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
+              scheme={scheme}
+            />
           );
         })}
       </div>
